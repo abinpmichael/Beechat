@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /server/
+
+Sitemap: https://beechat.com/sitemap.xml
