@@ -80,6 +80,6 @@ jobs:
           username: ${{secrets.MAIL_USERNAME}}
           password: ${{secrets.MAIL_PASSWORD}}
           subject: Bee Chat Tests Failed
-          to: admin@beechat.com
+          to: abinpmichaels@gmail.com
           from: github-actions@beechat.com
           body: The automated testing pipeline failed. Please check the GitHub Actions logs.
