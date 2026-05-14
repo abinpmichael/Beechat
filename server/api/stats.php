@@ -2,12 +2,14 @@
 // server/api/stats.php — real dashboard stats
 require_once 'config.php';
 
-$headers    = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) {
-    http_response_code(401); echo json_encode(["error"=>"Unauthorized"]); exit;
+$headers = getAuthHeaders();
+$decoded = decodeJwt($headers);
+
+if (!$decoded) {
+    http_response_code(401); 
+    echo json_encode(["error"=>"Unauthorized"]); 
+    exit;
 }
-$decoded  = json_decode(base64_decode($m[1]), true);
 $tenantId = (int)($decoded['tenant_id'] ?? 0);
 
 try {
@@ -84,6 +86,25 @@ try {
         $dailyStats[] = ["date" => date('D', strtotime($d)), "count" => $found];
     }
 
+    // Plan Limits & Utilization
+    $stmt = $pdo->prepare("SELECT p.max_websites, p.max_agents FROM tenants t JOIN plans p ON t.plan_id=p.id WHERE t.id=?");
+    $stmt->execute([$tenantId]);
+    $plan = $stmt->fetch();
+
+    // Avg Response Time (last 24h)
+    // This is a simplified calculation: Avg time from lead creation to first agent message
+    $stmt = $pdo->prepare("
+        SELECT AVG(TIMESTAMPDIFF(SECOND, l.created_at, m.created_at)) 
+        FROM leads l
+        JOIN messages m ON l.id = m.lead_id
+        WHERE l.tenant_id = ? 
+          AND m.sender_type = 'agent' 
+          AND l.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+          AND m.id = (SELECT id FROM messages WHERE lead_id = l.id AND sender_type = 'agent' ORDER BY created_at ASC LIMIT 1)
+    ");
+    $stmt->execute([$tenantId]);
+    $avgResponseTime = (int)$stmt->fetchColumn();
+
     echo json_encode([
         "live_chats"     => $liveChats,
         "total_leads"    => $totalLeads,
@@ -96,6 +117,13 @@ try {
         "recent_live"    => $recentLive,
         "agent_list"     => $agentList,
         "daily_stats"    => $dailyStats,
+        "avg_response_time" => $avgResponseTime,
+        "plan_utilization" => [
+            "websites_used" => $websites,
+            "websites_max"  => (int)($plan['max_websites'] ?? 1),
+            "agents_used"   => $agents,
+            "agents_max"    => (int)($plan['max_agents'] ?? 2)
+        ]
     ]);
 } catch (Exception $e) {
     http_response_code(500);

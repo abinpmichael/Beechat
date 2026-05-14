@@ -6,8 +6,9 @@ import {
   X, Copy, Check, Mail, User, Lock, ChevronDown, Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { API_BASE_URL } from '../config';
 
-const TEAM_URL = 'http://localhost/Bee/server/api/team.php';
+const TEAM_URL = `${API_BASE_URL}/team.php`;
 const authH    = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 export default function TeamPage() {

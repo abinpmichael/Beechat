@@ -14,17 +14,24 @@ if (empty($sessionId) || empty($apiKey)) {
     exit;
 }
 
-try {
-    // Update last_seen_at for matching lead
+    $country = $data['country'] ?? 'Unknown';
+    $browser = $data['browser'] ?? 'Unknown';
+    $device  = $data['device']  ?? 'Desktop';
+    $page    = $data['page']    ?? '';
+
+    // Update last_seen_at and metadata for matching lead
     $stmt = $pdo->prepare("
         UPDATE leads l
         JOIN websites w ON l.website_id = w.id
-        SET l.last_seen_at = NOW()
+        SET l.last_seen_at = NOW(),
+            l.country = IF(l.country = 'Unknown' OR l.country IS NULL, ?, l.country),
+            l.browser = ?,
+            l.device = ?,
+            l.current_page = ?
         WHERE l.session_id = ?
           AND w.api_key    = ?
-          AND l.is_live    = 1
     ");
-    $stmt->execute([$sessionId, $apiKey]);
+    $stmt->execute([$country, $browser, $device, $page, $sessionId, $apiKey]);
 
     echo json_encode(["status" => "ok", "ts" => date('Y-m-d H:i:s')]);
 } catch (Exception $e) {

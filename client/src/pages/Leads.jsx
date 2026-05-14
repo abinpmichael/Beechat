@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MessageSquare, Globe, X, Send,
   UserPlus, PhoneOff, ArrowRightLeft, Users,
-  History, Radio, Hash, Clock, CheckCircle, Bell, Shield, Bot, Image, FileText, Loader2, Share2
+  History, Radio, Hash, Clock, CheckCircle, Bell, Shield, Bot, Image, FileText, Loader2, Share2, Inbox
 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
-const API    = 'http://localhost/Bee/server/api/leads.php';
-const CONV   = 'http://localhost/Bee/server/api/conversations.php';
-const AGENTS = 'http://localhost/Bee/server/api/agents.php';
+const API    = `${API_BASE_URL}/leads.php`;
+const CONV   = `${API_BASE_URL}/conversations.php`;
+const AGENTS = `${API_BASE_URL}/agents.php`;
 
 function getToken()  { return localStorage.getItem('token'); }
 function authH()     { return { Authorization: `Bearer ${getToken()}` }; }
@@ -21,6 +22,96 @@ function parseUser() {
     return JSON.parse(atob(part));
   } catch { return { id:1, name:'Agent' }; }
 }
+
+// --- SUPER PERFECT BEE ---
+// --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
+const TopBee = ({ size = 40, animated = true }) => {
+  const [isWiggling, setIsWiggling] = useState(false);
+  
+  useEffect(() => {
+    if (!animated) return;
+    const interval = setInterval(() => {
+      if (Math.random() > 0.6) {
+        setIsWiggling(true);
+        setTimeout(() => setIsWiggling(false), 1200);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [animated]);
+
+  return (
+    <motion.svg 
+      width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      animate={animated ? { 
+        y: isWiggling ? [0, -12, 0] : [0, -4, 0],
+        rotate: isWiggling ? [0, 10, -10, 7, 0] : [0, 3, -3, 0],
+        scale: isWiggling ? [1, 1.1, 1] : [1, 1.02, 1],
+        filter: ["drop-shadow(0 0 0px rgba(251,191,36,0))", "drop-shadow(0 0 30px rgba(251,191,36,0.6))", "drop-shadow(0 0 0px rgba(251,191,36,0))"]
+      } : {}}
+      transition={{ duration: isWiggling ? 0.5 : 3.5, repeat: isWiggling ? 0 : Infinity, ease: "easeInOut" }}
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <filter id="megaKawaiiFuzzLeads" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" />
+        </filter>
+        <linearGradient id="megaHoneyLeads" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFFBEB" /><stop offset="40%" stopColor="#FEF3C7" /><stop offset="80%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#92400E" />
+        </linearGradient>
+        <radialGradient id="kawaiiEyeLeads" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#4B5563" /><stop offset="60%" stopColor="#111827" /><stop offset="100%" stopColor="#000000" />
+        </radialGradient>
+        <radialGradient id="deepBlushLeads" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FF85A2" stopOpacity="0.8" /><stop offset="100%" stopColor="#FF85A2" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <motion.g animate={animated ? { rotate: [0, 45, 0], opacity: [0.4, 0.7, 0.4] } : {}} transition={{ duration: 0.04, repeat: Infinity }}>
+        <path d="M40 40C20 10 0 20 0 40C0 60 20 80 40 60C60 80 80 60 80 40C80 20 60 10 40 40Z" fill="#FDF2F8" fillOpacity="0.5" stroke="#FBCFE8" strokeWidth="1" transform="scale(0.5) translate(40, 20)" />
+      </motion.g>
+
+      <motion.g animate={animated ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }}>
+        <circle cx="75" cy="75" r="30" fill="url(#megaHoneyLeads)" filter="url(#megaKawaiiFuzzLeads)" />
+        <path d="M85 55Q95 55 100 75L95 100Q85 105 75 100" fill="#1F2937" fillOpacity="0.9" />
+        <path d="M100 65Q110 70 115 80L108 95Q100 100 92 95" fill="#1F2937" fillOpacity="0.9" />
+        <circle cx="102" cy="75" r="2" fill="#000" />
+      </motion.g>
+
+      <motion.g animate={animated ? { rotate: isWiggling ? [-8, 8, -8] : [-2, 2] } : {}} transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}>
+        <circle cx="40" cy="60" r="35" fill="url(#megaHoneyLeads)" filter="url(#megaKawaiiFuzzLeads)" />
+        <circle cx="40" cy="60" r="32" fill="url(#megaHoneyLeads)" fillOpacity="0.2" />
+        <circle cx="15" cy="70" r="10" fill="url(#deepBlushLeads)" />
+        <circle cx="65" cy="70" r="10" fill="url(#deepBlushLeads)" />
+        <g>
+          <circle cx="22" cy="55" r="16" fill="url(#kawaiiEyeLeads)" />
+          <circle cx="16" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="28" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M10 55Q12 50 14 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+          <circle cx="58" cy="55" r="16" fill="url(#kawaiiEyeLeads)" />
+          <circle cx="52" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="64" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M46 55Q48 50 50 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+        </g>
+        <path d="M36 75Q38 78 40 75Q42 78 44 75" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '40px', originY: '30px' }}>
+          <path d="M30 35Q25 10 15 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <path d="M50 35Q55 10 65 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity }} d="M15 15L17 13L15 11L13 13Z" fill="#FF85A2" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} d="M65 15L67 13L65 11L63 13Z" fill="#FF85A2" />
+        </motion.g>
+      </motion.g>
+
+      <motion.g 
+        animate={animated ? { rotateX: [0, -85, 0], scale: [1, 1.1, 1], opacity: [0.9, 0.5, 0.9] } : {}} 
+        transition={{ duration: 0.02, repeat: Infinity }}
+        style={{ originX: '50px', originY: '50px' }}
+      >
+        <path d="M50 50C70 10 130 10 130 50C130 90 70 130 50 110C30 130 -30 90 -30 50C-30 10 30 10 50 50Z" fill="#F0F9FF" fillOpacity="0.4" stroke="#BAE6FD" strokeWidth="1" transform="scale(0.6) translate(40, -20)" />
+      </motion.g>
+    </motion.svg>
+  );
+};
 
 export default function Leads() {
   const [tab,          setTab]          = useState('live');   // live | history
@@ -34,6 +125,7 @@ export default function Leads() {
   const [showTransfer, setShowTransfer] = useState(false);
   const [toast,        setToast]        = useState(null);
   const [prevWaiting,  setPrevWaiting]  = useState(0);
+  const [liveEnabled,  setLiveEnabled]  = useState(true);
   const scrollRef = useRef();
   const audioRef  = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
   const user = parseUser();
@@ -75,6 +167,12 @@ export default function Leads() {
     const t = setInterval(fetchLeads, 4000);
     return () => clearInterval(t);
   }, [tab]);
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/settings.php`).then(res => {
+      setLiveEnabled(parseInt(res.data.enable_live_chat ?? 1) === 1);
+    });
+  }, []);
 
   useEffect(() => {
     if (!selected) return;
@@ -135,7 +233,7 @@ export default function Leads() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://localhost/Bee/server/api/upload.php', formData);
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
       if (res.data.url) sendMessage(null, res.data.url);
     } catch (err) { showToast("❌ Upload failed"); }
   };
@@ -182,12 +280,31 @@ export default function Leads() {
   const shareToTeam = async () => {
     if (!selected) return;
     try {
-      await axios.post('http://localhost/Bee/server/api/internal_chat.php', { 
+      await axios.post(`${API_BASE_URL}/internal_chat.php`, { 
         receiverId: 0, // General Group
         content: `[TICKET:${selected.id}]` 
       }, { headers: authH() });
       showToast('📢 Shared to Team Lounge!');
     } catch { showToast('❌ Failed to share.'); }
+  };
+
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [ticketForm, setTicketForm] = useState({ subject: '', priority: 'medium', department: 'Support', message: '', email: '' });
+
+  const convertToTicket = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const res = await axios.post(`${API_BASE_URL}/tickets.php?action=convert_lead`, {
+        ...ticketForm,
+        leadId: selected.id,
+        email: ticketForm.email || (selected.details ? (typeof selected.details === 'string' ? JSON.parse(selected.details).email : selected.details.email) : '')
+      }, { headers: authH() });
+      if (res.data.success) {
+        showToast(`✅ Ticket #${res.data.tracking_id} created!`);
+        setShowTicketModal(false);
+        setTab('history');
+      }
+    } catch { showToast('❌ Conversion failed.'); }
   };
 
   /* ─── filtered list ─────────────────────────────────────── */
@@ -200,6 +317,21 @@ export default function Leads() {
   const waitingCount = leads.filter(isWaiting).length;
 
   /* ─────────────────────────────────────────────────────────── */
+  if (!liveEnabled) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-12 text-center">
+        <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
+          <Shield className="w-12 h-12" />
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Live Chat Disabled</h2>
+        <p className="text-lg text-slate-500 font-medium max-w-md mx-auto leading-relaxed">
+          The real-time human chat functionality has been globally disabled by the platform administrator. 
+          Please contact support if you believe this is an error.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col gap-0" style={{minHeight:'calc(100vh - 11rem)'}}>
 
@@ -213,19 +345,77 @@ export default function Leads() {
         )}
       </AnimatePresence>
 
+      {/* Ticket Modal */}
+      <AnimatePresence>
+        {showTicketModal && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-6">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setShowTicketModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{opacity:0, scale:0.9, y:20}} animate={{opacity:1, scale:1, y:0}} exit={{opacity:0, scale:0.9, y:20}} className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-4xl border-4 border-white overflow-hidden">
+              <div className="p-8 bg-indigo-600 text-white flex justify-between items-center">
+                 <div>
+                    <h3 className="text-2xl font-black uppercase tracking-tighter">Escalate to Ticket</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mt-1">Convert live session to neural ticket</p>
+                 </div>
+                 <button onClick={() => setShowTicketModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
+              </div>
+              <form onSubmit={convertToTicket} className="p-8 space-y-4">
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Ticket Subject</label>
+                    <input required className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" placeholder="e.g. Technical Issue with Widget" value={ticketForm.subject} onChange={e => setTicketForm({...ticketForm, subject: e.target.value})} />
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Priority</label>
+                       <select className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" value={ticketForm.priority} onChange={e => setTicketForm({...ticketForm, priority: e.target.value})}>
+                          <option value="low">LOW</option>
+                          <option value="medium">MEDIUM</option>
+                          <option value="high">HIGH</option>
+                          <option value="urgent">URGENT</option>
+                       </select>
+                    </div>
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Department</label>
+                       <select className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" value={ticketForm.department} onChange={e => setTicketForm({...ticketForm, department: e.target.value})}>
+                          <option value="Support">SUPPORT</option>
+                          <option value="Billing">BILLING</option>
+                          <option value="Technical">TECHNICAL</option>
+                          <option value="Sales">SALES</option>
+                       </select>
+                    </div>
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Internal Description</label>
+                    <textarea required rows="4" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" placeholder="Describe the issue for the support team..." value={ticketForm.message} onChange={e => setTicketForm({...ticketForm, message: e.target.value})} />
+                 </div>
+                 <button type="submit" className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-100 hover:scale-[1.02] transition-all">Generate Ticket <CheckCircle className="inline-block ml-2 w-5 h-5" /></button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Tab bar */}
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => setTab('live')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${tab==='live' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}>
-          <Radio className="w-4 h-4"/>
-          Live Visitors
-          {waitingCount > 0 && <span className="bg-amber-400 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">{waitingCount}</span>}
-        </button>
-        <button onClick={() => setTab('history')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${tab==='history' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}>
-          <History className="w-4 h-4"/>
-          Chat History
-        </button>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setTab('live')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${tab==='live' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}>
+            <Radio className="w-4 h-4"/>
+            Live Visitors
+            {waitingCount > 0 && <span className="bg-amber-400 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">{waitingCount}</span>}
+          </button>
+          <button onClick={() => setTab('history')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${tab==='history' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}>
+            <History className="w-4 h-4"/>
+            Chat History
+          </button>
+        </div>
+        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
+           <div className="text-right">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Bee Agent</p>
+              <p className="text-xs font-black text-slate-900 leading-none">{user.name || 'Admin'}</p>
+           </div>
+           <TopBee size={32} />
+        </div>
       </div>
 
       {/* Main panel */}
@@ -283,9 +473,16 @@ export default function Leads() {
                       </div>
                     </div>
                     <p className="text-xs text-slate-900 font-black truncate">{lead.ticket_subject || 'Support Request'}</p>
-                    <p className="text-[10px] text-slate-400 truncate font-bold flex items-center gap-1 mt-0.5">
-                      <Globe className="w-2.5 h-2.5 shrink-0"/>{lead.domain}
-                    </p>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="text-[10px] text-slate-400 truncate font-bold flex items-center gap-1">
+                        <Globe className="w-2.5 h-2.5 shrink-0"/>{lead.domain}
+                      </p>
+                      {lead.tenant_name && (
+                        <span className="text-[8px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tight truncate max-w-[80px]">
+                          {lead.tenant_name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
@@ -331,6 +528,10 @@ export default function Leads() {
                   <Share2 className="w-4 h-4"/>
                 </button>
                 {tab==='live' && isActive(selected) && (<>
+                  <button onClick={() => setShowTicketModal(true)}
+                    className="flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-xl text-xs font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                    <Inbox className="w-3.5 h-3.5"/> Escalate
+                  </button>
                   <button onClick={flagFollowup}
                     disabled={selected.followup_required == 1}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all ${selected.followup_required == 1 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600'}`}>
@@ -374,6 +575,53 @@ export default function Leads() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Visitor Metadata Bar */}
+            <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
+               <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200">
+                     <Globe className="w-4 h-4 text-indigo-500" />
+                  </div>
+                  <div>
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Origin</p>
+                     <p className="text-[11px] font-bold text-slate-700 leading-none mt-1">{selected.country || 'Searching...'}</p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200">
+                     <FileText className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="max-w-[200px]">
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Viewing Page</p>
+                     <p className="text-[11px] font-bold text-slate-700 leading-none mt-1 truncate" title={selected.current_page}>{selected.current_page || 'Home'}</p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200">
+                     <Bot className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Device / Browser</p>
+                     <p className="text-[11px] font-bold text-slate-700 leading-none mt-1 uppercase tracking-tighter truncate max-w-[120px]">{selected.device} / {selected.browser?.split(' ')[0]}</p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-2 shrink-0 ml-auto">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200">
+                     <Clock className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Online For</p>
+                     <p className="text-[11px] font-bold text-slate-700 leading-none mt-1 uppercase tracking-tighter">
+                        {(() => {
+                           const start = new Date(selected.created_at);
+                           const now = new Date();
+                           const diff = Math.floor((now - start) / 60000);
+                           return diff < 1 ? 'Just joined' : `${diff} min`;
+                        })()}
+                     </p>
+                  </div>
+               </div>
+            </div>
 
             {/* Survey History Summary */}
             {selected.details && (

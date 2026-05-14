@@ -6,42 +6,35 @@ $method = $_SERVER['REQUEST_METHOD'];
 $data   = json_decode(file_get_contents("php://input"), true) ?? [];
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
-function getTenantId() {
-    $headers = getallheaders();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-    if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) return null;
-    $decoded = json_decode(base64_decode($m[1]), true);
-    return $decoded['tenant_id'] ?? null;
+function getAuthInfo() {
+    $token = getBearerToken();
+    if (!$token) return null;
+    return decodeJwt($token);
 }
 
 try {
+    $auth = getAuthInfo();
+    $isSuper = (int)($auth['is_superadmin'] ?? 0) === 1;
+
     // ─── GET actions ─────────────────────────────────────────────────────────
     if ($method === 'GET') {
         $action = $_GET['action'] ?? 'messages';
         $leadId = intval($_GET['leadId'] ?? 0);
         
-        // ── Auth Logic: Allow either Admin Token OR Widget API Key ──
-        $tenantId = getTenantId();
+        $tenantId = $auth['tenant_id'] ?? null;
         
         if (!$tenantId) {
-            // Check if it's a widget request
+            // Check if it's a widget request (API Key)
             $apiKey    = $_GET['apiKey']    ?? '';
-            $sessionId = $_GET['sessionId'] ?? '';
-            
-            if (!$apiKey || !$leadId) { http_response_code(401); exit; }
-            
-            // Validate that this lead belongs to this API Key
-            $stmt = $pdo->prepare("
-                SELECT l.tenant_id 
-                FROM leads l 
-                JOIN websites w ON l.website_id = w.id 
-                WHERE l.id = ? AND w.api_key = ?
-            ");
-            $stmt->execute([$leadId, $apiKey]);
-            $valid = $stmt->fetch();
-            if (!$valid) { http_response_code(401); exit; }
-            $tenantId = $valid['tenant_id'];
+            if ($apiKey && $leadId) {
+                $stmt = $pdo->prepare("SELECT l.tenant_id FROM leads l JOIN websites w ON l.website_id = w.id WHERE l.id = ? AND w.api_key = ?");
+                $stmt->execute([$leadId, $apiKey]);
+                $valid = $stmt->fetch();
+                if ($valid) $tenantId = $valid['tenant_id'];
+            }
         }
+
+        if (!$tenantId && !$isSuper) { http_response_code(401); exit(json_encode(["error"=>"Unauthorized"])); }
 
         // ── LIST VISITOR HISTORY (By Session ID) ──
         if ($action === 'list_visitor_history') {
@@ -92,10 +85,34 @@ try {
 
     // ─── POST actions ─────────────────────────────────────────────────────────
     if ($method === 'POST') {
-        $action   = $data['action']    ?? 'send';
-        $leadId   = intval($data['leadId']    ?? 0);
-        $agentId  = $data['agentId']   ?? null;
-        $agentName= trim($data['agentName']  ?? 'Agent');
+        $action   = $data['action']    ?? $_POST['action'] ?? 'send';
+        $leadId   = intval($data['leadId']    ?? $_POST['leadId'] ?? 0);
+        $agentId  = $data['agentId']   ?? $_POST['agentId'] ?? null;
+        $agentName= trim($data['agentName']  ?? $_POST['agentName'] ?? 'Agent');
+
+        // ── UPLOAD IMAGE ──
+        if ($action === 'upload') {
+            $sender  = $_POST['sender']  ?? 'agent';
+            
+            if (isset($_FILES['image'])) {
+                $dir = '../uploads/';
+                if (!is_dir($dir)) mkdir($dir, 0777, true);
+                
+                $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+                $name = 'chat_' . time() . '_' . rand(1000,9999) . '.' . $ext;
+                $path = $dir . $name;
+                
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $path)) {
+                    $url = 'api/uploads/' . $name;
+                    $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, image) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$leadId, $sender, 'Sent an image', $url]);
+                    echo json_encode(["status" => "success", "url" => $url]);
+                    exit;
+                }
+            }
+            echo json_encode(["error" => "Upload failed"]);
+            exit;
+        }
 
         // ── CLAIM ──
         if ($action === 'claim') {

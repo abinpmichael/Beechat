@@ -1,0 +1,26 @@
+{
+  "name": "beechat-testing",
+  "version": "1.0.0",
+  "description": "Automated testing system for Bee Chat SaaS platform",
+  "scripts": {
+    "test": "npm run test:api && npm run test:ui",
+    "test:api": "jest tests/api --detectOpenHandles --forceExit",
+    "test:ui": "npx playwright test && npx cypress run",
+    "test:socket": "jest tests/socket --detectOpenHandles --forceExit",
+    "test:security": "jest tests/security --detectOpenHandles --forceExit",
+    "test:load": "artillery run tests/load/load-test.yml",
+    "test:all": "npm run test:api && npm run test:ui && npm run test:security && npm run test:load && npm run test:socket",
+    "postman": "newman run tests/postman/BeeChat.postman_collection.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "artillery": "^2.0.9",
+    "axios": "^1.6.8",
+    "cypress": "^15.15.0",
+    "dotenv": "^16.4.5",
+    "jest": "^29.7.0",
+    "newman": "^6.1.2",
+    "socket.io-client": "^4.7.5",
+    "supertest": "^6.3.4"
+  }
+}

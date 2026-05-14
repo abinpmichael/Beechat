@@ -4,18 +4,144 @@ import { motion } from 'framer-motion';
 import { 
   Users, Crown, Calendar, Shield, Search, AlertTriangle, CheckCircle, 
   ChevronRight, Loader2, Filter, Globe, Trash2, Database, TrendingUp, 
-  CreditCard, Save, Plus 
+  CreditCard, Save, Plus, LayoutDashboard, MessageSquare
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
+import SupportChat from '../components/SupportChat';
+import { useAuth } from '../contexts/AuthContext';
+import TestingDashboard from './TestingDashboard';
+
+// --- ENHANCED TOP-VIEW BEE ---
+// --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
+const TopBee = ({ size = 40, animated = true }) => {
+  const [isWiggling, setIsWiggling] = useState(false);
+  
+  useEffect(() => {
+    if (!animated) return;
+    const interval = setInterval(() => {
+      if (Math.random() > 0.6) {
+        setIsWiggling(true);
+        setTimeout(() => setIsWiggling(false), 1200);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [animated]);
+
+  return (
+    <motion.svg 
+      width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      animate={animated ? { 
+        y: isWiggling ? [0, -12, 0] : [0, -4, 0],
+        rotate: isWiggling ? [0, 10, -10, 7, 0] : [0, 3, -3, 0],
+        scale: isWiggling ? [1, 1.1, 1] : [1, 1.02, 1],
+        filter: ["drop-shadow(0 0 0px rgba(251,191,36,0))", "drop-shadow(0 0 30px rgba(251,191,36,0.6))", "drop-shadow(0 0 0px rgba(251,191,36,0))"]
+      } : {}}
+      transition={{ duration: isWiggling ? 0.5 : 3.5, repeat: isWiggling ? 0 : Infinity, ease: "easeInOut" }}
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <filter id="megaKawaiiFuzzSA" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" />
+        </filter>
+        <linearGradient id="megaHoneySA" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFFBEB" /><stop offset="40%" stopColor="#FEF3C7" /><stop offset="80%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#92400E" />
+        </linearGradient>
+        <radialGradient id="kawaiiEyeSA" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#4B5563" /><stop offset="60%" stopColor="#111827" /><stop offset="100%" stopColor="#000000" />
+        </radialGradient>
+        <radialGradient id="deepBlushSA" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FF85A2" stopOpacity="0.8" /><stop offset="100%" stopColor="#FF85A2" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <motion.g animate={animated ? { rotate: [0, 45, 0], opacity: [0.4, 0.7, 0.4] } : {}} transition={{ duration: 0.04, repeat: Infinity }}>
+        <path d="M40 40C20 10 0 20 0 40C0 60 20 80 40 60C60 80 80 60 80 40C80 20 60 10 40 40Z" fill="#FDF2F8" fillOpacity="0.5" stroke="#FBCFE8" strokeWidth="1" transform="scale(0.5) translate(40, 20)" />
+      </motion.g>
+
+      <motion.g animate={animated ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }}>
+        <circle cx="75" cy="75" r="30" fill="url(#megaHoneySA)" filter="url(#megaKawaiiFuzzSA)" />
+        <path d="M85 55Q95 55 100 75L95 100Q85 105 75 100" fill="#1F2937" fillOpacity="0.9" />
+        <path d="M100 65Q110 70 115 80L108 95Q100 100 92 95" fill="#1F2937" fillOpacity="0.9" />
+        <circle cx="102" cy="75" r="2" fill="#000" />
+      </motion.g>
+
+      <motion.g animate={animated ? { rotate: isWiggling ? [-8, 8, -8] : [-2, 2] } : {}} transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}>
+        <circle cx="40" cy="60" r="35" fill="url(#megaHoneySA)" filter="url(#megaKawaiiFuzzSA)" />
+        <circle cx="40" cy="60" r="32" fill="url(#megaHoneySA)" fillOpacity="0.2" />
+        <circle cx="15" cy="70" r="10" fill="url(#deepBlushSA)" />
+        <circle cx="65" cy="70" r="10" fill="url(#deepBlushSA)" />
+        <g>
+          <circle cx="22" cy="55" r="16" fill="url(#kawaiiEyeSA)" />
+          <circle cx="16" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="28" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M10 55Q12 50 14 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+          <circle cx="58" cy="55" r="16" fill="url(#kawaiiEyeSA)" />
+          <circle cx="52" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="64" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M46 55Q48 50 50 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+        </g>
+        <path d="M36 75Q38 78 40 75Q42 78 44 75" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '40px', originY: '30px' }}>
+          <path d="M30 35Q25 10 15 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <path d="M50 35Q55 10 65 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity }} d="M15 15L17 13L15 11L13 13Z" fill="#FF85A2" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} d="M65 15L67 13L65 11L63 13Z" fill="#FF85A2" />
+        </motion.g>
+      </motion.g>
+
+      <motion.g 
+        animate={animated ? { rotateX: [0, -85, 0], scale: [1, 1.1, 1], opacity: [0.9, 0.5, 0.9] } : {}} 
+        transition={{ duration: 0.02, repeat: Infinity }}
+        style={{ originX: '50px', originY: '50px' }}
+      >
+        <path d="M50 50C70 10 130 10 130 50C130 90 70 130 50 110C30 130 -30 90 -30 50C-30 10 30 10 50 50Z" fill="#F0F9FF" fillOpacity="0.4" stroke="#BAE6FD" strokeWidth="1" transform="scale(0.6) translate(40, -20)" />
+      </motion.g>
+    </motion.svg>
+  );
+};
 
 export default function SuperAdmin() {
   const [tenants, setTenants] = useState([]);
   const [plans, setPlans] = useState([]);
   const [allKnowledge, setAllKnowledge] = useState([]);
-  const [platformSettings, setPlatformSettings] = useState({ stripe_publishable_key: '', stripe_secret_key: '', stripe_webhook_secret: '', platform_name: 'Bee Chat', platform_currency: 'USD' });
+  const [platformSettings, setPlatformSettings] = useState({ 
+    stripe_publishable_key: '', 
+    stripe_secret_key: '', 
+    stripe_webhook_secret: '', 
+    platform_name: 'Bee Chat', 
+    platform_currency: 'USD',
+    seo_title: '',
+    seo_description: '',
+    seo_keywords: '',
+    gtm_id: '',
+    enable_registration: 1,
+    enable_ai_bot: 1,
+    enable_live_chat: 1,
+    enable_ticketing: 1,
+    enable_billing: 1,
+    landing_page_active: 1,
+    support_email: '',
+    support_phone: '',
+    support_whatsapp: '',
+    help_center_url: '',
+    openai_api_key: '',
+    smtp_host: '',
+    smtp_port: '',
+    smtp_user: '',
+    smtp_pass: '',
+    smtp_from_email: '',
+    smtp_from_name: ''
+  });
   const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [] });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tenants');
+  const [emailTemplates, setEmailTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateEditData, setTemplateEditData] = useState({ subject: '', body: '' });
+  const [supportConvs, setSupportConvs] = useState([]);
+  const [activeSupportTenant, setActiveSupportTenant] = useState(null);
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -32,18 +158,39 @@ export default function SuperAdmin() {
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const [tRes, pRes, sRes, kRes, rRes] = await Promise.all([
+      const [tRes, pRes, sRes, kRes, rRes, eRes] = await Promise.all([
         axios.get(`${API_URL}?action=list_tenants`, { headers }),
         axios.get(`${API_URL}?action=get_plans`, { headers }),
         axios.get(`${API_URL}?action=get_platform_settings`, { headers }),
         axios.get(`${API_URL}?action=list_all_knowledge`, { headers }),
-        axios.get(`${API_URL}?action=get_revenue_stats`, { headers })
+        axios.get(`${API_URL}?action=get_revenue_stats`, { headers }),
+        axios.get(`${API_URL}?action=list_email_templates`, { headers })
       ]);
-      setTenants(tRes.data);
-      setPlans(pRes.data.map(p => ({...p, features: JSON.parse(p.features || '[]')})));
-      setPlatformSettings(sRes.data);
-      setAllKnowledge(kRes.data);
-      setRevenue(rRes.data);
+      setTenants(Array.isArray(tRes.data) ? tRes.data : []);
+      setPlans((Array.isArray(pRes.data) ? pRes.data : []).map(p => {
+        let feats = [];
+        try { feats = typeof p.features === 'string' ? JSON.parse(p.features || '[]') : (p.features || []); } catch(e) {}
+        return {...p, features: feats};
+      }));
+      setPlatformSettings(prev => ({ 
+        ...prev, 
+        ...(sRes.data || {}),
+        enable_registration: parseInt(sRes.data?.enable_registration ?? 1),
+        enable_ai_bot: parseInt(sRes.data?.enable_ai_bot ?? 1),
+        enable_live_chat: parseInt(sRes.data?.enable_live_chat ?? 1),
+        enable_ticketing: parseInt(sRes.data?.enable_ticketing ?? 1),
+        enable_billing: parseInt(sRes.data?.enable_billing ?? 1),
+        landing_page_active: parseInt(sRes.data?.landing_page_active ?? 1)
+      }));
+      setAllKnowledge(Array.isArray(kRes.data) ? kRes.data : []);
+      setRevenue({
+        total_revenue: rRes.data?.total_revenue || 0,
+        monthly_stats: Array.isArray(rRes.data?.monthly_stats) ? rRes.data.monthly_stats : []
+      });
+      setEmailTemplates(Array.isArray(eRes.data) ? eRes.data : []);
+      
+      const supRes = await axios.get(`${API_BASE_URL}/support.php?action=list_conversations`, { headers });
+      setSupportConvs(supRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -51,10 +198,29 @@ export default function SuperAdmin() {
     }
   };
 
+  const handleUpdateTemplate = async (e) => {
+    e.preventDefault();
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.post(API_URL, {
+        action: 'update_email_template',
+        ...templateEditData
+      }, { headers });
+      setSelectedTemplate(null);
+      fetchData();
+      alert("Template updated successfully!");
+    } catch (err) {
+      alert("Error updating template");
+    }
+  };
+
   const handleSavePlatformSettings = async () => {
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      await axios.post(`${API_URL}?action=update_platform_settings`, { settings: platformSettings }, { headers });
+      await axios.post(API_URL, { 
+        action: 'update_platform_settings',
+        settings: platformSettings 
+      }, { headers });
       alert('Global settings saved successfully!');
       fetchData();
     } catch (err) {
@@ -130,29 +296,34 @@ export default function SuperAdmin() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+      <Loader2 className="w-12 h-12 text-amber-500 animate-spin" />
     </div>
   );
 
   return (
-    <div className="space-y-10 pb-20">
+    <div className="space-y-10 pb-20 selection:bg-amber-100 selection:text-amber-600">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <button onClick={() => window.location.href = '/dashboard'} className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all">
-              ← Back to User Dashboard
-            </button>
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-50">
+             <TopBee size={40} />
           </div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Super Admin</h2>
-          <p className="text-slate-500 font-medium mt-1">Manage all tenants and subscription plans system-wide.</p>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <button onClick={() => window.location.href = '/dashboard'} className="text-[10px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all">
+                ← Back to User Dashboard
+              </button>
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Super Admin <span className="text-amber-500">Hive</span></h2>
+            <p className="text-slate-500 font-medium mt-1 text-sm">Manage all tenants and subscription plans system-wide.</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input 
               type="text" placeholder="Search companies..."
-              className="pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl w-full md:w-80 font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm"
+              className="pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl w-full md:w-80 font-bold outline-none focus:ring-4 focus:ring-amber-50 transition-all shadow-sm"
               value={search} onChange={(e) => setSearch(e.target.value)}
             />
           </div>
@@ -162,7 +333,7 @@ export default function SuperAdmin() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass p-8 rounded-[2.5rem] border border-white shadow-xl">
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4"><Globe className="w-6 h-6" /></div>
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4"><Globe className="w-6 h-6" /></div>
           <h3 className="text-3xl font-black text-slate-900">{tenants.length}</h3>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Total Tenants</p>
         </div>
@@ -185,13 +356,17 @@ export default function SuperAdmin() {
           { id: 'plans', name: 'Subscription Plans' },
           { id: 'ai', name: 'AI Training Oversight' },
           { id: 'revenue', name: 'Financial Insights' },
-          { id: 'settings', name: 'Gateway & Settings' }
+          { id: 'settings', name: 'Gateway & Settings' },
+          { id: 'emails', name: 'Email Center' },
+          { id: 'testing', name: 'Automated Testing' },
+          { id: 'support', name: 'Support Chats' }
         ].map(tab => (
           <button 
             key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-indigo-600'}`}
+            className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-amber-600'} ${tab.id === 'support' ? 'flex items-center gap-2' : ''}`}
           >
             {tab.name}
+            {tab.id === 'support' && supportConvs.length > 0 && <span className="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full">{supportConvs.length}</span>}
           </button>
         ))}
       </div>
@@ -221,7 +396,7 @@ export default function SuperAdmin() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${tenant.plan_name === 'Enterprise' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-500'}`}>{tenant.plan_name}</span>
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${tenant.plan_name === 'Enterprise' ? 'bg-amber-500 text-white shadow-lg shadow-amber-100' : 'bg-slate-100 text-slate-500'}`}>{tenant.plan_name}</span>
                     {tenant.expires_at && <p className="text-[10px] text-slate-400 mt-2 font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> Expires: {new Date(tenant.expires_at).toLocaleDateString()}</p>}
                   </td>
                   <td className="px-8 py-6">
@@ -231,7 +406,7 @@ export default function SuperAdmin() {
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <button onClick={() => { setSelectedTenant(tenant); setEditData({ plan_id: tenant.plan_id || 1, expires_at: tenant.expires_at ? tenant.expires_at.split(' ')[0] : '', is_active: tenant.is_active }); }} className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                    <button onClick={() => { setSelectedTenant(tenant); setEditData({ plan_id: tenant.plan_id || 1, expires_at: tenant.expires_at ? tenant.expires_at.split(' ')[0] : '', is_active: tenant.is_active }); }} className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm">
                       <Shield className="w-5 h-5" />
                     </button>
                   </td>
@@ -246,14 +421,41 @@ export default function SuperAdmin() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-black text-slate-900">Platform-Wide AI Training</h3>
-            <span className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black">{allKnowledge.length} Total Items</span>
+            <span className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-xs font-black">{allKnowledge.length} Total Items</span>
           </div>
+
+          <div className="glass p-10 rounded-[3rem] border border-white shadow-xl bg-slate-950 text-white relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-10"><Database className="w-32 h-32" /></div>
+             <h4 className="text-xl font-black mb-2 uppercase tracking-tighter">Inject Global Hive Memory</h4>
+             <p className="text-slate-400 text-xs font-medium mb-8 max-w-md">Items added here will be available to EVERY AI bot on the platform, regardless of tenant. Use this for general platform help or global FAQs.</p>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Knowledge Title</label>
+                   <input className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold text-white" placeholder="e.g. How to use Bee Chat" value={newKItem.title} onChange={e => setNewKItem({...newKItem, title: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Content / Instruction</label>
+                   <textarea className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold text-white" rows="1" placeholder="Detailed answer or behavior instructions..." value={newKItem.content} onChange={e => setNewKItem({...newKItem, content: e.target.value})} />
+                </div>
+             </div>
+             <button onClick={async () => {
+                if (!newKItem.title || !newKItem.content) return alert("Please fill both title and content");
+                try {
+                   await axios.post(API_URL, { action: 'add_global_knowledge', ...newKItem }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+                   setNewKItem({ title: '', content: '' });
+                   fetchData();
+                   alert("Global knowledge injected successfully!");
+                } catch (err) { alert("Error injecting knowledge"); }
+             }} className="mt-8 px-10 py-4 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all">Inject Memory Cell</button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {allKnowledge.map((item) => (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={item.id} className="glass p-8 rounded-[2.5rem] border border-white shadow-xl transition-all">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest">{item.tenant_name}</div>
-                  <div className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg text-[9px] font-black uppercase tracking-widest">{item.domain}</div>
+                  <div className="px-3 py-1 bg-amber-100 text-amber-600 rounded-lg text-[9px] font-black uppercase tracking-widest">{item.domain}</div>
                 </div>
                 <h4 className="font-black text-slate-900 mb-2">{item.title}</h4>
                 <p className="text-sm text-slate-500 font-medium line-clamp-3 leading-relaxed">{item.content}</p>
@@ -270,33 +472,33 @@ export default function SuperAdmin() {
       {activeTab === 'revenue' && (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             <div className="premium-gradient p-10 rounded-[3.5rem] text-white shadow-2xl shadow-indigo-100 relative overflow-hidden group">
-               <TrendingUp className="absolute -bottom-4 -right-4 w-40 h-40 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-700" />
-               <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-2">Total Revenue</p>
-               <h3 className="text-6xl font-black tracking-tighter">${Number(revenue.total_revenue).toLocaleString()}</h3>
-             </div>
-             <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-xl relative overflow-hidden group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Average Monthly</p>
-                <h3 className="text-5xl font-black text-slate-900 tracking-tighter">${revenue.monthly_stats.length > 0 ? (Number(revenue.total_revenue) / revenue.monthly_stats.length).toFixed(0) : 0}</h3>
-             </div>
-             <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-xl relative overflow-hidden group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Active Tenants</p>
-                <h3 className="text-5xl font-black text-slate-900 tracking-tighter">{tenants.filter(t => t.is_active).length}</h3>
-             </div>
+              <div className="bg-amber-500 p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl shadow-amber-100 relative overflow-hidden group">
+                <TrendingUp className="absolute -bottom-4 -right-4 w-32 h-32 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-700" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-2">Total Revenue</p>
+                <h3 className="text-4xl md:text-5xl font-black tracking-tighter">${Number(revenue.total_revenue).toLocaleString()}</h3>
+              </div>
+              <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-xl relative overflow-hidden group">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Average Monthly</p>
+                 <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">${revenue.monthly_stats.length > 0 ? (Number(revenue.total_revenue) / revenue.monthly_stats.length).toFixed(0) : 0}</h3>
+              </div>
+              <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-xl relative overflow-hidden group">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Active Tenants</p>
+                 <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">{tenants.filter(t => t.is_active).length}</h3>
+              </div>
            </div>
-           <div className="glass p-12 rounded-[4rem]">
-              <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-8 text-center">Monthly Breakdown</h3>
+           <div className="glass p-8 md:p-12 rounded-[3rem]">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-6 md:mb-8 text-center">Monthly Breakdown</h3>
               <div className="space-y-4">
                  {revenue.monthly_stats.map((stat, i) => (
                    <div key={i} className="flex items-center justify-between p-6 bg-slate-50/50 rounded-3xl border border-slate-50 hover:bg-white hover:shadow-xl transition-all group">
                       <div className="flex items-center gap-6">
-                         <div className="w-16 h-16 bg-white rounded-[1.5rem] shadow-sm flex flex-col items-center justify-center border border-slate-100 group-hover:border-indigo-100 transition-colors">
+                         <div className="w-16 h-16 bg-white rounded-[1.5rem] shadow-sm flex flex-col items-center justify-center border border-slate-100 group-hover:border-amber-100 transition-colors">
                             <span className="text-[10px] font-black text-slate-400 uppercase leading-none">{new Date(0, stat.month - 1).toLocaleString('default', { month: 'short' })}</span>
                             <span className="text-xl font-black text-slate-900 leading-none mt-1">{stat.year}</span>
                          </div>
                          <p className="text-lg font-black text-slate-900">Total Monthly Settlements</p>
                       </div>
-                      <p className="text-3xl font-black text-indigo-600 tracking-tighter">${Number(stat.total).toLocaleString()}</p>
+                      <p className="text-3xl font-black text-amber-500 tracking-tighter">${Number(stat.total).toLocaleString()}</p>
                    </div>
                  ))}
               </div>
@@ -307,7 +509,7 @@ export default function SuperAdmin() {
       {activeTab === 'plans' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex justify-end">
-            <button onClick={() => { setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] }); setIsCreatingPlan(true); }} className="premium-gradient text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-3">
+            <button onClick={() => { setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] }); setIsCreatingPlan(true); }} className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3">
               <Plus className="w-5 h-5" /> Add New Tier
             </button>
           </div>
@@ -315,7 +517,7 @@ export default function SuperAdmin() {
             {plans.map((p) => (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} key={p.id} className="glass p-10 rounded-[3rem] border-2 border-white shadow-xl relative overflow-hidden group">
                 <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
-                  <button onClick={() => { setSelectedPlan(p); setPlanEditData({...p}); }} className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg hover:scale-110 transition-all"><Shield className="w-5 h-5" /></button>
+                  <button onClick={() => { setSelectedPlan(p); setPlanEditData({...p}); }} className="p-3 bg-amber-500 text-white rounded-2xl shadow-lg hover:scale-110 transition-all"><Shield className="w-5 h-5" /></button>
                 </div>
                 <h4 className="text-xl font-black text-slate-900">{p.name}</h4>
                 <div className="mt-4 flex items-baseline gap-1">
@@ -323,8 +525,8 @@ export default function SuperAdmin() {
                   <span className="text-slate-400 font-bold text-sm">/mo</span>
                 </div>
                 <div className="mt-8 space-y-3">
-                  <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Websites</span><span className="text-indigo-600">{p.max_websites}</span></div>
-                  <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Support Agents</span><span className="text-indigo-600">{p.max_agents}</span></div>
+                  <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Websites</span><span className="text-amber-500">{p.max_websites}</span></div>
+                  <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Support Agents</span><span className="text-amber-500">{p.max_agents}</span></div>
                   <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>AI Auto-Reply</span><span className={p.ai_enabled ? 'text-emerald-500' : 'text-slate-300'}>{p.ai_enabled ? 'ON' : 'OFF'}</span></div>
                 </div>
               </motion.div>
@@ -338,7 +540,7 @@ export default function SuperAdmin() {
           <div className="glass p-10 rounded-[3rem] border border-white shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                <Shield className="w-6 h-6 text-indigo-600" /> Payment & Demo Mode
+                <Shield className="w-6 h-6 text-amber-500" /> Payment & Demo Mode
               </h3>
               <div 
                 onClick={() => setPlatformSettings({...platformSettings, is_testing_mode: platformSettings.is_testing_mode ? 0 : 1})}
@@ -354,7 +556,7 @@ export default function SuperAdmin() {
               When <strong>Testing Mode</strong> is enabled, all payments are simulated and no real money is charged. Disable this only when you are ready to use your real Stripe API keys.
             </p>
             
-            <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3"><CreditCard className="w-6 h-6 text-indigo-600" /> Stripe Integration</h3>
+            <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3"><CreditCard className="w-6 h-6 text-amber-500" /> Stripe Integration</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Publishable Key</label>
@@ -371,21 +573,254 @@ export default function SuperAdmin() {
             </div>
 
             <h3 className="text-xl font-black text-slate-900 mt-10 mb-6 flex items-center gap-3">
-              <Users className="w-6 h-6 text-indigo-600" /> Google Authentication
+              <Users className="w-6 h-6 text-amber-500" /> Google Authentication
             </h3>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Google Client ID</label>
               <input 
                 type="text" 
                 className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" 
-                value={platformSettings.google_client_id} 
+                value={platformSettings.google_client_id || ''} 
                 onChange={(e) => setPlatformSettings({...platformSettings, google_client_id: e.target.value})}
                 placeholder="000000000000-xxxx.apps.googleusercontent.com"
               />
             </div>
+
+            <h3 className="text-xl font-black text-slate-900 mt-10 mb-6 flex items-center gap-3">
+              <Globe className="w-6 h-6 text-amber-500" /> OpenAI GPT Integration
+            </h3>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">OpenAI API Key</label>
+              <input 
+                type="password" 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" 
+                value={platformSettings.openai_api_key || ''} 
+                onChange={(e) => setPlatformSettings({...platformSettings, openai_api_key: e.target.value})}
+                placeholder="sk-..."
+              />
+            </div>
+
+            <h3 className="text-xl font-black text-slate-900 mt-10 mb-6 flex items-center gap-3">
+              <MessageSquare className="w-6 h-6 text-amber-500" /> SMTP Email Configuration
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SMTP Host</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_host || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_host: e.target.value})} placeholder="smtp.example.com" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SMTP Port</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_port || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_port: e.target.value})} placeholder="587" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_user || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_user: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SMTP Password</label>
+                <input type="password" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_pass || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_pass: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">From Email</label>
+                <input type="email" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_from_email || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_from_email: e.target.value})} placeholder="noreply@domain.com" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">From Name</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.smtp_from_name || ''} onChange={(e) => setPlatformSettings({...platformSettings, smtp_from_name: e.target.value})} placeholder="Bee Chat" />
+              </div>
+            </div>
+
+            <h3 className="text-xl font-black text-slate-900 mt-10 mb-6 flex items-center gap-3">
+              <MessageSquare className="w-6 h-6 text-amber-500" /> Platform Contact & Support
+            </h3>
+            <p className="text-sm text-slate-500 font-medium mb-6 leading-relaxed">
+              These details are shown on the landing page, help center, and customer dashboards.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Support Email</label>
+                <input type="email" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.support_email} onChange={(e) => setPlatformSettings({...platformSettings, support_email: e.target.value})} placeholder="support@beechat.com" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Support Phone</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.support_phone} onChange={(e) => setPlatformSettings({...platformSettings, support_phone: e.target.value})} placeholder="+1 (555) 000-0000" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp / Chat Link</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.support_whatsapp} onChange={(e) => setPlatformSettings({...platformSettings, support_whatsapp: e.target.value})} placeholder="https://wa.me/..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Help Center URL</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.help_center_url} onChange={(e) => setPlatformSettings({...platformSettings, help_center_url: e.target.value})} placeholder="https://help.beechat.com" />
+              </div>
+            </div>
           </div>
+
+          <div className="glass p-10 rounded-[3rem] border border-white shadow-xl">
+            <h3 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
+              <Database className="w-6 h-6 text-amber-500" /> System Feature Controls
+            </h3>
+            <p className="text-sm text-slate-500 font-medium mb-8 leading-relaxed">
+              Enable or disable core system functions globally. These settings affect all tenants and visitors.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { key: 'enable_registration', label: 'User Registration', desc: 'Allow new companies to sign up' },
+                { key: 'enable_ai_bot', label: 'AI Support Bot', desc: 'Enable automated AI responses' },
+                { key: 'enable_live_chat', label: 'Live Agent Chat', desc: 'Allow real-time human support' },
+                { key: 'enable_ticketing', label: 'Ticket System', desc: 'Enable offline support tickets' },
+                { key: 'enable_billing', label: 'Subscription Billing', desc: 'Enable Stripe checkout & plans' },
+                { key: 'landing_page_active', label: 'Marketing Home Page', desc: 'Show landing page instead of login' },
+              ].map(feature => (
+                <div key={feature.key} className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div>
+                    <h4 className="font-black text-slate-900">{feature.label}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{feature.desc}</p>
+                  </div>
+                  <div 
+                    onClick={() => setPlatformSettings({...platformSettings, [feature.key]: platformSettings[feature.key] ? 0 : 1})} 
+                    className={`w-14 h-8 rounded-full relative p-1 cursor-pointer transition-all ${platformSettings[feature.key] ? 'bg-amber-500' : 'bg-slate-200'}`}
+                  >
+                    <motion.div animate={{ x: platformSettings[feature.key] ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> SEO Meta Title</label>
+              <input 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+                value={platformSettings.seo_title} 
+                onChange={(e) => setPlatformSettings({...platformSettings, seo_title: e.target.value})}
+                placeholder="Bee Chat | AI-Powered Customer Support"
+              />
+            </div>
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Search className="w-3.5 h-3.5" /> GTM Container ID</label>
+              <input 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+                value={platformSettings.gtm_id} 
+                onChange={(e) => setPlatformSettings({...platformSettings, gtm_id: e.target.value})}
+                placeholder="GTM-XXXXXXX"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><LayoutDashboard className="w-3.5 h-3.5" /> SEO Meta Description</label>
+            <textarea 
+              rows="3"
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+              value={platformSettings.seo_description} 
+              onChange={(e) => setPlatformSettings({...platformSettings, seo_description: e.target.value})}
+              placeholder="Describe your platform for search engines..."
+            />
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5" /> SEO Keywords</label>
+            <input 
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+              value={platformSettings.seo_keywords} 
+              onChange={(e) => setPlatformSettings({...platformSettings, seo_keywords: e.target.value})}
+              placeholder="AI Chat, Live Support, Customer Engagement, SaaS"
+            />
+          </div>
+
           <div className="flex justify-end">
-            <button onClick={handleSavePlatformSettings} className="premium-gradient text-white px-12 py-5 rounded-2xl font-black shadow-xl shadow-indigo-100 flex items-center gap-3"><Save className="w-5 h-5" /> Save Global Settings</button>
+            <button onClick={handleSavePlatformSettings} className="bg-amber-500 text-white px-12 py-5 rounded-2xl font-black shadow-xl shadow-amber-100 flex items-center gap-3"><Save className="w-5 h-5" /> Save Global Settings</button>
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'emails' && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black text-slate-900">System Email Templates</h3>
+            <p className="text-sm text-slate-500 font-medium">Use <code>{`{{placeholder}}`}</code> to inject dynamic data.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {emailTemplates.map(tpl => (
+              <motion.div key={tpl.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass p-8 rounded-[2.5rem] border border-white shadow-xl group">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{tpl.name}</div>
+                  <button onClick={() => { setSelectedTemplate(tpl); setTemplateEditData({...tpl}); }} className="p-3 bg-slate-900 text-white rounded-xl hover:bg-amber-500 transition-all shadow-lg opacity-0 group-hover:opacity-100"><Shield className="w-4 h-4" /></button>
+                </div>
+                <h4 className="font-black text-slate-900 text-lg mb-2">{tpl.subject}</h4>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 max-h-40 overflow-y-auto">
+                   <div className="text-xs text-slate-500 font-medium whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: tpl.body }} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'testing' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4">
+          <TestingDashboard />
+        </div>
+      )}
+
+      {activeTab === 'support' && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 space-y-4">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Open <span className="text-amber-600">Tickets</span></h3>
+              {supportConvs.length === 0 ? (
+                <div className="p-10 bg-white rounded-[2.5rem] text-center border border-slate-100">
+                  <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                  <p className="text-slate-400 font-bold text-sm italic">No active support requests</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {supportConvs.map(conv => (
+                    <button 
+                      key={conv.id} 
+                      onClick={() => setActiveSupportTenant(conv.tenant_id)}
+                      className={`w-full p-6 rounded-[2rem] border transition-all text-left flex items-center gap-4 ${
+                        activeSupportTenant === conv.tenant_id ? 'bg-amber-600 border-amber-600 text-white shadow-xl shadow-amber-100' : 'bg-white border-slate-100 text-slate-600 hover:border-amber-200'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${
+                        activeSupportTenant === conv.tenant_id ? 'bg-white/20' : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        {conv.company_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="font-black text-sm truncate">{conv.company_name}</p>
+                        <p className={`text-[10px] font-bold truncate opacity-60`}>
+                          {conv.last_message || 'No messages yet'}
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 ${activeSupportTenant === conv.tenant_id ? 'opacity-100' : 'opacity-20'}`} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="lg:col-span-2">
+              {activeSupportTenant ? (
+                <SupportChat 
+                  user={user} 
+                  targetTenantId={activeSupportTenant} 
+                  onClose={() => setActiveSupportTenant(null)} 
+                />
+              ) : (
+                <div className="h-full min-h-[500px] glass rounded-[3.5rem] flex flex-col items-center justify-center text-center p-12 border-dashed border-2 border-slate-200">
+                  <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-[2rem] flex items-center justify-center mb-6">
+                    <MessageSquare className="w-10 h-10" />
+                  </div>
+                  <h4 className="text-2xl font-black text-slate-900 mb-2">Select a Conversation</h4>
+                  <p className="text-slate-500 font-medium max-w-sm mx-auto">Choose a tenant from the list to start a real-time support session and assist them with their platform needs.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -403,9 +838,9 @@ export default function SuperAdmin() {
               <input type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editData.expires_at} onChange={(e) => setEditData({...editData, expires_at: e.target.value})} />
               <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
                 <span className="font-black">Account Active</span>
-                <div onClick={() => setEditData({...editData, is_active: editData.is_active ? 0 : 1})} className={`w-14 h-8 rounded-full relative p-1 cursor-pointer transition-all ${editData.is_active ? 'bg-indigo-600' : 'bg-slate-200'}`}><motion.div animate={{ x: editData.is_active ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" /></div>
+                <div onClick={() => setEditData({...editData, is_active: editData.is_active ? 0 : 1})} className={`w-14 h-8 rounded-full relative p-1 cursor-pointer transition-all ${editData.is_active ? 'bg-amber-500' : 'bg-slate-200'}`}><motion.div animate={{ x: editData.is_active ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" /></div>
               </div>
-              <button type="submit" className="w-full premium-gradient text-white font-black py-4 rounded-2xl shadow-xl">Save Changes</button>
+              <button type="submit" className="w-full bg-amber-500 text-white font-black py-4 rounded-2xl shadow-xl">Save Changes</button>
             </form>
           </motion.div>
         </div>
@@ -427,7 +862,27 @@ export default function SuperAdmin() {
                 <div onClick={() => setPlanEditData({...planEditData, ai_enabled: !planEditData.ai_enabled})} className={`w-full px-6 py-4 rounded-2xl font-black text-center cursor-pointer transition-all ${planEditData.ai_enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>{planEditData.ai_enabled ? 'AI ENABLED' : 'AI DISABLED'}</div>
               </div>
               <textarea rows="3" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="Features (one per line)" value={planEditData.features.join('\n')} onChange={(e) => setPlanEditData({...planEditData, features: e.target.value.split('\n')})} />
-              <button type="submit" className="w-full premium-gradient text-white font-black py-4 rounded-2xl shadow-xl">{isCreatingPlan ? 'Create Plan' : 'Save Changes'}</button>
+              <button type="submit" className="w-full bg-amber-500 text-white font-black py-4 rounded-2xl shadow-xl">{isCreatingPlan ? 'Create Plan' : 'Save Changes'}</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {selectedTemplate && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedTemplate(null)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-2xl bg-white rounded-[3rem] p-10 shadow-2xl border border-white">
+            <h3 className="text-3xl font-black text-slate-900 mb-8 text-center uppercase tracking-tight">Edit Template: <span className="text-amber-500">{selectedTemplate.name}</span></h3>
+            <form onSubmit={handleUpdateTemplate} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Subject</label>
+                <input type="text" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={templateEditData.subject} onChange={(e) => setTemplateEditData({...templateEditData, subject: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">HTML Body Content</label>
+                <textarea rows="10" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs leading-relaxed" value={templateEditData.body} onChange={(e) => setTemplateEditData({...templateEditData, body: e.target.value})} />
+              </div>
+              <button type="submit" className="w-full bg-amber-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-amber-100 hover:bg-slate-900 transition-all uppercase tracking-widest">Save Template Changes</button>
             </form>
           </motion.div>
         </div>

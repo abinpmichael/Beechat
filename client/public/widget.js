@@ -19,8 +19,8 @@
 
     // ── Styles: start as just the bubble size ──────────────────────────
     iframe.style.position        = 'fixed';
-    iframe.style.bottom          = '10px';
-    iframe.style.right           = '10px';
+    iframe.style.bottom          = '20px';
+    iframe.style.right           = '20px';
     iframe.style.border          = 'none';
     iframe.style.zIndex          = '2147483647';
     iframe.style.colorScheme     = 'light';
@@ -30,9 +30,9 @@
     iframe.setAttribute('allowTransparency', 'true');
     iframe.setAttribute('allow', 'autoplay');
 
-    // Start small — only the bubble (100x100 to allow for shadows)
-    iframe.style.width  = '100px';
-    iframe.style.height = '100px';
+    // Start small — only the bubble (80x80)
+    iframe.style.width  = '85px';
+    iframe.style.height = '85px';
 
     document.body.appendChild(iframe);
 
@@ -46,18 +46,19 @@
         if (data.type === 'open') {
             var isMobile = window.innerWidth < 480;
             iframe.style.width  = isMobile ? '100%' : '420px';
-            iframe.style.height = isMobile ? '100%' : '700px';
+            iframe.style.height = isMobile ? '100%' : '720px'; // Slightly taller for better spacing
             if (isMobile) {
                 iframe.style.bottom = '0';
                 iframe.style.right  = '0';
+                iframe.style.borderRadius = '0';
             }
         }
 
         if (data.type === 'close') {
-            iframe.style.width  = '100px';
-            iframe.style.height = '100px';
-            iframe.style.bottom = '10px';
-            iframe.style.right  = '10px';
+            iframe.style.width  = '85px';
+            iframe.style.height = '85px';
+            iframe.style.bottom = '20px';
+            iframe.style.right  = '20px';
         }
     });
 })();

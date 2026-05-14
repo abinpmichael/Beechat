@@ -11,21 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-    http_response_code(401);
-    echo json_encode(["message" => "Unauthorized"]);
-    exit;
-}
-
-$token = $matches[1];
-$decoded = json_decode(base64_decode($token), true);
+$headers = getAuthHeaders();
+$decoded = decodeJwt($headers);
 
 if (!$decoded || !isset($decoded['id'])) {
     http_response_code(401);
-    echo json_encode(["message" => "Invalid token"]);
+    echo json_encode(["message" => "Unauthorized: Invalid or missing token"]);
     exit;
 }
 

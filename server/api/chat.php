@@ -45,6 +45,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
             $isOpen = ($now >= $open && $now <= $close);
             
             $res['is_open'] = $isOpen;
+
+            // GLOBAL SETTINGS
+            $gStmt = $pdo->query("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key IN ('enable_live_chat', 'enable_ai_bot', 'enable_ticketing')");
+            foreach ($gStmt->fetchAll() as $row) {
+                $res[$row['setting_key']] = (int)$row['setting_value'];
+            }
+
             echo json_encode($res);
         }
     } catch (Exception $e) {
@@ -89,12 +96,27 @@ try {
         $pdo->prepare("INSERT INTO messages (lead_id,sender_type,content) VALUES (?,?,?)")
             ->execute([$leadId, 'visitor', $message]);
         
-        // --- AI & AUTOMATION INTEGRATION ---
-        $stmt = $pdo->prepare("SELECT ai_auto_reply FROM tenant_settings WHERE tenant_id = ?");
+        // --- AI & AUTOMATION INTEGRATION (CognitioIT Rules) ---
+        $stmt = $pdo->prepare("SELECT ai_auto_reply, ai_offline_only FROM tenant_settings WHERE tenant_id = ?");
         $stmt->execute([$website['tenant_id']]);
         $settings = $stmt->fetch();
 
-        if ($settings && $settings['ai_auto_reply'] == 1) {
+        // Check if ANY agent is online (last_seen_at < 60s ago)
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE tenant_id = ? AND last_seen_at > (NOW() - INTERVAL 1 MINUTE)");
+        $stmt->execute([$website['tenant_id']]);
+        $agentsOnline = $stmt->fetchColumn() > 0;
+
+        // Check GLOBAL AI toggle first
+        $globalAi = $pdo->query("SELECT setting_value FROM platform_settings WHERE setting_key = 'enable_ai_bot'")->fetchColumn();
+
+        $shouldTriggerAI = ($globalAi == '1' && $settings && $settings['ai_auto_reply'] == 1);
+        
+        // Apply "Offline Only" rule: If agents are online and "offline only" is active, skip AI.
+        if ($shouldTriggerAI && $agentsOnline && ($settings['ai_offline_only'] ?? 1) == 1) {
+            $shouldTriggerAI = false;
+        }
+
+        if ($shouldTriggerAI) {
             require_once 'ai_engine.php';
             $ai = new AIEngine($pdo);
             $aiResponse = $ai->getResponse($website['tenant_id'], $website['id'], $message);
@@ -107,7 +129,8 @@ try {
                     "sender_type" => "bot", 
                     "content" => $aiResponse, 
                     "lead_id" => $leadId,
-                    "created_at" => date('Y-m-d H:i:s')
+                    "created_at" => date('Y-m-d H:i:s'),
+                    "ai_mode" => true
                 ]);
                 exit;
             }

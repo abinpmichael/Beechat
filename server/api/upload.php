@@ -12,12 +12,11 @@ if (!isset($_FILES['file'])) {
     http_response_code(400); echo json_encode(["error" => "No file uploaded"]); exit;
 }
 
-$file = $_FILES['file'];
-$ext  = pathinfo($file['name'], PATHINFO_EXTENSION);
-$allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+$ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+$allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'xlsx', 'txt', 'zip', 'csv'];
 
-if (!in_array(strtolower($ext), $allowed)) {
-    http_response_code(400); echo json_encode(["error" => "Invalid file type"]); exit;
+if (!in_array($ext, $allowed)) {
+    http_response_code(400); echo json_encode(["error" => "Invalid file type: $ext"]); exit;
 }
 
 // Ensure uploads directory exists

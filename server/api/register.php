@@ -2,6 +2,15 @@
 // server/api/register.php
 require_once 'config.php';
 
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit;
+}
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data) {
@@ -42,6 +51,17 @@ try {
     $stmt->execute([$tenantId]);
 
     $pdo->commit();
+
+    // 4. Queue Welcome Email
+    try {
+        require_once 'mail_service.php';
+        $mail = new MailService($pdo);
+        $mail->queue($email, 'welcome_admin', [
+            'name' => $name,
+            'company' => $companyName,
+            'login_url' => 'http://localhost:5173/login'
+        ]);
+    } catch (Exception $e) { /* Silent fail for email queueing in registration */ }
 
     // Simple token (in production use JWT)
     $token = base64_encode(json_encode([

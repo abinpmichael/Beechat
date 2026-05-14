@@ -1,0 +1,13 @@
+{
+  "users": [
+    { "email": "admin@beechat.com", "password": "password123", "role": "superadmin" },
+    { "email": "agent@beechat.com", "password": "password123", "role": "agent" }
+  ],
+  "tickets": [
+    { "subject": "Login Issue", "description": "Cannot login to dashboard", "status": "open", "priority": "high" },
+    { "subject": "Billing", "description": "Update my credit card", "status": "resolved", "priority": "medium" }
+  ],
+  "chats": [
+    { "visitor_name": "John Doe", "visitor_email": "john@example.com", "status": "active" }
+  ]
+}

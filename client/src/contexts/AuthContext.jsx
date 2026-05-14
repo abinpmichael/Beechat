@@ -18,6 +18,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Agent Heartbeat
+  useEffect(() => {
+    if (!user) return;
+    
+    const sendHeartbeat = () => {
+      axios.get(`${API_BASE_URL}/agent_heartbeat.php`).catch(() => {});
+    };
+
+    sendHeartbeat(); // Initial
+    const interval = setInterval(sendHeartbeat, 30000); // Every 30s
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/me.php`);
@@ -31,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const res = await axios.post(`${API_URL}/login.php`, { email, password });
+    const res = await axios.post(`${API_BASE_URL}/login.php`, { email, password });
     const { token } = res.data;
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;

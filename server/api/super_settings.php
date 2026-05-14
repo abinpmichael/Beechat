@@ -2,7 +2,7 @@
 // server/api/super_settings.php
 require_once 'config.php';
 
-$headers = getallheaders();
+$headers = getAuthHeaders();
 $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
 if (empty($auth) || !preg_match('/Bearer\s+(.*)$/i', $auth, $m)) {
     http_response_code(401); exit;

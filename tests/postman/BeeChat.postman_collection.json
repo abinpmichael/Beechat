@@ -1,0 +1,173 @@
+{
+	"info": {
+		"_postman_id": "aa123456-1234-1234-1234-abcdef123456",
+		"name": "Bee Chat Pro API",
+		"description": "Postman Collection for Bee Chat SaaS Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login.php"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/me.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me.php"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Widget API",
+			"item": [
+				{
+					"name": "Check Session",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leads.php?action=check_session&sessionId={{session_id}}&apiKey={{api_key}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"leads.php"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "check_session"
+								},
+								{
+									"key": "sessionId",
+									"value": "{{session_id}}"
+								},
+								{
+									"key": "apiKey",
+									"value": "{{api_key}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"apiKey\": \"{{api_key}}\",\n  \"sessionId\": \"{{session_id}}\",\n  \"message\": \"Hello, I need assistance.\",\n  \"isOffline\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat.php"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Super Admin API",
+			"item": [
+				{
+					"name": "Get Super Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/super_stats.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"super_stats.php"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost/Bee/server/api"
+		},
+		{
+			"key": "admin_email",
+			"value": "admin@cognitioit.ca"
+		},
+		{
+			"key": "admin_password",
+			"value": "password123"
+		},
+		{
+			"key": "auth_token",
+			"value": ""
+		},
+		{
+			"key": "api_key",
+			"value": "DEMO_KEY"
+		},
+		{
+			"key": "session_id",
+			"value": "postman_test_123"
+		}
+	]
+}

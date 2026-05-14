@@ -50,6 +50,19 @@ if ($method === 'POST') {
                 ->execute([$leadId, "🟡 Visitor $uid is active."]);
         }
 
+        // Queue Ticket Confirmation if it's a lead (and has email)
+        if (isset($details['email']) && !empty($details['email'])) {
+            try {
+                require_once 'mail_service.php';
+                $mail = new MailService($pdo);
+                $mail->queue($details['email'], 'ticket_received', [
+                    'ticket_id' => $leadId,
+                    'subject' => $details['subject'] ?? 'Support Request',
+                    'tracking_url' => "http://localhost:5173/ticket/" . base64_encode($leadId)
+                ]);
+            } catch (Exception $e) { }
+        }
+
         echo json_encode(["message"=>$msg,"id"=>$leadId,"uid"=>$uid]);
     } catch (Exception $e) {
         http_response_code(500);
@@ -79,14 +92,14 @@ if ($method === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_se
     exit;
 }
 
-/* ── Auth for dashboard requests ──────────────────────────── */
-$headers    = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) {
-    http_response_code(401); exit;
+$headers = getAuthHeaders();
+$decoded = decodeJwt($headers);
+
+if (!$decoded || !isset($decoded['tenant_id'])) {
+    http_response_code(401);
+    exit;
 }
-$decoded  = json_decode(base64_decode($m[1]), true);
-$tenantId = (int)($decoded['tenant_id'] ?? 0);
+$tenantId = (int)$decoded['tenant_id'];
 
 /* ── DELETE ────────────────────────────────────────────────── */
 if ($method === 'DELETE') {
@@ -118,24 +131,34 @@ try {
           AND last_seen_at < DATE_SUB(NOW(), INTERVAL 60 SECOND)
     ")->execute();
 
+    $isSuper = (int)($decoded['is_superadmin'] ?? 0) === 1;
+
     $filter = $_GET['filter'] ?? 'all'; // all | live | history
-    $sql = "SELECT l.*, w.domain,
+    $sql = "SELECT l.*, w.domain, t.name as tenant_name,
                COALESCE(l.visitor_uid, CONCAT('BEE-', UPPER(SUBSTR(MD5(l.id),1,6)))) AS visitor_uid
             FROM leads l
             JOIN websites w ON l.website_id = w.id
-            WHERE l.tenant_id = ?";
+            JOIN tenants t ON l.tenant_id = t.id
+            WHERE 1=1";
 
-    // Apply Privacy Visibility (only for agents, admins see everything)
-    if ($visibility === 'private' && $decoded['role'] !== 'admin') {
-        $sql .= " AND (l.assigned_to = " . intval($decoded['id']) . " OR l.assigned_to IS NULL)";
+    $params = [];
+    if (!$isSuper) {
+        $sql .= " AND l.tenant_id = ?";
+        $params[] = $tenantId;
     }
 
-    if ($filter === 'live')    $sql .= " AND l.chat_status NOT IN ('ended','transferred')";
-    if ($filter === 'history') $sql .= " AND (l.chat_status='ended' OR l.chat_status='transferred')";
+    // Apply Privacy Visibility (only for agents, admins see everything)
+    if (!$isSuper && $visibility === 'private' && $decoded['role'] !== 'admin') {
+        $sql .= " AND (l.assigned_to = ? OR l.assigned_to IS NULL)";
+        $params[] = (int)$decoded['id'];
+    }
+
+    if ($filter === 'live')    $sql .= " AND (l.chat_status NOT IN ('ended','transferred') OR l.last_seen_at > DATE_SUB(NOW(), INTERVAL 60 SECOND))";
+    if ($filter === 'history') $sql .= " AND (l.chat_status='ended' OR l.chat_status='transferred') AND l.last_seen_at < DATE_SUB(NOW(), INTERVAL 60 SECOND)";
 
     $sql .= " ORDER BY l.created_at DESC";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$tenantId]);
+    $stmt->execute($params);
     echo json_encode($stmt->fetchAll());
 } catch (Exception $e) {
     http_response_code(500);

@@ -2,21 +2,12 @@
 // server/api/agents.php - Get all agents for the same tenant (for transfer)
 require_once 'config.php';
 
-$headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-    http_response_code(401);
-    echo json_encode(["error" => "Unauthorized"]);
-    exit;
-}
-
-$token  = $matches[1];
-$decoded = json_decode(base64_decode($token), true);
+$headers = getAuthHeaders();
+$decoded = decodeJwt($headers);
 
 if (!$decoded || !isset($decoded['tenant_id'])) {
     http_response_code(401);
-    echo json_encode(["error" => "Invalid token"]);
+    echo json_encode(["error" => "Unauthorized or Invalid token"]);
     exit;
 }
 

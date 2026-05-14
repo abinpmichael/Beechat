@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Bell, Shield, Palette, Bot, Save, Loader2, Check, Lock, Eye, EyeOff, UserCircle, Zap, Users, CreditCard, Activity, ChevronRight, Crown } from 'lucide-react';
 
 import { useAuth } from '../contexts/AuthContext';
+import { API_BASE_URL } from '../config';
 
-const API_URL = 'http://localhost/Bee/server/api/settings.php';
-const PASS_URL = 'http://localhost/Bee/server/api/change_password.php';
+const API_URL = `${API_BASE_URL}/settings.php`;
+const PASS_URL = `${API_BASE_URL}/change_password.php`;
 
 export default function Settings() {
   const { user, refreshUser } = useAuth();
@@ -22,6 +23,7 @@ export default function Settings() {
     closing_time: '18:00',
     chat_visibility: 'shared',
     ai_auto_reply: 0,
+    ai_offline_only: 1,
     notifications_enabled: 1,
     default_theme_color: '#6366f1',
     default_bot_name: 'Bee Bot'
@@ -33,17 +35,26 @@ export default function Settings() {
   const [passMessage, setPassMessage] = useState({ type: '', text: '' });
   const [plans, setPlans] = useState([]);
   const [upgradeLoading, setUpgradeLoading] = useState(null);
+  const [sysSettings, setSysSettings] = useState({});
+  const [billingInfo, setBillingInfo] = useState({ subscription: null, invoices: [] });
+  const [billingInterval, setBillingInterval] = useState('monthly');
 
-  const fetchPlans = async () => {
+  const fetchBillingInfo = async () => {
     try {
-      const r = await axios.get('http://localhost/Bee/server/api/super_plans.php');
-      setPlans(r.data);
+      const r = await axios.get(`${API_BASE_URL}/billing.php`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if(r.data) {
+        setBillingInfo({ subscription: r.data.subscription, invoices: r.data.invoices });
+        if (r.data.plans) setPlans(r.data.plans);
+      }
     } catch { /* silent */ }
   };
 
   useEffect(() => {
     fetchSettings();
-    fetchPlans();
+    fetchBillingInfo();
+    axios.get(`${API_BASE_URL}/settings.php`).then(res => {
+      setSysSettings(res.data);
+    });
   }, []);
 
   const fetchSettings = async () => {
@@ -55,6 +66,7 @@ export default function Settings() {
           handover_enabled: Number(res.data.handover_enabled),
           visitor_tracking: Number(res.data.visitor_tracking),
           default_language: res.data.default_language || 'en',
+          ai_offline_only: Number(res.data.ai_offline_only ?? 1),
           opening_time: res.data.opening_time?.substring(0, 5) || '09:00',
           closing_time: res.data.closing_time?.substring(0, 5) || '18:00'
         });
@@ -76,6 +88,28 @@ export default function Settings() {
       alert("Error saving settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Email state
+  const [emailState, setEmailState] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailMessage, setEmailMessage] = useState({ type: '', text: '' });
+
+  const handleEmailChange = async (e) => {
+    e.preventDefault();
+    setEmailLoading(true);
+    setEmailMessage({ type: '', text: '' });
+    try {
+      await axios.post(`${API_BASE_URL}/change_email.php`, { 
+        new_email: emailState
+      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setEmailMessage({ type: 'success', text: 'Email updated successfully! Please login again with your new email.' });
+      setEmailState('');
+    } catch (err) {
+      setEmailMessage({ type: 'error', text: err.response?.data?.error || 'Failed to change email' });
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -104,26 +138,44 @@ export default function Settings() {
   const handleUpgrade = async (planId) => {
     setUpgradeLoading(planId);
     try {
-      const res = await axios.post('http://localhost/Bee/server/api/billing.php', {
+      const res = await axios.post(`${API_BASE_URL}/billing.php`, {
         action: 'checkout',
-        planId: planId
+        planId: planId,
+        interval: billingInterval
       }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       
-      if (res.data.url) {
+      if (res.data.url && res.data.url !== '/dashboard/settings') {
         window.location.href = res.data.url;
       } else {
         alert(res.data.message || "Successfully upgraded your plan!");
-        await refreshUser(); // Update global user state
-        await fetchSettings(); // Update local settings view
+        await refreshUser();
+        await fetchSettings();
+        await fetchBillingInfo();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to upgrade plan. Please contact support.");
+      alert(err.response?.data?.error || "Failed to upgrade plan. Please contact support.");
     } finally {
       setUpgradeLoading(null);
     }
   };
 
-  const renderBilling = () => (
+  const handlePortal = async () => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/billing.php`, {
+        action: 'portal'
+      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if (res.data.url) window.location.href = res.data.url;
+      else alert(res.data.error || "Could not load portal.");
+    } catch (err) {
+      alert("Error loading portal.");
+    }
+  };
+
+  const renderBilling = () => {
+    const isAnnual = billingInterval === 'annual';
+    const sub = billingInfo.subscription;
+    
+    return (
     <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
@@ -132,60 +184,154 @@ export default function Settings() {
         </div>
         {user?.is_superadmin === 1 && (
           <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-indigo-100">
-            <Shield className="w-6 h-6" /> PLATFORM OWNER (UNLIMITED)
+            <Shield className="w-6 h-6" /> PLATFORM OWNER
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          { id: 1, name: 'Free Tier', price: '0', websites: 1, agents: 2, ai: false },
-          { id: 2, name: 'Growth Plan', price: '29', websites: 5, agents: 10, ai: true, popular: true },
-          { id: 3, name: 'Enterprise', price: '99', websites: 'Unlimited', agents: 'Unlimited', ai: true }
-        ].map((p) => {
-          const isCurrent = user?.plan?.name?.toLowerCase().includes(p.name.toLowerCase().split(' ')[0]);
-          return (
-            <div key={p.id} className={`glass p-10 rounded-[3rem] border-2 transition-all relative ${p.popular ? 'border-indigo-500 shadow-2xl scale-105 z-10' : 'border-white shadow-xl'}`}>
-              {p.popular && <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Most Popular</span>}
-              
-              <h4 className="text-xl font-black text-slate-900">{p.name}</h4>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-slate-900">${p.price}</span>
-                <span className="text-slate-400 font-bold text-sm">/month</span>
-              </div>
+      {sub && (
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center shadow-lg mb-10">
+          <div>
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Current Plan</h4>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-black text-slate-900">{sub.plan_name || 'Free Tier'}</span>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+                {sub.status || 'Active'}
+              </span>
+            </div>
+            {sub.current_period_end && (
+              <p className="text-sm text-slate-500 font-medium mt-2">
+                {sub.cancel_at_period_end ? 'Cancels on' : 'Renews on'} {new Date(sub.current_period_end).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          <div className="mt-6 md:mt-0 flex gap-4">
+            <button onClick={handlePortal} className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+              Manage Billing & Invoices
+            </button>
+          </div>
+        </div>
+      )}
 
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                  <Check className="w-5 h-5 text-emerald-500" /> {p.websites} {p.websites === 1 ? 'Website' : 'Websites'}
+      {/* Monthly / Annual Toggle */}
+      <div className="flex justify-center mb-10">
+        <div className="bg-slate-100 p-1.5 rounded-2xl inline-flex relative">
+          <button 
+            onClick={() => setBillingInterval('monthly')}
+            className={`relative px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest z-10 transition-colors ${!isAnnual ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Monthly
+          </button>
+          <button 
+            onClick={() => setBillingInterval('annual')}
+            className={`relative px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest z-10 transition-colors flex items-center gap-2 ${isAnnual ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Annual
+            <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[8px]">2 MONTHS FREE</span>
+          </button>
+          <div 
+            className="absolute top-1.5 bottom-1.5 w-1/2 bg-white rounded-xl shadow-sm transition-transform duration-300 ease-out"
+            style={{ transform: isAnnual ? 'translateX(100%)' : 'translateX(0)' }}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {plans.map((p) => {
+          const isCurrent = user?.plan?.name?.toLowerCase().includes(p.name.toLowerCase().split(' ')[0]);
+          const features = JSON.parse(p.features || '[]');
+          const price = isAnnual ? p.price_annual : p.price;
+          
+          return (
+            <div key={p.id} className={`glass p-8 rounded-[2.5rem] border-2 transition-all relative flex flex-col ${p.name === 'Starter' ? 'border-indigo-500 shadow-2xl scale-105 z-10' : 'border-white shadow-xl'}`}>
+              {p.name === 'Starter' && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">Most Popular</span>}
+              
+              <h4 className="text-lg font-black text-slate-900">{p.name}</h4>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-black text-slate-900">${price}</span>
+                <span className="text-slate-400 font-bold text-xs">/{isAnnual ? 'year' : 'month'}</span>
+              </div>
+              
+              {isAnnual && p.price > 0 && (
+                <div className="mt-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                  Save ${ (p.price * 12) - p.price_annual } yearly
+                </div>
+              )}
+
+              <ul className="mt-8 space-y-4 flex-1">
+                <li className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                  <Check className="w-4 h-4 text-emerald-500" /> {p.max_websites > 1000 ? 'Unlimited' : p.max_websites} Websites
                 </li>
-                <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                  <Check className="w-5 h-5 text-emerald-500" /> {p.agents} Support Agents
+                <li className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                  <Check className="w-4 h-4 text-emerald-500" /> {p.max_agents > 1000 ? 'Unlimited' : p.max_agents} Support Agents
                 </li>
-                <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                  {p.ai ? <Check className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 border-2 border-slate-200 rounded-full" />}
-                  AI Auto-Reply {p.ai ? 'Enabled' : 'Disabled'}
-                </li>
+                {features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                    <Check className="w-4 h-4 text-emerald-500" /> {f.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </li>
+                ))}
               </ul>
 
               <button 
                 onClick={() => handleUpgrade(p.id)}
                 disabled={isCurrent || upgradeLoading || user?.is_superadmin === 1}
-                className={`w-full mt-10 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
+                className={`w-full mt-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                   isCurrent ? 'bg-emerald-50 text-emerald-600 cursor-default' : 
                   user?.is_superadmin === 1 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
                   'premium-gradient text-white shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95'
                 }`}
               >
-                {upgradeLoading === p.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-                 isCurrent ? 'Active Plan' : 
-                 user?.is_superadmin === 1 ? 'Infinite Access' : 'Upgrade Now'}
+                {upgradeLoading === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                 isCurrent ? 'Current Plan' : 
+                 user?.is_superadmin === 1 ? 'Infinite Access' : 'Choose Plan'}
               </button>
             </div>
           );
         })}
       </div>
+      
+      {billingInfo.invoices && billingInfo.invoices.length > 0 && (
+        <div className="mt-16 bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
+          <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-indigo-500" /> Payment History
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm font-medium">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-widest">
+                  <th className="pb-3">Date</th>
+                  <th className="pb-3">Amount</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Invoice</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billingInfo.invoices.map((inv, idx) => (
+                  <tr key={idx} className="border-b border-slate-50 last:border-0">
+                    <td className="py-4 text-slate-700">{new Date(inv.created_at).toLocaleDateString()}</td>
+                    <td className="py-4 text-slate-900 font-bold">${parseFloat(inv.amount).toFixed(2)}</td>
+                    <td className="py-4">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="py-4">
+                      {inv.pdf_url ? (
+                        <a href={inv.pdf_url} target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline text-[10px] font-black uppercase tracking-widest">Download</a>
+                      ) : (
+                        <span className="text-slate-400 text-[10px]">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
-  );
+    );
+  };
 
   if (loading) return <div className="h-64 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div>;
 
@@ -205,9 +351,9 @@ export default function Settings() {
             { id: 'general', name: 'General Preferences', icon: Globe },
             { id: 'privacy', name: 'Privacy & Visibility', icon: Eye },
             { id: 'security', name: 'Account Security', icon: Lock },
-            { id: 'billing', name: 'Billing & Subscription', icon: CreditCard },
+            ...(parseInt(sysSettings.enable_billing ?? 1) === 1 ? [{ id: 'billing', name: 'Billing & Subscription', icon: CreditCard }] : []),
             { id: 'branding', name: 'Platform Branding', icon: Palette },
-            { id: 'ai', name: 'AI & Automation', icon: Bot },
+            ...(parseInt(sysSettings.enable_ai_bot ?? 1) === 1 ? [{ id: 'ai', name: 'AI & Automation', icon: Bot }] : []),
           ].map((tab) => (
             <button 
               key={tab.id}
@@ -380,51 +526,83 @@ export default function Settings() {
                 <h3 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
                   <Lock className="w-6 h-6 text-indigo-600" /> Account Security
                 </h3>
-                
-                <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
-                    <input 
-                      type="password" required
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
-                      value={passState.current}
-                      onChange={(e) => setPassState({...passState, current: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-                    <input 
-                      type="password" required
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
-                      value={passState.new}
-                      onChange={(e) => setPassState({...passState, new: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
-                    <input 
-                      type="password" required
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
-                      value={passState.confirm}
-                      onChange={(e) => setPassState({...passState, confirm: e.target.value})}
-                    />
-                  </div>
 
-                  {passMessage.text && (
-                    <motion.div initial={{ opacity:0, x:-5 }} animate={{ opacity:1, x:0 }} className={`p-4 rounded-2xl text-xs font-black uppercase tracking-wider ${passMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                      {passMessage.text}
-                    </motion.div>
-                  )}
+                <div className="mb-12">
+                  <h4 className="font-black text-slate-800 mb-4 text-sm uppercase tracking-widest">Change Login Email</h4>
+                  <form onSubmit={handleEmailChange} className="space-y-6 max-w-md">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Email Address</label>
+                      <input 
+                        type="email" required
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
+                        value={emailState}
+                        onChange={(e) => setEmailState(e.target.value)}
+                        placeholder="new.email@example.com"
+                      />
+                    </div>
+                    {emailMessage.text && (
+                      <motion.div initial={{ opacity:0, x:-5 }} animate={{ opacity:1, x:0 }} className={`p-4 rounded-2xl text-xs font-black uppercase tracking-wider ${emailMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                        {emailMessage.text}
+                      </motion.div>
+                    )}
+                    <button 
+                      type="submit" 
+                      disabled={emailLoading}
+                      className="w-full bg-slate-900 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                    >
+                      {emailLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
+                      Update Email
+                    </button>
+                  </form>
+                </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={passLoading}
-                    className="w-full bg-slate-900 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
-                  >
-                    {passLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
-                    Update Password
-                  </button>
-                </form>
+                <div className="border-t-2 border-slate-50 pt-8">
+                  <h4 className="font-black text-slate-800 mb-4 text-sm uppercase tracking-widest">Change Password</h4>
+                  <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                      <input 
+                        type="password" required
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
+                        value={passState.current}
+                        onChange={(e) => setPassState({...passState, current: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                      <input 
+                        type="password" required
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
+                        value={passState.new}
+                        onChange={(e) => setPassState({...passState, new: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
+                      <input 
+                        type="password" required
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all"
+                        value={passState.confirm}
+                        onChange={(e) => setPassState({...passState, confirm: e.target.value})}
+                      />
+                    </div>
+
+                    {passMessage.text && (
+                      <motion.div initial={{ opacity:0, x:-5 }} animate={{ opacity:1, x:0 }} className={`p-4 rounded-2xl text-xs font-black uppercase tracking-wider ${passMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                        {passMessage.text}
+                      </motion.div>
+                    )}
+
+                    <button 
+                      type="submit" 
+                      disabled={passLoading}
+                      className="w-full bg-slate-900 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                    >
+                      {passLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
+                      Update Password
+                    </button>
+                  </form>
+                </div>
               </motion.div>
             )}
 
@@ -495,6 +673,19 @@ export default function Settings() {
                       className={`w-14 h-8 rounded-full relative p-1 cursor-pointer transition-all ${config.ai_auto_reply ? 'bg-indigo-600' : 'bg-slate-200'}`}
                     >
                       <motion.div animate={{ x: config.ai_auto_reply ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-black text-slate-800">Offline AI Automation</h4>
+                      <p className="text-sm text-slate-500 font-medium">Only trigger AI when no agents are online (CognitioIT Protocol).</p>
+                    </div>
+                    <div 
+                      onClick={() => setConfig({...config, ai_offline_only: config.ai_offline_only ? 0 : 1})}
+                      className={`w-14 h-8 rounded-full relative p-1 cursor-pointer transition-all ${config.ai_offline_only ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                    >
+                      <motion.div animate={{ x: config.ai_offline_only ? 24 : 0 }} className="w-6 h-6 bg-white rounded-full shadow-md" />
                     </div>
                   </div>
 

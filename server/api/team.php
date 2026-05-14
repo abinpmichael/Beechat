@@ -3,13 +3,26 @@
 require_once 'config.php';
 
 $method  = $_SERVER['REQUEST_METHOD'];
-$headers = getallheaders();
-$auth    = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+function getAuthHeaders() {
+    if (function_exists('getallheaders')) return getallheaders();
+    $headers = [];
+    foreach ($_SERVER as $name => $value) {
+        if (substr($name, 0, 5) == 'HTTP_') {
+            $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+        }
+    }
+    return $headers;
+}
+
+$headers = getAuthHeaders();
+$auth = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 
 if (empty($auth) || !preg_match('/Bearer\s+(.*)$/i', $auth, $m)) {
     http_response_code(401); echo json_encode(["error"=>"Unauthorized"]); exit;
 }
-$decoded  = json_decode(base64_decode($m[1]), true);
+
+$payload = explode('.', $m[1])[1] ?? $m[1];
+$decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $payload)), true);
 $tenantId = (int)($decoded['tenant_id'] ?? 0);
 $myId     = (int)($decoded['id']        ?? 0);
 $myRole   = $decoded['role']            ?? 'agent';

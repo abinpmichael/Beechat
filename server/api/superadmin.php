@@ -11,19 +11,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
 
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+// PUBLIC ACTIONS
+if ($method === 'GET' && ($_GET['action'] ?? '') === 'get_plans') {
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM plans");
+        $stmt->execute();
+        echo json_encode($stmt->fetchAll());
+        exit;
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(["error" => $e->getMessage()]);
+        exit;
+    }
+}
+
+$headers = getAuthHeaders();
+$auth = decodeJwt($headers);
+
+if (!$auth) {
     http_response_code(401);
+    echo json_encode(["message" => "Unauthorized access"]);
     exit;
 }
 
-$token = $matches[1];
-$decoded = json_decode(base64_decode($token), true);
-
 // ONLY SUPERADMINS ALLOWED
-if (($decoded['is_superadmin'] ?? 0) !== 1) {
+if (($auth['is_superadmin'] ?? 0) !== 1) {
     http_response_code(403);
     echo json_encode(["message" => "Forbidden: SuperAdmin access only"]);
     exit;
@@ -70,11 +84,17 @@ try {
         }
 
         if ($action === 'list_all_knowledge') {
-            $stmt = $pdo->query("SELECT k.*, w.domain, t.name as tenant_name 
+            $stmt = $pdo->query("SELECT k.*, COALESCE(w.domain, 'PLATFORM') as domain, COALESCE(t.name, 'GLOBAL') as tenant_name 
                                 FROM knowledge_base k
-                                JOIN websites w ON k.website_id = w.id
-                                JOIN tenants t ON k.tenant_id = t.id
+                                LEFT JOIN websites w ON k.website_id = w.id
+                                LEFT JOIN tenants t ON k.tenant_id = t.id
                                 ORDER BY k.created_at DESC");
+            echo json_encode($stmt->fetchAll());
+            exit;
+        }
+
+        if ($action === 'list_email_templates') {
+            $stmt = $pdo->query("SELECT * FROM email_templates ORDER BY name ASC");
             echo json_encode($stmt->fetchAll());
             exit;
         }
@@ -160,6 +180,13 @@ try {
 
 
 
+        if ($action === 'update_email_template') {
+            $stmt = $pdo->prepare("UPDATE email_templates SET subject = ?, body = ? WHERE id = ?");
+            $stmt->execute([$data['subject'], $data['body'], $data['id']]);
+            echo json_encode(["message" => "Template updated"]);
+            exit;
+        }
+
         if ($action === 'update_platform_settings') {
             $pdo->beginTransaction();
             foreach ($data['settings'] as $key => $value) {
@@ -172,6 +199,13 @@ try {
             }
             $pdo->commit();
             echo json_encode(["message" => "Platform settings updated"]);
+            exit;
+        }
+
+        if ($action === 'add_global_knowledge') {
+            $stmt = $pdo->prepare("INSERT INTO knowledge_base (tenant_id, website_id, title, content) VALUES (0, 0, ?, ?)");
+            $stmt->execute([$data['title'], $data['content']]);
+            echo json_encode(["message" => "Global knowledge added"]);
             exit;
         }
 

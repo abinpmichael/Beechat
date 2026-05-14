@@ -2,7 +2,7 @@
 // server/api/upgrade.php
 require_once 'config.php';
 
-$headers = getallheaders();
+$headers = getAuthHeaders();
 $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
 if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) {
     http_response_code(401); exit;

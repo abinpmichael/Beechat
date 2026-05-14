@@ -1,17 +1,109 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus } from 'lucide-react';
+import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config';
 
-const API = 'http://localhost/Bee/server/api';
-const HEARTBEAT_INTERVAL = 20000; // 20 seconds
-const OFFLINE_TIMEOUT    = 60;    // seconds — must match backend
+const API = API_BASE_URL;
+const HEARTBEAT_INTERVAL = 20000;
+const OFFLINE_TIMEOUT    = 60;
+
+// --- TOP-VIEW BEE ---
+const TopBee = ({ size = 40, animated = true }) => {
+  const [isDarting, setIsDarting] = useState(false);
+  
+  useEffect(() => {
+    if (!animated) return;
+    const interval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        setIsDarting(true);
+        setTimeout(() => setIsDarting(false), 600);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [animated]);
+
+  return (
+    <motion.svg 
+      width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      animate={animated ? { 
+        y: isDarting ? [0, -15, 0] : [0, -4, 0],
+        x: isDarting ? [0, 8, -5, 0] : [0, 1, -1, 0],
+        rotate: isDarting ? [0, 5, -5, 0] : [0, 1, -1, 0],
+        filter: ["drop-shadow(0 0 0px rgba(245,158,11,0))", "drop-shadow(0 0 25px rgba(245,158,11,0.6))", "drop-shadow(0 0 0px rgba(245,158,11,0))"]
+      } : {}}
+      transition={{ duration: isDarting ? 0.6 : 3, repeat: isDarting ? 0 : Infinity, ease: "easeInOut" }}
+      style={{ overflow: 'visible' }}
+    >
+      <circle cx="60" cy="60" r="50" fill="url(#honeyGlowWidgetLive)" opacity="0.25" />
+      {animated && [...Array(6)].map((_, i) => (
+        <motion.circle key={i} r="0.6" fill="#FDE68A"
+          animate={{ scale: [0, 1, 0], opacity: [0, 0.6, 0], x: [60, 60 + (Math.random() - 0.5) * 120], y: [80, 120] }}
+          transition={{ duration: 4 + Math.random() * 2, repeat: Infinity, delay: i * 0.8 }}
+        />
+      ))}
+      <motion.g animate={animated ? { rotate: [-18, 18], scale: [1, 1.05, 1] } : {}} transition={{ duration: 0.04, repeat: Infinity }}>
+        <path d="M55 45C30 10 0 20 10 50C20 80 55 60 55 45Z" fill="url(#wingGradWidgetLive)" fillOpacity="0.45" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
+        <path d="M45 42L25 32M40 45L20 45M35 48L25 55" stroke="white" strokeOpacity="0.1" strokeWidth="0.3" />
+      </motion.g>
+      <g stroke="#1A1A11" strokeWidth="2.5" strokeLinecap="round">
+        <motion.path animate={animated ? { rotate: [-5, 5] } : {}} d="M42 75L35 88L30 95" />
+        <motion.path animate={animated ? { rotate: [4, -4] } : {}} d="M58 80L55 95L52 105" />
+        <motion.path animate={animated ? { rotate: [-4, 4] } : {}} d="M78 75L85 95L90 102" />
+      </g>
+      <motion.g animate={animated ? { scale: [1, 1.02, 1] } : {}} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
+        <path d="M35 50C35 35 65 35 75 55C75 75 65 85 45 85C25 85 35 65 35 50Z" fill="#2D2D2A" filter="url(#fuzzFilterWidgetLive)" />
+        <motion.path animate={animated ? { scaleX: [1, 1.03, 1] } : {}} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} d="M55 55C55 40 85 35 110 55C130 75 110 105 80 105C55 105 55 75 55 55Z" fill="url(#bodyGradWidgetLive)" />
+      </motion.g>
+      <g opacity="0.9">
+        <path d="M70 42Q78 39 86 42L84 102Q76 105 68 102Z" fill="#1A1A11" />
+        <path d="M90 47Q97 45 104 49L102 90Q95 95 88 90Z" fill="#1A1A11" />
+        <path d="M106 58L114 62" stroke="#1A1A11" strokeWidth="4" strokeLinecap="round" />
+      </g>
+      <motion.g animate={animated ? { rotate: [-2, 2] } : {}} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+        <circle cx="30" cy="55" r="15" fill="#1A1A11" />
+        <g>
+          <circle cx="22" cy="54" r="10" fill="#0A0A0A" />
+          <circle cx="22" cy="54" r="10" fill="url(#eyeFacetWidgetLive)" fillOpacity="0.2" />
+          <circle cx="18" cy="50" r="3" fill="white" fillOpacity="0.7" />
+          <circle cx="24" cy="56" r="1.5" fill="#BAE6FD" fillOpacity="0.4" />
+        </g>
+        <motion.g animate={animated ? { rotate: [-10, 10] } : {}} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '30px', originY: '45px' }}>
+          <path d="M28 43C25 30 18 25 10 28" stroke="#1A1A11" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M32 43C35 30 42 25 50 28" stroke="#1A1A11" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        </motion.g>
+      </motion.g>
+      <motion.g animate={animated ? { rotate: [18, -18], scale: [1, 1.05, 1] } : {}} transition={{ duration: 0.035, repeat: Infinity }}>
+        <path d="M65 50C75 10 120 25 110 65C100 105 65 75 65 50Z" fill="url(#wingGradWidgetLive)" fillOpacity="0.65" stroke="white" strokeOpacity="0.3" strokeWidth="0.5" />
+        <path d="M75 45L100 25M85 55L115 45M90 65L110 60" stroke="white" strokeOpacity="0.15" strokeWidth="0.3" />
+      </motion.g>
+      <defs>
+        <filter id="fuzzFilterWidgetLive" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+        </filter>
+        <pattern id="eyeFacetWidgetLive" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse">
+          <path d="M1.5 0L3 0.866V2.598L1.5 3.464L0 2.598V0.866L1.5 0Z" fill="white" />
+        </pattern>
+        <linearGradient id="bodyGradWidgetLive" x1="55" y1="55" x2="110" y2="105" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FDE68A" /><stop offset="0.4" stopColor="#FBBF24" /><stop offset="0.7" stopColor="#D97706" /><stop offset="1" stopColor="#451A03" />
+        </linearGradient>
+        <radialGradient id="wingGradWidgetLive" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(65 50) rotate(90) scale(50)">
+          <stop stopColor="white" /><stop offset="0.5" stopColor="#E0F2FE" stopOpacity="0.6" /><stop offset="1" stopColor="#BAE6FD" stopOpacity="0.1" />
+        </radialGradient>
+        <radialGradient id="honeyGlowWidgetLive" cx="60" cy="60" r="50">
+          <stop stopColor="#FBBF24" stopOpacity="0.6" /><stop offset="1" stopColor="#FBBF24" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+    </motion.svg>
+  );
+};
 
 export default function ChatWidget({ apiKey }) {
   const [isOpen, setIsOpen]         = useState(false);
   const [branding, setBranding]     = useState({ 
     name:'Bee Bot', 
-    image:'/logo.png', 
-    color:'#6366f1', 
+    image: null, 
+    color:'#f59e0b', 
     welcome:'Hello! How can we help?', 
     subtitle:'Support Assistant', 
     success:'Thank you! We will be in touch.',
@@ -19,57 +111,67 @@ export default function ChatWidget({ apiKey }) {
     sound: 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
     icon: null
   });
+  const [idleTimer, setIdleTimer] = useState(0);
+  const [lastActivity, setLastActivity] = useState(Date.now());
+  const [isUploading, setIsUploading] = useState(false);
   const [steps, setSteps]           = useState([]);
   const [stepId, setStepId]         = useState(null);
   const [messages, setMessages]     = useState([]);
   const [input, setInput]           = useState('');
-  const [formData, setFormData]     = useState({ name:'', email:'', phone:'' });
   const [isTyping, setIsTyping]     = useState(false);
   const [isLive, setIsLive]         = useState(false);
-  const [chatStatus, setChatStatus] = useState('lead'); // lead | waiting | active | ended
+  const [chatStatus, setChatStatus] = useState('lead');
   const [leadId, setLeadId]         = useState(null);
   const [surveyDone, setSurveyDone] = useState(false);
-
   const [notification, setNotification] = useState(null);
   const [lastSeenMsgId, setLastSeenMsgId] = useState(0);
+  const [ticketFormVisible, setTicketFormVisible] = useState(false);
+  const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '' });
+  const [ticketLoading, setTicketLoading] = useState(false);
 
   const sessionRef  = useRef(null);
-  const leadIdRef   = useRef(null);   // ref copy so interval always sees latest
+  const leadIdRef   = useRef(null);
   const scrollRef   = useRef(null);
   const surveyDataRef = useRef({});
   const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'));
 
-  // keep ref in sync
   useEffect(() => { leadIdRef.current = leadId; }, [leadId]);
   useEffect(() => {
-    if (branding.sound) {
-      audioRef.current.src = branding.sound;
-    }
+    if (branding.sound) audioRef.current.src = branding.sound;
   }, [branding.sound]);
 
-  // Notify parent iframe to resize
+  // --- IDLE TIMER LOGIC ---
+  useEffect(() => {
+    if (!isOpen || !branding.is_open) return;
+    const interval = setInterval(() => {
+      const diff = (Date.now() - lastActivity) / 1000;
+      if (diff >= 30 && !surveyDone) {
+        setMessages(prev => {
+           if (prev.some(m => m.isIdle)) return prev;
+           return [...prev, { role: 'bot', text: "Need a little inspiration? Take a look at our recent projects: [View Portfolio]", isIdle: true }];
+        });
+        setLastActivity(Date.now()); // Reset to avoid spam
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isOpen, lastActivity, surveyDone, branding.is_open]);
+
+  const recordActivity = () => setLastActivity(Date.now());
+
   const notifyParent = useCallback((type) => {
-    try {
-      window.parent.postMessage({ source: 'bee-chat-widget', type }, '*');
-    } catch { /* standalone mode — no parent */ }
+    try { window.parent.postMessage({ source: 'bee-chat-widget', type }, '*'); } catch { }
   }, []);
 
-  // Open/close with resize signal
-  const openChat  = useCallback(() => { setIsOpen(true);  notifyParent('open');  }, [notifyParent]);
+  const openChat  = useCallback(() => { setIsOpen(true);  notifyParent('open'); recordActivity(); }, [notifyParent]);
   const closeChat = useCallback(() => { setIsOpen(false); notifyParent('close'); }, [notifyParent]);
 
-  useEffect(() => {
-    notifyParent('close');
-  }, [notifyParent]);
+  useEffect(() => { notifyParent('close'); }, [notifyParent]);
 
-  /* ── AUTO SCROLL ─────────────────────────────────────── */
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isTyping]);
 
-  /* ── INITIALIZE SESSION & RESUME ────────────────────── */
   useEffect(() => {
-    // Persistent Device Identifier
     let sid = localStorage.getItem(`bee_device_id`);
     if (!sid) {
       sid = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -77,7 +179,6 @@ export default function ChatWidget({ apiKey }) {
     }
     sessionRef.current = sid;
 
-    // Check for existing lead to resume chat
     fetch(`${API}/leads.php?action=check_session&sessionId=${sid}&apiKey=${encodeURIComponent(apiKey)}`)
       .then(r => r.json())
       .then(res => {
@@ -87,36 +188,25 @@ export default function ChatWidget({ apiKey }) {
           setIsLive(res.is_live);
           setChatStatus(res.chat_status || 'lead');
           setSurveyDone(true);
-          
-          // FETCH OLD MESSAGES
           fetch(`${API}/conversations.php?leadId=${res.id}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
             .then(r => r.json())
             .then(rows => {
               if (!Array.isArray(rows)) return;
-              const mapped = rows.map(r => ({
-                role: r.sender_type === 'agent' ? 'agent' : 'visitor',
-                text: r.content,
-                id: r.id
-              }));
+              const mapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor', text: r.content, id: r.id, image: r.image }));
               setMessages(mapped);
-              if (mapped.length > 0) {
-                const last = mapped[mapped.length - 1];
-                if (last.id) setLastSeenMsgId(last.id);
-              }
+              if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
             });
         }
-      })
-      .catch(() => {});
+      });
 
-    // Load branding
     fetch(`${API}/chat.php?action=get_branding&apiKey=${encodeURIComponent(apiKey)}`)
       .then(r => r.json())
       .then(d => {
         if (!d || d.error) return;
         setBranding({
           name:     d.bot_name        || 'Bee Bot',
-          image:    d.bot_image       || '/logo.png',
-          color:    d.theme_color     || '#6366f1',
+          image:    d.bot_image       || null,
+          color:    d.theme_color     || '#f59e0b',
           welcome:  d.welcome_message || 'Hello! How can we help?',
           subtitle: d.bot_subtitle    || 'Support Assistant',
           success:  d.success_message || 'Thank you! We will be in touch.',
@@ -124,32 +214,11 @@ export default function ChatWidget({ apiKey }) {
           sound:    d.notification_sound || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
           icon:     d.widget_icon || null,
           is_open:  d.is_open !== false,
-          opening:  d.opening_time || '00:00:00',
-          closing:  d.closing_time || '23:59:59',
-          form_config: d.form_config ? (typeof d.form_config === 'string' ? JSON.parse(d.form_config) : d.form_config) : [
-            { label: "Full Name", name: "name", required: true },
-            { label: "Email Address", name: "email", required: true },
-            { label: "Phone Number", name: "phone", required: false }
-          ]
+          enable_live_chat: d.enable_live_chat,
+          enable_ai_bot: d.enable_ai_bot
         });
-        
-        // Auto-inject offline message if closed
-        if (d.is_open === false) {
-           setTimeout(() => {
-             addMsg('bot', `🕰️ We are currently offline. Our business hours are ${d.opening_time} - ${d.closing_time}. Please leave your details and we will get back to you!`);
-           }, 1000);
-        }
-      })
-      .catch(() => {});
+      });
   }, [apiKey]);
-
-  /* ── OPEN CHAT → setup initial messages if new ───────── */
-  useEffect(() => {
-    if (!isOpen) {
-      setNotification(null); // Clear notification when opening
-      return;
-    }
-  }, [isOpen]);
 
   const initChat = useCallback((sid) => {
     fetch(`${API}/chat.php?action=get_branding&apiKey=${encodeURIComponent(apiKey)}`)
@@ -157,527 +226,275 @@ export default function ChatWidget({ apiKey }) {
       .then(d => {
         if (!d) return;
         let parsed = [];
-        if (d.survey_config) {
-          parsed = typeof d.survey_config === 'string' ? JSON.parse(d.survey_config) : d.survey_config;
-        }
+        if (d.survey_config) parsed = typeof d.survey_config === 'string' ? JSON.parse(d.survey_config) : d.survey_config;
         setSteps(parsed);
-        const welcome = d.is_open ? (d.welcome_message || 'Hello!') : "👋 We're currently closed, but you can leave a message below and we'll get back to you!";
+        const welcome = d.is_open ? (d.welcome_message || 'Hello!') : "👋 We're currently closed, but you can leave a message below!";
         const init = [{ role:'bot', text: welcome }];
-        if (parsed.length > 0) {
-          init.push({ role:'bot', text: parsed[0].question });
-          setStepId(parsed[0].id);
+        
+        const priority = parseInt(d.survey_priority ?? 1);
+        if (priority === 1 && parsed.length > 0) { 
+           init.push({ role:'bot', text: parsed[0].question, options: parsed[0].type === 'options' ? parsed[0].options : null }); 
+           setStepId(parsed[0].id); 
+        } else {
+           setSurveyDone(true);
+           setChatStatus('ai');
+           init.push({ role:'bot', text: "How can I help you today?" });
         }
         setMessages(init);
-        setBranding(prev => ({ ...prev, ...d, headerBg: d.color }));
+        setBranding(prev => ({ ...prev, ...d }));
       });
   }, [apiKey]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    if (messages.length > 0) return;
-    initChat(sessionRef.current);
-  }, [isOpen, initChat]);
+    if (isOpen && messages.length === 0) initChat(sessionRef.current);
+  }, [isOpen, initChat, messages]);
 
   const handleResetChat = () => {
-    if (!window.confirm("Start a fresh conversation? Your previous messages will be saved for our team.")) return;
-    
-    // 1. Clear local state
-    setMessages([]);
-    setLeadId(null);
-    leadIdRef.current = null;
-    setChatStatus('lead');
-    setIsLive(false);
-    setSurveyDone(false);
-    setStepId(null);
-    setLastSeenMsgId(0);
-    setNotification(null);
-    
-    // 2. Generate NEW session ID
+    if (!window.confirm("Start fresh?")) return;
+    setMessages([]); setLeadId(null); leadIdRef.current = null; setChatStatus('lead'); setIsLive(false); setSurveyDone(false); setStepId(null); setLastSeenMsgId(0); setNotification(null);
     const newSid = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem(`bee_device_id`, newSid);
-    sessionRef.current = newSid;
-
-    // 3. Re-init
-    initChat(newSid);
+    localStorage.setItem(`bee_device_id`, newSid); sessionRef.current = newSid; initChat(newSid);
   };
 
-  /* ── HEARTBEAT: ping every 20s while widget is open ─────────────── */
   useEffect(() => {
     if (!isOpen) return;
     const ping = () => {
       const sid = sessionRef.current;
-      if (!sid || !apiKey) return;
-      fetch(`${API}/heartbeat.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: sid, apiKey }),
-      }).catch(() => {});
+      if (sid && apiKey) {
+        const browser = navigator.userAgent;
+        const device = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+        const page = window.location.href;
+        fetch(`${API}/heartbeat.php`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ sessionId: sid, apiKey, browser, device, page }) 
+        });
+      }
     };
-    // First ping after 1s (session may still be initializing)
-    const init = setTimeout(ping, 1000);
-    const t    = setInterval(ping, HEARTBEAT_INTERVAL);
-    return () => { clearTimeout(init); clearInterval(t); };
+    const t = setInterval(ping, HEARTBEAT_INTERVAL); return () => clearInterval(t);
   }, [isOpen, apiKey]);
 
-  /* ── LIVE CHAT: poll even if closed for notifications ── */
   useEffect(() => {
     if (!isLive) return;
     const tick = setInterval(() => {
-      const lid = leadIdRef.current;
-      const sid = sessionRef.current;
-      if (!lid || !sid) return;
+      const lid = leadIdRef.current; const sid = sessionRef.current; if (!lid || !sid) return;
       fetch(`${API}/conversations.php?leadId=${lid}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
         .then(r => r.json())
         .then(rows => {
           if (!Array.isArray(rows)) return;
-          
-          // Sync Chat Status from first row if possible or from polling
           if (rows.length > 0) {
-             // In a real app we'd fetch the lead status too, but we'll infer it from agents being present
-             const hasAgent = rows.some(r => r.sender_type === 'agent' && !r.content.includes('ended'));
+             const hasAgent = rows.some(r => r.sender_type === 'agent');
              const isEnded  = rows.some(r => r.content.includes('ended'));
-             if (isEnded) setChatStatus('ended');
-             else if (hasAgent) setChatStatus('active');
+             if (isEnded) setChatStatus('ended'); else if (hasAgent) setChatStatus('active');
           }
-
           const agentMsgs = rows.filter(r => r.sender_type === 'agent');
-          
-          // Check for notifications
           if (!isOpen && agentMsgs.length > 0) {
-            const latest = agentMsgs[agentMsgs.length - 1];
-            if (latest.id > lastSeenMsgId) {
-              setNotification(latest.content);
-              setLastSeenMsgId(latest.id);
-              if (branding.sound !== 'off') {
-                audioRef.current.play().catch(() => {});
-              }
-            }
+            const latest = agentMsgs[agentMsgs.length-1];
+            if (latest.id > lastSeenMsgId) { setNotification(latest.content); setLastSeenMsgId(latest.id); audioRef.current.play(); }
           }
-
           setMessages(prev => {
-            const dbMapped = rows.map(r => ({
-              role: r.sender_type === 'agent' ? 'agent' : 'visitor_db',
-              text: r.content,
-              id: r.id,
-            }));
+            const dbMapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor_db', text: r.content, id: r.id, image: r.image }));
             const prevAgentIds = new Set(prev.filter(m => m.id).map(m => m.id));
             const newAgentMsgs = dbMapped.filter(m => m.role === 'agent' && !prevAgentIds.has(m.id));
             if (newAgentMsgs.length === 0) return prev;
-            
-            // Update last seen ID for notification tracking
-            const maxId = Math.max(...newAgentMsgs.map(m => m.id));
-            if (maxId > lastSeenMsgId) setLastSeenMsgId(maxId);
-            
+            setLastSeenMsgId(Math.max(...newAgentMsgs.map(m => m.id)));
             return [...prev, ...newAgentMsgs];
           });
-        })
-        .catch(() => {});
-    }, 2000);
-    return () => clearInterval(tick);
-  }, [isLive, isOpen, lastSeenMsgId]);
+        });
+    }, 2000); return () => clearInterval(tick);
+  }, [isLive, isOpen, lastSeenMsgId, apiKey]);
 
-  /* ── HELPERS ─────────────────────────────────────────── */
-  const addMsg = useCallback((role, text) => setMessages(p => [...p, { role, text }]), []);
+  const addMsg = useCallback((role, text, image = null) => setMessages(p => [...p, { role, text, image }]), []);
+  
+  const handleImageUpload = async (e) => {
+     const file = e.target.files[0];
+     if (!file) return;
+     setIsUploading(true);
+     const formData = new FormData();
+     formData.append('image', file);
+     formData.append('apiKey', apiKey);
+     formData.append('leadId', leadIdRef.current || '');
+     formData.append('sessionId', sessionRef.current);
+     formData.append('sender', 'visitor');
 
-  const submitLead = useCallback((data, live = false) => {
-    const phone = data.phone || data.email || 'Visitor';
-    const subject = `Inquiry from ${phone}`;
-
-    fetch(`${API}/leads.php`, {
-      method:'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        apiKey, 
-        sessionId: sessionRef.current, 
-        phone: phone, 
-        details: { ...data, is_ticket: 1, subject: subject } 
-      }),
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.id) {
-        setLeadId(res.id);
-        leadIdRef.current = res.id;
-        setChatStatus(live ? 'waiting' : 'lead');
-        if (live) {
-          addMsg('bot', '🎟️ Ticket raised! An agent will be with you shortly.');
+     try {
+        const res = await fetch(`${API}/conversations.php?action=upload`, { method: 'POST', body: formData }).then(r => r.json());
+        if (res.url) {
+           addMsg('visitor', 'Sent an image', res.url);
+           recordActivity();
         }
-      }
-    })
-    .catch(console.error);
-  }, [apiKey, addMsg]);
-
-  const handleEndChat = async () => {
-    if (!leadId) return;
-    try {
-      await fetch(`${API}/conversations.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'end_chat', leadId, agentName: 'Visitor' })
-      });
-      setChatStatus('ended');
-      setIsLive(false);
-      addMsg('bot', '🔴 You have ended the chat. This ticket is now marked as resolved.');
-    } catch (e) { console.error(e); }
+     } catch (err) { } finally { setIsUploading(false); }
   };
 
-  /* ── STEP ACTION (button click) ──────────────────────── */
-  const handleStep = useCallback((label, next) => {
-    addMsg('visitor', label);
-    surveyDataRef.current[stepId] = label;
+  const submitLead = useCallback((data, live = false) => {
+    fetch(`${API}/leads.php`, { method:'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey, sessionId: sessionRef.current, phone: data.phone||'Visitor', details: data }) })
+    .then(r => r.json()).then(res => { if (res.id) { setLeadId(res.id); leadIdRef.current = res.id; setChatStatus(live ? 'waiting' : 'lead'); if (live) addMsg('bot', '🎟️ Ticket raised! Connection pending.'); } });
+  }, [apiKey, addMsg]);
 
-    if (next === 'human') {
-      if (!branding.is_open) {
-        addMsg('bot', "Our agents are currently offline. Please finish the survey and we will email you back as soon as we're online!");
-        // Redirect them to the first text step or just let them finish
-        return;
-      }
-      addMsg('bot', 'Connecting you to a live agent… Please hold on.');
-      setIsLive(true);
-      setSurveyDone(true);
-      setStepId(null);
-      submitLead({ ...surveyDataRef.current, status:'human_requested' }, true);
-      return;
-    }
-    if (!next || next === 'finish') {
-      submitLead({ ...surveyDataRef.current });
-      setSurveyDone(true);
-      setStepId(null);
-      setIsTyping(true);
-      setTimeout(() => { addMsg('bot', branding.success); setIsTyping(false); }, 700);
-      return;
-    }
-    const nxt = steps.find(s => s.id === next);
-    if (nxt) {
-      setStepId(next);
-      setIsTyping(true);
-      setTimeout(() => { addMsg('bot', nxt.question); setIsTyping(false); }, 700);
+  const handleSend = (e, contentOverride = null) => {
+    if (e) e.preventDefault(); const text = contentOverride || input.trim(); if (!text) return; if (!contentOverride) setInput(''); 
+    addMsg('visitor', text);
+    recordActivity();
+    if (isLive && leadIdRef.current) { fetch(`${API}/conversations.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'send', leadId: leadIdRef.current, sender:'visitor', content: text }) }); return; }
+    const step = steps.find(s => s.id == stepId); if (step && step.type === 'text') { handleStep(text, step.next); return; }
+    setIsTyping(true);
+    fetch(`${API}/chat.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ apiKey, message: text, sessionId: sessionRef.current, isOffline: !branding.is_open }) })
+    .then(r => r.json()).then(d => { setIsTyping(false); if (d.content) addMsg('bot', d.content); if (d.lead_id) setLeadId(d.lead_id); });
+  };
+
+  const handleStep = useCallback((label, next) => {
+    addMsg('visitor', label); surveyDataRef.current[stepId] = label;
+    recordActivity();
+    if (next === 'human') { setIsLive(true); setSurveyDone(true); setStepId(null); submitLead({ ...surveyDataRef.current, status:'human_requested' }, true); return; }
+    if (!next || next === 'finish') { submitLead({ ...surveyDataRef.current }); setSurveyDone(true); setStepId(null); setIsTyping(true); setTimeout(() => { addMsg('bot', branding.success); setIsTyping(false); }, 700); return; }
+    const nxt = steps.find(s => s.id == next); 
+    if (nxt) { 
+       setStepId(next); 
+       setIsTyping(true); 
+       setTimeout(() => { 
+          addMsg('bot', nxt.question, null); 
+          if (nxt.type === 'options') {
+             setMessages(prev => {
+                const last = prev[prev.length-1];
+                if (last && last.role === 'bot') last.options = nxt.options;
+                return [...prev];
+             });
+          }
+          setIsTyping(false); 
+       }, 700); 
     }
   }, [stepId, steps, branding.success, addMsg, submitLead]);
 
-  /* ── FORM SUBMIT ─────────────────────────────────────── */
-  const handleFormSubmit = (e) => {
+  const handleTicketSubmit = async (e) => {
     e.preventDefault();
-    const step = steps.find(s => s.id === stepId);
-    if (!step) return;
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
-    
-    // Save to surveyDataRef for later submission
-    surveyDataRef.current = { ...surveyDataRef.current, ...data };
-    
-    // Show summary in chat
-    const summary = Object.values(data).join(' | ');
-    handleStep(summary, step.next);
-  };
-
-  /* ── FREE-TYPE SEND ──────────────────────────────────── */
-  const handleSend = (e, contentOverride = null) => {
-    if (e) e.preventDefault();
-    const text = contentOverride || input.trim();
-    if (!text) return;
-    if (!contentOverride) setInput('');
-    addMsg('visitor', text);
-
-    if (isLive && leadIdRef.current) {
-      fetch(`${API}/conversations.php`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'send', leadId: leadIdRef.current, sender:'visitor', content: text }),
-      }).catch(console.error);
-      return;
-    }
-
-    // text-type survey step
-    const step = steps.find(s => s.id === stepId);
-    if (step && step.type === 'text') { handleStep(text, step.next); return; }
-
-    // generic bot fallback
-    setIsTyping(true);
-    fetch(`${API}/chat.php`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ apiKey, message: text, sessionId: sessionRef.current, isOffline: !branding.is_open }),
-    }).then(r => r.json()).then(d => { 
-      setIsTyping(false); 
-      if (d.content) addMsg('bot', d.content); 
-      if (d.lead_id) setLeadId(d.lead_id); // Sync lead if created on first message
-    }).catch(() => setIsTyping(false));
-  };
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
+    if (!ticketData.message || !ticketData.email) return;
+    setTicketLoading(true);
     try {
-      const res = await fetch('http://localhost/Bee/server/api/upload.php', { method:'POST', body: formData });
-      const d = await res.json();
-      if (d.url) handleSend(null, d.url);
-    } catch { /* fail silent */ }
+      const res = await fetch(`${API}/tickets.php?action=create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey,
+          sessionId: sessionRef.current,
+          subject: ticketData.subject || 'Offline Support Request',
+          message: ticketData.message,
+          email: ticketData.email,
+          phone: ticketData.phone
+        })
+      }).then(r => r.json());
+
+      if (res.success) {
+        addMsg('bot', `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`);
+        setTicketFormVisible(false);
+        setTicketData({ subject: '', message: '', email: '', phone: '' });
+      }
+    } catch (err) {
+      addMsg('bot', '❌ Failed to create ticket. Please try again later.');
+    } finally {
+      setTicketLoading(false);
+    }
   };
 
-  const submitRaisedForm = (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
-    handleSend(null, `📝 Form Data: ${JSON.stringify(data)}`);
-    // Also update lead details
-    fetch(`${API}/leads.php`, {
-      method:'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey, sessionId: sessionRef.current, details: data })
-    });
-  };
-
-  /* ── RENDER STEP UI ──────────────────────────────────── */
-  const renderStep = () => {
-    if (isLive || surveyDone || isTyping || !stepId) return null;
-    const step = steps.find(s => s.id === stepId);
-    if (!step) return null;
-
-    if (step.type === 'options') return (
-      <div className="grid grid-cols-1 gap-2 mt-3">
-        {(step.options || []).map((opt, i) => (
-          <button key={i} onClick={() => handleStep(opt.label, opt.next)} className="survey-btn group">
-            {opt.label} <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
-          </button>
-        ))}
-        <button onClick={() => handleStep('Talk to a Human Agent', 'human')} className="survey-btn" style={{borderColor: branding.color, color: branding.color, background:'rgba(99,102,241,0.05)'}}>
-          🎧 Talk to a Human Agent
-        </button>
-      </div>
-    );
-
-    if (step.type === 'form') return (
-      <form onSubmit={handleFormSubmit} className="mt-3 p-4 bg-white rounded-3xl border border-slate-100 space-y-3 shadow-sm">
-        {(step.fields || [
-          { label: "Full Name", name: "name", required: true },
-          { label: "Email Address", name: "email", required: true },
-          { label: "Phone Number", name: "phone", required: false }
-        ]).map((f, i) => (
-          <div key={i} className="relative">
-            <input 
-              name={f.name}
-              required={f.required} 
-              placeholder={f.label} 
-              className="w-full px-4 py-2 bg-slate-50 rounded-xl text-sm outline-none font-bold border border-transparent focus:border-indigo-100 focus:bg-white transition-all" 
-            />
-          </div>
-        ))}
-        <button type="submit" className="w-full py-2.5 text-white font-black rounded-xl text-xs uppercase tracking-widest" style={{backgroundColor:branding.color}}>Submit Details</button>
-      </form>
-    );
-    return null;
-  };
-
-  /* ── JSX ─────────────────────────────────────────────── */
   return (
-    <div className="relative font-sans flex flex-col items-end">
+    <div className="relative font-sans flex flex-col items-end selection:bg-amber-100 selection:text-amber-600 pointer-events-none">
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity:0, scale:0.9, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.9, y:20 }}
-            className="mb-4 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-slate-50/90 backdrop-blur-xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col border border-white"
+          <motion.div initial={{ opacity:0, scale:0.9, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.9, y:20 }}
+            className="mb-4 w-[400px] max-w-[calc(100vw-2rem)] h-[650px] max-h-[calc(100vh-8rem)] bg-white rounded-[3rem] shadow-4xl overflow-hidden flex flex-col border border-slate-100 pointer-events-auto"
           >
-            {/* Header */}
-            <header 
-              className="p-6 text-white flex flex-col gap-3" 
-              style={{background: branding.headerBg || `linear-gradient(135deg,${branding.color} 0%,${branding.color}cc 100%)`}}
-            >
+            <header className="p-8 text-white flex flex-col gap-4" style={{background: branding.headerBg || branding.color}}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white p-1.5 rounded-2xl w-12 h-12 flex items-center justify-center shadow-lg overflow-hidden text-slate-900">
-                    <img src={branding.image} className="w-full h-full object-cover" alt="bot"/>
+                <div className="flex items-center gap-4">
+                  <div className="bg-white p-2 rounded-2xl w-14 h-14 flex items-center justify-center shadow-xl relative overflow-hidden group">
+                     {branding.image ? <img src={branding.image} className="w-full h-full object-contain relative z-10" alt="bot"/> : <TopBee size={40} />}
                   </div>
                   <div>
-                    <h3 className="font-black text-lg leading-tight">{branding.name}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-75 flex items-center gap-1">
-                      {branding.is_open ? (
-                        <><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Active Now</>
-                      ) : (
-                        <><div className="w-1.5 h-1.5 bg-amber-400 rounded-full" /> Currently Away</>
-                      )}
+                    <h3 className="font-black text-xl leading-tight uppercase tracking-tighter">{branding.name}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 flex items-center gap-1.5 mt-1">
+                      {branding.is_open ? <><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" /> Live Connection</> : <><div className="w-1.5 h-1.5 bg-amber-400 rounded-full" /> Away Mode</>}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {chatStatus !== 'ended' && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); if(window.confirm('End this chat session?')) handleEndChat(); }}
-                      className="p-1.5 hover:bg-white/20 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-all"
-                    >
-                      <PhoneOff className="w-3 h-3" /> End
-                    </button>
-                  )}
-                  <button onClick={closeChat} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
-                </div>
+                <button onClick={closeChat} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-7 h-7"/></button>
               </div>
-
-              {leadId && (
-                <div className="flex items-center justify-between bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/10">
-                  <span className="text-[10px] font-black uppercase tracking-tighter opacity-80">Ticket ID: {leadId}</span>
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                    chatStatus === 'ended' ? 'bg-emerald-400 text-emerald-950' : 
-                    chatStatus === 'active' ? 'bg-indigo-400 text-indigo-950' : 'bg-amber-400 text-amber-950'
-                  }`}>
-                    {chatStatus === 'ended' ? 'Resolved' : chatStatus === 'active' ? 'In Progress' : 'Pending Review'}
-                  </span>
-                </div>
-              )}
             </header>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50/20">
               {messages.map((msg, i) => {
                 const right = msg.role === 'visitor';
-                const isAgent = msg.role === 'agent';
-                
-                // --- Contrast Check ---
-                const isDark = (color) => {
-                  if (!color) return true;
-                  const c = color.replace('#','');
-                  const r = parseInt(c.substring(0,2), 16);
-                  const g = parseInt(c.substring(2,4), 16);
-                  const b = parseInt(c.substring(4,6), 16);
-                  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                  return brightness < 155;
-                };
-                const bubbleTextColor = right ? (isDark(branding.color) ? 'text-white' : 'text-slate-900') : (isAgent ? 'text-white' : 'text-slate-700');
-                // ---------------------
-
+                const isOptions = msg.options && msg.options.length > 0;
                 return (
-                  <div key={i} className={`flex ${right ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] px-4 py-3 rounded-3xl text-sm font-medium shadow-sm ${bubbleTextColor} ${
-                      right ? '' : isAgent ? 'bg-indigo-600' : 'bg-white border border-slate-100'
-                    }`} style={right ? {backgroundColor: branding.color} : {}}>
-                      {msg.text.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                        <img src={msg.text} alt="Upload" className="max-w-full rounded-lg cursor-pointer" onClick={() => window.open(msg.text)} />
-                      ) : msg.text === '[FORM:DATA_REQUEST]' ? (
-                        <form onSubmit={submitRaisedForm} className="space-y-3 bg-white p-4 rounded-xl border border-indigo-100 shadow-sm mt-1">
-                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <FileText className="w-3.5 h-3.5"/> Complete this form
-                          </p>
-                          {(branding.form_config || []).map((field, idx) => (
-                            <input 
-                              key={idx}
-                              name={field.name} 
-                              placeholder={field.label} 
-                              required={field.required} 
-                              className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold outline-none focus:ring-2 ring-indigo-50" 
-                            />
-                          ))}
-                          <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-black hover:bg-indigo-700 transition-all">Submit Details</button>
-                        </form>
-                      ) : (
-                        msg.text
-                      )}
+                  <div key={i} className={`flex flex-col ${right ? 'items-end' : 'items-start'}`}>
+                    <div className={`max-w-[85%] px-5 py-4 rounded-[2rem] text-sm font-bold shadow-sm ${right ? 'text-white' : 'bg-white border-2 border-slate-50 text-slate-800'}`} style={right ? {backgroundColor: branding.color} : {}}>
+                      {msg.image ? <img src={msg.image} className="w-full rounded-xl mb-2" alt="upload" /> : msg.text}
                     </div>
+                    {isOptions && (
+                      <div className="flex flex-wrap gap-2 mt-4 ml-2">
+                        {msg.options.map((opt, idx) => (
+                           <button key={idx} onClick={() => handleStep(opt.label, opt.next)} 
+                              className="px-6 py-3 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-amber-500 hover:text-amber-600 transition-all shadow-sm"
+                           >
+                              {opt.label}
+                           </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-white px-4 py-3 rounded-3xl border border-slate-100 flex gap-1 items-center">
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"/>
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce [animation-delay:0.15s]"/>
-                    <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce [animation-delay:0.3s]"/>
-                  </div>
-                </div>
-              )}
-              {renderStep()}
+              {isTyping && <div className="flex justify-start"><div className="bg-white px-5 py-4 rounded-[2rem] border-2 border-slate-50 flex gap-1.5 items-center"><div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"/><div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:0.1s]"/><div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:0.2s]"/></div></div>}
               {chatStatus === 'ended' && (
-                <div className="flex flex-col items-center gap-3 py-6 animate-in fade-in slide-in-from-bottom-4">
-                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
-                    <CheckCircle className="w-6 h-6" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-black text-slate-900">Conversation Resolved</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Need something else?</p>
-                  </div>
-                  <button 
-                    onClick={handleResetChat}
-                    className="mt-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Start New Conversation
-                  </button>
+                <div className="flex flex-col items-center gap-4 py-10">
+                   <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[2rem] flex items-center justify-center shadow-sm"><CheckCircle className="w-8 h-8" /></div>
+                   <div className="text-center"><p className="text-lg font-black text-slate-900 uppercase tracking-tighter">Solved</p><button onClick={handleResetChat} className="mt-4 px-8 py-4 bg-slate-900 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-amber-500 transition-all">New Hive Session</button></div>
+                </div>
+              )}
+
+              {ticketFormVisible ? (
+                <motion.form initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} onSubmit={handleTicketSubmit} className="space-y-4 p-6 bg-white border-2 border-slate-50 rounded-[2.5rem] shadow-xl">
+                   <h4 className="font-black text-slate-900 uppercase tracking-tighter text-sm flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-amber-500" /> Create Support Ticket
+                   </h4>
+                   <input required type="email" placeholder="YOUR EMAIL" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.email} onChange={e => setTicketData({...ticketData, email: e.target.value})} />
+                   <textarea required placeholder="HOW CAN WE HELP?" rows="3" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.message} onChange={e => setTicketData({...ticketData, message: e.target.value})} />
+                   <button disabled={ticketLoading} type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-amber-500 transition-all">
+                      {ticketLoading ? 'Sending...' : 'Raise Ticket'}
+                   </button>
+                   <button type="button" onClick={() => setTicketFormVisible(false)} className="w-full text-center text-slate-400 font-black text-[9px] uppercase tracking-widest">Back to Chat</button>
+                </motion.form>
+              ) : !branding.is_open && (
+                <div className="p-6 bg-amber-50/50 border border-amber-100 rounded-[2.5rem] text-center">
+                   <p className="text-xs font-bold text-amber-900/60 leading-relaxed mb-4">
+                     We are currently out of the hive. Leave a message or create a ticket for faster response.
+                   </p>
+                   <button onClick={() => setTicketFormVisible(true)} className="px-6 py-3 bg-white text-amber-600 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-sm border border-amber-100">Open Ticket</button>
                 </div>
               )}
             </div>
 
-            {/* Input */}
-            <div className="p-4 bg-white border-t border-slate-100">
-              <form onSubmit={handleSend} className="flex items-center gap-2 bg-slate-50 p-2 pl-2 rounded-2xl border border-slate-100 focus-within:border-indigo-200 focus-within:bg-white transition-all">
-                <label className="p-2 text-slate-400 hover:text-indigo-600 cursor-pointer transition-all shrink-0">
-                  <Image className="w-5 h-5"/>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+            <div className="p-6 bg-white border-t-2 border-slate-50">
+              <form onSubmit={handleSend} className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border-2 border-transparent focus-within:border-amber-100 focus-within:bg-white transition-all">
+                <label className="p-2 cursor-pointer hover:bg-slate-200 rounded-xl transition-all relative">
+                   <Image className={`w-6 h-6 ${isUploading ? 'animate-pulse text-amber-500' : 'text-slate-400'}`} />
+                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
                 </label>
-                <input
-                  placeholder={isLive ? 'Type message to agent…' : 'Type your message…'}
-                  className="flex-1 bg-transparent border-none text-sm font-medium outline-none text-slate-700"
-                  value={input} onChange={e => setInput(e.target.value)}
-                />
-                <button type="submit" className="p-2.5 rounded-xl text-white transition-all hover:scale-105 active:scale-95" style={{backgroundColor:branding.color}}>
-                  <Send className="w-5 h-5"/>
-                </button>
+                <input placeholder="Enter message to hive..." className="flex-1 bg-transparent border-none text-sm font-bold outline-none text-slate-700 placeholder:uppercase placeholder:text-[10px]" value={input} onChange={e => { setInput(e.target.value); recordActivity(); }} />
+                <button type="submit" className="p-3.5 rounded-xl text-white transition-all hover:scale-105" style={{backgroundColor:branding.color}}><Send className="w-6 h-6"/></button>
               </form>
-              
-              {branding.plan_name !== 'Enterprise' && (
-                <div className="py-2 text-center border-t border-slate-50 bg-slate-50/50">
-                  <a href="#" className="text-[9px] font-black text-slate-300 hover:text-indigo-400 transition-colors uppercase tracking-widest flex items-center justify-center gap-1">
-                    Powered by <span className="text-indigo-300">Bee Chat</span>
-                  </a>
-                </div>
-              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Notification Nudge */}
-      <AnimatePresence>
-        {notification && !isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            onClick={openChat}
-            className="absolute bottom-20 right-0 w-64 bg-white p-4 rounded-2xl shadow-2xl border border-slate-100 cursor-pointer group"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">{branding.name}</p>
-                <p className="text-xs font-bold text-slate-800 line-clamp-2">{notification}</p>
-              </div>
-              <button onClick={(e) => { e.stopPropagation(); setNotification(null); }} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
-                <X className="w-3 h-3 text-slate-400" />
-              </button>
-            </div>
-            <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-b border-r border-slate-100 rotate-45" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Bubble */}
-      <button
-        onClick={() => isOpen ? closeChat() : openChat()}
-        className="w-16 h-16 rounded-[2rem] shadow-2xl flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 relative overflow-hidden"
-        style={{background: branding.headerBg || `linear-gradient(135deg,${branding.color} 0%,${branding.color}cc 100%)`}}
-      >
-        {isOpen ? <X className="w-8 h-8"/> : (
-          branding.icon ? <img src={branding.icon} className="w-8 h-8 object-contain" alt="icon" /> : <MessageSquare className="w-8 h-8"/>
-        )}
-        {notification && !isOpen && <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 rounded-full border-2 border-white animate-bounce" />}
+      <button onClick={() => isOpen ? closeChat() : openChat()} className="w-20 h-20 rounded-full shadow-4xl flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 relative overflow-hidden pointer-events-auto" style={{background: branding.headerBg || branding.color}}>
+        {isOpen ? <X className="w-10 h-10"/> : <MessageSquare className="w-10 h-10"/>}
+        {notification && !isOpen && <span className="absolute -top-1 -right-1 w-6 h-6 bg-pink-500 rounded-full border-4 border-white animate-bounce" />}
       </button>
 
       <style>{`
-        .survey-btn{background:white;border:1px solid #f1f5f9;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:700;color:#475569;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;width:100%;}
-        .survey-btn:hover{background:#f8fafc;transform:translateX(3px);}
+        html, body { background: transparent !important; margin: 0; padding: 0; overflow: hidden; }
         .custom-scrollbar::-webkit-scrollbar{width:4px;}
         .custom-scrollbar::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       `}</style>
     </div>
   );

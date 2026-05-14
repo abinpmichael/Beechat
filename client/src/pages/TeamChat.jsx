@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Send, Users, MessageSquare, Shield, CheckCircle, Clock, Image, FileText, ExternalLink } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
-const API = 'http://localhost/Bee/server/api/internal_chat.php';
+const API = `${API_BASE_URL}/internal_chat.php`;
 
 function getToken()  { return localStorage.getItem('token'); }
 function authH()     { return { Authorization: `Bearer ${getToken()}` }; }
@@ -76,7 +77,7 @@ export default function TeamChat() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://localhost/Bee/server/api/upload.php', formData);
+      const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
       if (res.data.url) sendMessage(null, res.data.url);
     } catch (err) { alert("Upload failed"); }
   };
@@ -84,10 +85,10 @@ export default function TeamChat() {
   const filtered = agents.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="h-full flex flex-col gap-6" style={{minHeight:'calc(100vh - 11rem)'}}>
+    <div className="h-full flex flex-col gap-6 selection:bg-amber-100 selection:text-amber-600" style={{minHeight:'calc(100vh - 11rem)'}}>
       <div>
-        <h2 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-          <Shield className="w-10 h-10 text-indigo-600" /> Team <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Lounge</span>
+        <h2 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4 uppercase">
+          <Shield className="w-10 h-10 text-amber-500" /> Team <span className="text-amber-500">Lounge</span>
         </h2>
         <p className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-xs">Private internal communication for agents.</p>
       </div>
@@ -101,23 +102,23 @@ export default function TeamChat() {
               <input 
                 value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search teammates..."
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:ring-4 ring-indigo-50 transition-all"
+                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 ring-amber-50 transition-all focus:bg-white"
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
             {loading ? (
-              <div className="p-8 text-center animate-pulse text-slate-300 font-bold">Loading Team...</div>
+              <div className="p-8 text-center animate-pulse text-slate-300 font-black uppercase tracking-widest text-[10px]">Loading Team...</div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-slate-300 font-bold">No teammates found.</div>
+              <div className="p-8 text-center text-slate-300 font-black uppercase tracking-widest text-[10px]">No teammates found.</div>
             ) : filtered.map(a => (
               <button 
                 key={a.id} onClick={() => setSelected(a)}
-                className={`w-full p-4 text-left rounded-[2rem] transition-all flex items-center gap-4 group ${selected?.id === a.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' : 'hover:bg-slate-50 text-slate-600'} ${a.id === 0 ? 'border-2 border-indigo-100 mb-4' : ''}`}
+                className={`w-full p-4 text-left rounded-[2rem] transition-all flex items-center gap-4 group ${selected?.id === a.id ? 'bg-amber-500 text-white shadow-xl shadow-amber-200' : 'hover:bg-slate-50 text-slate-600'} ${a.id === 0 ? 'border-2 border-amber-100 mb-4' : ''}`}
               >
                 <div className="relative shrink-0">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${selected?.id === a.id ? 'bg-white/20' : a.id === 0 ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white' : 'bg-indigo-50 text-indigo-600'}`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${selected?.id === a.id ? 'bg-white/20' : a.id === 0 ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600'}`}>
                     {a.id === 0 ? '📢' : a.name.charAt(0)}
                   </div>
                   {a.unread_count > 0 && (
@@ -147,7 +148,7 @@ export default function TeamChat() {
           <div className="flex-1 flex flex-col min-w-0 bg-slate-50/30">
             <header className="h-20 bg-white border-b border-slate-100 px-8 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black shadow-lg">
                   {selected.name.charAt(0)}
                 </div>
                 <div>
@@ -159,11 +160,11 @@ export default function TeamChat() {
               </div>
             </header>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-4">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
               {messages.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-50">
                   <MessageSquare className="w-12 h-12 mb-4" />
-                  <p className="font-bold">No internal messages yet</p>
+                  <p className="font-black uppercase tracking-widest text-[10px]">No internal messages yet</p>
                 </div>
               )}
               {messages.map((msg, i) => {
@@ -174,19 +175,19 @@ export default function TeamChat() {
                       {!isMe && selected.id === 0 && (
                         <p className="text-[10px] font-black text-slate-400 mb-1 ml-4 uppercase tracking-widest">{msg.sender_name}</p>
                       )}
-                      <div className={`px-5 py-3 rounded-[2rem] text-sm font-medium shadow-sm transition-all ${
-                        isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'
+                      <div className={`px-5 py-3 rounded-[2rem] text-sm font-bold shadow-sm transition-all ${
+                        isMe ? 'bg-amber-500 text-white rounded-br-none' : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'
                       }`}>
                         {msg.content.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                          <img src={msg.content} alt="Upload" className="max-w-xs rounded-xl cursor-pointer" onClick={() => window.open(msg.content)} />
+                          <img src={msg.content} alt="Upload" className="max-w-xs rounded-xl cursor-pointer shadow-xl" onClick={() => window.open(msg.content)} />
                         ) : msg.content.startsWith('[TICKET:') ? (
-                          <div className={`p-3 rounded-2xl border ${isMe ? 'bg-white/10 border-white/20' : 'bg-slate-50 border-slate-100'}`}>
+                          <div className={`p-4 rounded-[1.5rem] border ${isMe ? 'bg-white/10 border-white/20' : 'bg-amber-50 border-amber-100'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                              <FileText className="w-4 h-4 text-indigo-400" />
+                              <FileText className={`w-4 h-4 ${isMe ? 'text-white' : 'text-amber-500'}`} />
                               <span className="font-black text-[10px] uppercase tracking-widest">Shared Ticket</span>
                             </div>
-                            <p className="text-xs font-bold mb-2">Issue reference: {msg.content.replace('[TICKET:', '').replace(']', '')}</p>
-                            <a href={`/dashboard/leads?id=${msg.content.match(/\d+/)[0]}`} className={`text-[10px] font-black uppercase flex items-center gap-1 hover:underline ${isMe ? 'text-white' : 'text-indigo-600'}`}>
+                            <p className={`text-xs font-bold mb-2 ${isMe ? 'text-white' : 'text-slate-700'}`}>Issue reference: {msg.content.replace('[TICKET:', '').replace(']', '')}</p>
+                            <a href={`/dashboard/leads?id=${msg.content.match(/\d+/)[0]}`} className={`text-[10px] font-black uppercase flex items-center gap-1 hover:underline ${isMe ? 'text-white' : 'text-amber-600'}`}>
                               View Details <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
@@ -194,7 +195,7 @@ export default function TeamChat() {
                           msg.content
                         )}
                       </div>
-                      <p className={`text-[10px] font-bold mt-2 flex items-center gap-1 ${isMe ? 'justify-end text-indigo-400' : 'text-slate-400'}`}>
+                      <p className={`text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1 ${isMe ? 'justify-end text-amber-400' : 'text-slate-400'}`}>
                         <Clock className="w-3 h-3" /> {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -204,19 +205,19 @@ export default function TeamChat() {
             </div>
 
             <div className="p-6 bg-white border-t border-slate-100">
-              <form onSubmit={sendMessage} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-[2rem] px-6 py-3 focus-within:ring-4 ring-indigo-50 focus-within:bg-white transition-all">
+              <form onSubmit={sendMessage} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-[2rem] px-6 py-3 focus-within:ring-4 ring-amber-50 focus-within:bg-white transition-all">
                 <input 
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder={`Message ${selected.name}...`}
                   className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-700 placeholder:text-slate-400"
                 />
                 <div className="flex items-center gap-1">
-                  <label className="p-2 text-slate-400 hover:text-indigo-600 cursor-pointer transition-all shrink-0">
+                  <label className="p-2 text-slate-400 hover:text-amber-600 cursor-pointer transition-all shrink-0">
                     <Image className="w-5 h-5"/>
                     <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                   </label>
                 </div>
-                <button type="submit" disabled={!input.trim()} className="bg-indigo-600 text-white p-3 rounded-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-30">
+                <button type="submit" disabled={!input.trim()} className="bg-amber-500 text-white p-3 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-amber-100 disabled:opacity-30">
                   <Send className="w-5 h-5" />
                 </button>
               </form>
@@ -224,10 +225,10 @@ export default function TeamChat() {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-20">
-            <div className="w-24 h-24 bg-indigo-50 rounded-[3rem] flex items-center justify-center mb-8 shadow-inner">
-              <Users className="w-12 h-12 text-indigo-300" />
+            <div className="w-24 h-24 bg-amber-50 rounded-[3rem] flex items-center justify-center mb-8 shadow-inner border border-white">
+              <Users className="w-12 h-12 text-amber-300" />
             </div>
-            <h3 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Team Lounge</h3>
+            <h3 className="text-3xl font-black text-slate-900 mb-3 tracking-tight uppercase">Team Lounge</h3>
             <p className="text-slate-400 text-sm max-w-sm font-medium leading-relaxed">
               Select a teammate from the list to start a private conversation. 
               All internal chats are encrypted and restricted to your organization.

@@ -1,0 +1,85 @@
+name: Bee Chat Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  deployment:
+
+jobs:
+  test-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql
+          
+      - name: Setup MySQL
+        run: |
+          sudo systemctl start mysql
+          mysql -e "CREATE DATABASE beechat;"
+          mysql -e "CREATE USER 'root'@'localhost' IDENTIFIED BY '';" || true
+          mysql -e "GRANT ALL PRIVILEGES ON beechat.* TO 'root'@'localhost';"
+          
+      - name: Start PHP Server
+        run: php -S localhost:8000 -t server/api &
+        
+      - name: Start Socket Server
+        run: node server/socket/index.js &
+        
+      - name: Run API Tests
+        run: npm run test:api
+        env:
+          API_BASE_URL: http://localhost:8000
+
+      - name: Run Socket Tests
+        run: npm run test:socket
+
+      - name: Run Security Tests
+        run: npm run test:security
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run UI Tests (Playwright & Cypress)
+        run: npm run test:ui
+
+      - name: Run Load Tests
+        run: npm run test:load
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            playwright-report/
+            cypress/videos/
+            cypress/screenshots/
+          retention-days: 30
+          
+      - name: Send Email Notification
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{secrets.MAIL_USERNAME}}
+          password: ${{secrets.MAIL_PASSWORD}}
+          subject: Bee Chat Tests Failed
+          to: admin@beechat.com
+          from: github-actions@beechat.com
+          body: The automated testing pipeline failed. Please check the GitHub Actions logs.

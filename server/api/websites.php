@@ -2,24 +2,22 @@
 // server/api/websites.php
 require_once 'config.php';
 
-$headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+$headers = getAuthHeaders();
+$decoded = decodeJwt($headers);
 
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+if (!$decoded || !isset($decoded['tenant_id'])) {
     http_response_code(401);
-    echo json_encode(["message" => "Unauthorized"]);
+    echo json_encode(["message" => "Unauthorized or Invalid token"]);
     exit;
 }
 
-$token = $matches[1];
-$decoded = json_decode(base64_decode($token), true);
 $tenantId = $decoded['tenant_id'];
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     if ($method === 'GET') {
-        $stmt = $pdo->prepare("SELECT * FROM websites WHERE tenant_id = ?");
+        $stmt = $pdo->prepare("SELECT * FROM websites WHERE tenant_id = ? AND deleted_at IS NULL");
         $stmt->execute([$tenantId]);
         echo json_encode($stmt->fetchAll());
     } 
@@ -50,15 +48,17 @@ try {
             $sound    = $data['notification_sound'] ?? null;
             $icon     = $data['widget_icon'] ?? null;
             
+            $surveyPriority = $data['survey_priority'] ?? 1;
+            
             $stmt = $pdo->prepare("UPDATE websites SET 
                 bot_name = ?, bot_image = ?, theme_color = ?, 
                 welcome_message = ?, bot_subtitle = ?, success_message = ?, 
                 survey_config = ?, form_config = ?, header_bg_gradient = ?, 
-                notification_sound = ?, widget_icon = ? 
+                notification_sound = ?, widget_icon = ?, survey_priority = ?
                 WHERE id = ? AND tenant_id = ?");
             $stmt->execute([
                 $botName, $botImage, $themeColor, $welcomeMessage, $botSubtitle, $successMessage, 
-                $surveyConfig, $formConfig, $headerBg, $sound, $icon, $id, $tenantId
+                $surveyConfig, $formConfig, $headerBg, $sound, $icon, $surveyPriority, $id, $tenantId
             ]);
             
             echo json_encode(["message" => "Settings updated"]);
@@ -83,7 +83,9 @@ try {
         $planStmt->execute([$tenantId]);
         $maxWebsites = $planStmt->fetchColumn() ?: 1; // Default to 1 if no plan found
 
-        if ($currentCount >= $maxWebsites) {
+        $isSuperAdmin = isset($decoded['is_superadmin']) && (int)$decoded['is_superadmin'] === 1;
+
+        if ($currentCount >= $maxWebsites && !$isSuperAdmin) {
             http_response_code(403);
             echo json_encode(["message" => "Plan limit reached ($maxWebsites). Please upgrade to add more websites."]);
             exit;
@@ -101,9 +103,9 @@ try {
     } 
     elseif ($method === 'DELETE') {
         $id = $_GET['id'] ?? 0;
-        $stmt = $pdo->prepare("DELETE FROM websites WHERE id = ? AND tenant_id = ?");
+        $stmt = $pdo->prepare("UPDATE websites SET deleted_at = NOW() WHERE id = ? AND tenant_id = ?");
         $stmt->execute([$id, $tenantId]);
-        echo json_encode(["message" => "Website deleted"]);
+        echo json_encode(["message" => "Website moved to trash"]);
     }
 } catch (Exception $e) {
     http_response_code(500);

@@ -7,7 +7,8 @@ import {
   Settings as SettingsIcon, LogOut, Bell, Search,
   ChevronRight, Plus, TrendingUp, Activity, Zap,
   Menu, Radio, History, Clock, UserCheck, Hash, Shield,
-  Sparkles, BrainCircuit, Rocket, Heart, AlertCircle, CreditCard, Lock
+  Sparkles, BrainCircuit, Rocket, Heart, AlertCircle, CreditCard, Lock, HelpCircle, X,
+  CheckCircle2, Inbox, Target
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ChatConsole from './ChatConsole';
@@ -17,298 +18,358 @@ import Settings from './Settings';
 import TeamPage from './TeamPage';
 import TeamChat from './TeamChat';
 import SuperAdmin from './SuperAdmin';
+import Help from './Help';
+import Tickets from './Tickets';
+import { API_BASE_URL } from '../config';
 
-const STATS_URL = 'http://localhost/Bee/server/api/stats.php';
+const STATS_URL = `${API_BASE_URL}/stats.php`;
+
+// --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
+const TopBee = ({ size = 40, animated = true }) => {
+  const [isWiggling, setIsWiggling] = useState(false);
+  
+  useEffect(() => {
+    if (!animated) return;
+    const interval = setInterval(() => {
+      if (Math.random() > 0.6) {
+        setIsWiggling(true);
+        setTimeout(() => setIsWiggling(false), 1200);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [animated]);
+
+  return (
+    <motion.svg 
+      width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      animate={animated ? { 
+        y: isWiggling ? [0, -12, 0] : [0, -4, 0],
+        rotate: isWiggling ? [0, 10, -10, 7, 0] : [0, 3, -3, 0],
+        scale: isWiggling ? [1, 1.1, 1] : [1, 1.02, 1],
+        filter: ["drop-shadow(0 0 0px rgba(251,191,36,0))", "drop-shadow(0 0 30px rgba(251,191,36,0.6))", "drop-shadow(0 0 0px rgba(251,191,36,0))"]
+      } : {}}
+      transition={{ duration: isWiggling ? 0.5 : 3.5, repeat: isWiggling ? 0 : Infinity, ease: "easeInOut" }}
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <filter id="megaKawaiiFuzzDash" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" />
+        </filter>
+        <linearGradient id="megaHoneyDash" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFFBEB" /><stop offset="40%" stopColor="#FEF3C7" /><stop offset="80%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#92400E" />
+        </linearGradient>
+        <radialGradient id="kawaiiEyeDash" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#4B5563" /><stop offset="60%" stopColor="#111827" /><stop offset="100%" stopColor="#000000" />
+        </radialGradient>
+        <radialGradient id="deepBlushDash" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FF85A2" stopOpacity="0.8" /><stop offset="100%" stopColor="#FF85A2" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <motion.g animate={animated ? { rotate: [0, 45, 0], opacity: [0.4, 0.7, 0.4] } : {}} transition={{ duration: 0.04, repeat: Infinity }}>
+        <path d="M40 40C20 10 0 20 0 40C0 60 20 80 40 60C60 80 80 60 80 40C80 20 60 10 40 40Z" fill="#FDF2F8" fillOpacity="0.5" stroke="#FBCFE8" strokeWidth="1" transform="scale(0.5) translate(40, 20)" />
+      </motion.g>
+
+      <motion.g animate={animated ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }}>
+        <circle cx="75" cy="75" r="30" fill="url(#megaHoneyDash)" filter="url(#megaKawaiiFuzzDash)" />
+        <path d="M85 55Q95 55 100 75L95 100Q85 105 75 100" fill="#1F2937" fillOpacity="0.9" />
+        <path d="M100 65Q110 70 115 80L108 95Q100 100 92 95" fill="#1F2937" fillOpacity="0.9" />
+        <circle cx="102" cy="75" r="2" fill="#000" />
+      </motion.g>
+
+      <motion.g animate={animated ? { rotate: isWiggling ? [-8, 8, -8] : [-2, 2] } : {}} transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}>
+        <circle cx="40" cy="60" r="35" fill="url(#megaHoneyDash)" filter="url(#megaKawaiiFuzzDash)" />
+        <circle cx="40" cy="60" r="32" fill="url(#megaHoneyDash)" fillOpacity="0.2" />
+        <circle cx="15" cy="70" r="10" fill="url(#deepBlushDash)" />
+        <circle cx="65" cy="70" r="10" fill="url(#deepBlushDash)" />
+        <g>
+          <circle cx="22" cy="55" r="16" fill="url(#kawaiiEyeDash)" />
+          <circle cx="16" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="28" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M10 55Q12 50 14 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+          <circle cx="58" cy="55" r="16" fill="url(#kawaiiEyeDash)" />
+          <circle cx="52" cy="48" r="7" fill="white" fillOpacity="0.95" />
+          <circle cx="64" cy="60" r="3" fill="white" fillOpacity="0.6" />
+          <path d="M46 55Q48 50 50 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+        </g>
+        <path d="M36 75Q38 78 40 75Q42 78 44 75" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '40px', originY: '30px' }}>
+          <path d="M30 35Q25 10 15 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <path d="M50 35Q55 10 65 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity }} d="M15 15L17 13L15 11L13 13Z" fill="#FF85A2" />
+          <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} d="M65 15L67 13L65 11L63 13Z" fill="#FF85A2" />
+        </motion.g>
+      </motion.g>
+
+      <motion.g 
+        animate={animated ? { rotateX: [0, -85, 0], scale: [1, 1.1, 1], opacity: [0.9, 0.5, 0.9] } : {}} 
+        transition={{ duration: 0.02, repeat: Infinity }}
+        style={{ originX: '50px', originY: '50px' }}
+      >
+        <path d="M50 50C70 10 130 10 130 50C130 90 70 130 50 110C30 130 -30 90 -30 50C-30 10 30 10 50 50Z" fill="#F0F9FF" fillOpacity="0.4" stroke="#BAE6FD" strokeWidth="1" transform="scale(0.6) translate(40, -20)" />
+      </motion.g>
+    </motion.svg>
+  );
+};
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
   const [waitingCount, setWaitingCount]   = useState(0);
   const [showWelcome, setShowWelcome]     = useState(false);
+  const [sysSettings, setSysSettings]     = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const [isNotifOpen, setIsNotifOpen]     = useState(false);
 
-  useEffect(() => {
-    // Show welcome guide to non-superadmins who haven't seen it
-    const hasSeen = localStorage.getItem('bee_welcome_seen');
-    if (!hasSeen && user?.is_superadmin === 0) {
-      setShowWelcome(true);
-    }
-  }, [user]);
-
-  const closeWelcome = () => {
-    localStorage.setItem('bee_welcome_seen', 'true');
-    setShowWelcome(false);
+  const fetchNotifs = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/notifications.php`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setNotifications(res.data);
+    } catch (e) { }
   };
 
-  // Poll waiting count for nav badge
+  useEffect(() => {
+    fetchNotifs();
+    const t = setInterval(fetchNotifs, 10000);
+    return () => clearInterval(t);
+  }, []);
+
+  const markAllRead = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/notifications.php`, { action: 'mark_read' }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      fetchNotifs();
+    } catch (e) { }
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('bee_welcome_seen');
+    if (!hasSeen && user?.is_superadmin === 0) setShowWelcome(true);
+  }, [user]);
+
+  const closeWelcome = () => { localStorage.setItem('bee_welcome_seen', 'true'); setShowWelcome(false); };
+
   useEffect(() => {
     const fetchWaiting = async () => {
       try {
         const r = await axios.get(STATS_URL, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
         setWaitingCount(r.data.waiting || 0);
-      } catch { /* silent */ }
+      } catch { }
     };
-    fetchWaiting();
-    const t = setInterval(fetchWaiting, 5000);
-    return () => clearInterval(t);
+    fetchWaiting(); const t = setInterval(fetchWaiting, 5000); return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/settings.php`).then(res => setSysSettings(res.data));
   }, []);
 
   const navItems = [
-    { name: 'Overview',      path: '/dashboard',          icon: LayoutDashboard },
-    { name: 'Live Chats',    path: '/dashboard/leads',    icon: Radio,           badge: waitingCount },
-    { name: 'Conversations', path: '/dashboard/chats',    icon: MessageSquare },
-    { name: 'Team Lounge',  path: '/dashboard/team',     icon: MessageSquare },
-    { name: 'My Websites',   path: '/dashboard/websites', icon: Globe },
-    { name: 'Team Members',  path: '/dashboard/agents',   icon: Users },
-    { name: 'Settings',      path: '/dashboard/settings', icon: SettingsIcon },
-    // Only show Super Admin to the platform owner
-    ...(user?.is_superadmin === 1 ? [{ name: 'Super Admin', path: '/dashboard/super-admin', icon: Shield }] : []),
+    { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+    ...(parseInt(sysSettings.enable_live_chat ?? 1) === 1 ? [
+      { name: 'Live Console', path: '/dashboard/leads', icon: Radio, badge: waitingCount },
+      { name: 'Communications', path: '/dashboard/chats', icon: MessageSquare },
+    ] : []),
+    { name: 'Team Lounge', path: '/dashboard/team', icon: MessageSquare },
+    { name: 'Neural Tickets', path: '/dashboard/tickets', icon: Inbox },
+    { name: 'My Domains', path: '/dashboard/websites', icon: Globe },
+    { name: 'Hive Members', path: '/dashboard/agents', icon: Users },
+    { name: 'Neural Config', path: '/dashboard/settings', icon: SettingsIcon },
+    ...(parseInt(sysSettings.enable_ticketing ?? 1) === 1 ? [
+      { name: 'Intelligence Hub', path: '/dashboard/help', icon: HelpCircle },
+    ] : []),
+    ...(user?.is_superadmin === 1 || user?.role === 'superadmin' ? [{ name: 'Sovereign View', path: '/dashboard/super-admin', icon: Shield }] : []),
   ];
-
-  const isExpiringSoon = user?.plan?.expires_at && 
-    (new Date(user.plan.expires_at).getTime() - new Date().getTime()) < (3 * 24 * 60 * 60 * 1000); // 3 days
-
-    (new Date(user.plan.expires_at).getTime() - new Date().getTime()) < (3 * 24 * 60 * 60 * 1000); // 3 days
 
   const isRestricted = user?.status !== 'active' && user?.is_superadmin !== 1;
 
   return (
-    <div className="flex h-screen bg-slate-50/50 overflow-hidden text-slate-700 relative">
+    <div className="flex h-screen bg-[#fcfdfe] overflow-hidden text-slate-700 relative selection:bg-amber-100 selection:text-amber-600">
       {/* Paywall Overlay */}
       {isRestricted && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-2xl bg-white rounded-[4rem] p-12 shadow-2xl border-4 border-white text-center relative overflow-hidden"
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-2xl">
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-xl bg-white rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 shadow-2xl border-4 md:border-[8px] border-white text-center relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-2 premium-gradient" />
-            <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
-              <Lock className="w-12 h-12" />
-            </div>
-            
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">Subscription Required</h2>
-            <p className="text-xl text-slate-500 font-medium mb-10 leading-relaxed">
-              Your access to the Bee Chat dashboard is currently restricted. <br/>
-              Please renew your plan or upgrade to continue managing your agents and websites.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link 
-                to="/dashboard/settings" 
-                className="premium-gradient text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 hover:scale-105 transition-all flex items-center justify-center gap-3"
-              >
-                <CreditCard className="w-6 h-6" /> View Pricing Plans
-              </Link>
-              <button 
-                onClick={logout}
-                className="bg-slate-100 text-slate-600 py-5 rounded-3xl font-black text-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-3"
-              >
-                <LogOut className="w-6 h-6" /> Log Out
-              </button>
-            </div>
-            
-            <div className="mt-12 flex items-center justify-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
-              <Shield className="w-4 h-4" /> Secure Payment via Stripe
+            <div className="w-16 h-16 md:w-24 md:h-24 bg-rose-50 text-rose-500 rounded-xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner border border-rose-100"><Lock className="w-8 h-8 md:w-12 md:h-12" /></div>
+            <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter mb-3 uppercase">Access Restricted</h2>
+            <p className="text-base md:text-xl text-slate-400 font-bold mb-8 md:mb-10 leading-relaxed uppercase tracking-widest">Plan Renewal Required.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+              <Link to="/dashboard/settings" className="bg-amber-500 text-white py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-base md:text-lg shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center justify-center gap-3 uppercase tracking-tighter"><CreditCard className="w-5 h-5 md:w-6 md:h-6" /> Upgrade</Link>
+              <button onClick={logout} className="bg-slate-100 text-slate-600 py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-base md:text-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-3 uppercase tracking-tighter"><LogOut className="w-5 h-5 md:w-6 md:h-6" /> Sign Out</button>
             </div>
           </motion.div>
         </div>
       )}
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: isSidebarOpen ? 280 : 88 }}
-        className="glass border-r border-slate-200/50 flex flex-col z-20 relative"
-      >
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" className="w-10 h-10 object-contain drop-shadow-sm" alt="Bee Chat" />
-            {isSidebarOpen && (
-              <motion.span initial={{ opacity:0 }} animate={{ opacity:1 }} className="font-black text-2xl tracking-tighter text-slate-900 uppercase">
-                HIVE<span className="text-indigo-600">CHAT</span>
-              </motion.span>
-            )}
-          </div>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-2 mt-6">
-          {navItems.map((item) => {
-            const isActive = item.path === '/dashboard'
-              ? location.pathname === '/dashboard'
-              : location.pathname.startsWith(item.path);
-            const Icon = item.icon;
-            return (
-              <Link key={item.path} to={item.path}
-                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative ${
-                  isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' : 'text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm'
-                }`}>
-                <Icon className="w-6 h-6 shrink-0 transition-transform group-hover:scale-110" />
-                {isSidebarOpen && (
-                  <motion.span initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }} className="font-semibold text-sm flex-1">
-                    {item.name}
-                  </motion.span>
-                )}
-                {isSidebarOpen && item.badge > 0 && (
-                  <span className="bg-amber-400 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">{item.badge}</span>
-                )}
-                {!isSidebarOpen && item.badge > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse border border-white"/>
-                )}
-                {isActive && <motion.div layoutId="activeTab" className="absolute -left-1 w-2 h-8 bg-white rounded-full" />}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-slate-100">
-          <button onClick={logout}
-            className="flex items-center gap-4 px-4 py-4 w-full text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all group">
-            <LogOut className="w-6 h-6 shrink-0 group-hover:-translate-x-1 transition-transform" />
-            {isSidebarOpen && <span className="font-semibold text-sm">Sign Out</span>}
-          </button>
-        </div>
-      </motion.aside>
-
-      {/* Main */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/50 backdrop-blur-md border-b border-slate-200/50 px-8 flex items-center justify-between z-10">
-          <div className="flex items-center gap-6">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500">
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="hidden md:flex items-center gap-3 bg-slate-100/50 px-4 py-2.5 rounded-2xl border border-slate-200/50 focus-within:bg-white focus-within:ring-2 ring-indigo-100 transition-all">
-              <Search className="w-5 h-5 text-slate-400" />
-              <input type="text" placeholder="Global search..." className="bg-transparent border-none focus:ring-0 w-64 outline-none text-sm font-medium" />
+      <AnimatePresence mode="wait">
+        {(isSidebarOpen || window.innerWidth > 1024) && (
+          <motion.aside initial={{ x: -320 }} animate={{ x: 0, width: isSidebarOpen ? (window.innerWidth > 1024 ? 300 : 280) : 100 }} exit={{ x: -320 }}
+            className={`bg-white border-r-2 border-slate-50 flex flex-col z-50 absolute lg:relative h-full transition-all shadow-2xl shadow-slate-100`}
+          >
+            <div className="p-6 md:p-8 flex items-center justify-between">
+              <div className="flex items-center gap-3 md:gap-4 group">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-xl shadow-amber-500/10 flex items-center justify-center p-1 md:p-1.5 border-2 border-slate-50 overflow-hidden"><TopBee size={24} /></div>
+                {isSidebarOpen && <span className="font-black text-lg md:text-xl tracking-tighter text-slate-900 uppercase">BEE<span className="text-amber-500">CHAT</span></span>}
+              </div>
+              {!isSidebarOpen && window.innerWidth < 1024 && <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400"><X /></button>}
             </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <button className="relative p-2.5 hover:bg-slate-100 rounded-xl transition-all text-slate-500 group">
-                <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                {waitingCount > 0 && <span className="absolute top-2 right-2 w-3 h-3 bg-pink-500 rounded-full border-2 border-white animate-pulse"/>}
+            <nav className="flex-1 px-4 md:px-5 space-y-2 md:space-y-3 mt-6 md:mt-10 no-scrollbar overflow-y-auto">
+              {navItems.map((item) => {
+                const isActive = item.path === '/dashboard' ? location.pathname === '/dashboard' : location.pathname.startsWith(item.path);
+                const Icon = item.icon;
+                return (
+                  <Link key={item.path} to={item.path} onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)}
+                    className={`flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] transition-all group relative ${isActive ? 'bg-amber-500 text-white shadow-xl shadow-amber-200' : 'text-slate-400 hover:bg-slate-50 hover:text-amber-500'}`}>
+                    <Icon className={`w-6 h-6 md:w-7 md:h-7 shrink-0 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                    {isSidebarOpen && <span className="font-black text-[11px] md:text-[12px] uppercase tracking-widest md:tracking-[0.2em] flex-1">{item.name}</span>}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="p-4 md:p-6 border-t-2 border-slate-50">
+              <button onClick={logout} className="flex items-center gap-4 md:gap-5 px-4 md:px-5 py-4 md:py-5 w-full text-slate-300 hover:bg-red-50 hover:text-red-500 rounded-xl md:rounded-[1.25rem] transition-all group">
+                <LogOut className="w-6 h-6 md:w-7 md:h-7 shrink-0 group-hover:-translate-x-1 transition-transform" />
+                {isSidebarOpen && <span className="font-black text-[11px] md:text-[12px] uppercase tracking-widest md:tracking-[0.2em]">Terminate</span>}
               </button>
             </div>
-            <div className="flex items-center gap-4 pl-6 border-l border-slate-200">
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-slate-50/20">
+        <header className="h-20 md:h-28 bg-white/80 backdrop-blur-3xl border-b-2 border-slate-50 px-6 md:px-10 flex items-center justify-between z-10">
+          <div className="flex items-center gap-4 md:gap-8">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 md:p-3 bg-slate-50 hover:bg-slate-100 rounded-xl md:rounded-2xl transition-all text-slate-500 border border-slate-100"><Menu className="w-6 h-6 md:w-7 md:h-7" /></button>
+            <div className="hidden lg:flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 shadow-inner">
+              <Search className="w-5 h-5 text-slate-300" />
+              <input type="text" placeholder="Neural Search..." className="bg-transparent border-none focus:ring-0 w-64 outline-none text-xs font-black uppercase tracking-widest text-slate-600 placeholder:text-slate-300" />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 md:gap-8">
+            <div className="relative">
+              <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="relative p-2 md:p-3 hover:bg-slate-100 rounded-xl text-slate-400 border border-transparent hover:border-slate-100">
+                <Bell className="w-6 h-6 md:w-7 md:h-7" />
+                {unreadCount > 0 && <span className="absolute top-2 right-2 md:top-3 md:right-3 w-4 h-4 md:w-5 md:h-5 bg-pink-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-black">{unreadCount}</span>}
+              </button>
+
+              <AnimatePresence>
+                {isNotifOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsNotifOpen(false)} />
+                    <motion.div initial={{ opacity:0, y:10, scale:0.95 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:10, scale:0.95 }}
+                      className="absolute right-0 mt-4 w-96 bg-white rounded-[2.5rem] shadow-4xl border-2 border-slate-50 z-50 overflow-hidden"
+                    >
+                      <div className="p-8 border-b-2 border-slate-50 flex items-center justify-between bg-white">
+                        <h4 className="font-black text-slate-900 uppercase tracking-tighter text-lg">Neural Alerts</h4>
+                        <button onClick={markAllRead} className="text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-600 transition-colors">Acknowledge All</button>
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-slate-50/20">
+                        {notifications.length === 0 ? (
+                          <div className="p-12 text-center">
+                            <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100"><TopBee size={32} /></div>
+                            <p className="text-xs font-black text-slate-300 uppercase tracking-widest">Hive is silent</p>
+                          </div>
+                        ) : (
+                          notifications.map((n, i) => (
+                            <div key={i} className={`p-6 border-b border-slate-50 flex gap-4 items-start hover:bg-white transition-all group ${!n.is_read ? 'bg-white' : 'opacity-60'}`}>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.type === 'ticket' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}>
+                                {n.type === 'ticket' ? <Inbox className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-1 group-hover:text-amber-500 transition-colors">{n.title}</p>
+                                <p className="text-[10px] text-slate-400 font-bold leading-relaxed mb-2">{n.message}</p>
+                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{n.created_at}</span>
+                              </div>
+                              {!n.is_read && <div className="w-2 h-2 bg-pink-500 rounded-full mt-2" />}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="p-6 text-center border-t-2 border-slate-50 bg-white">
+                         <Link to="/dashboard/leads" onClick={() => setIsNotifOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors">View All Activities</Link>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="flex items-center gap-3 md:gap-5 pl-4 md:pl-8 border-l-2 border-slate-100">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-black text-slate-900">{user?.name}</p>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-indigo-500">{user?.role}</p>
+                <p className="text-[12px] md:text-sm font-black text-slate-900 uppercase tracking-tighter leading-none">{user?.name}</p>
+                <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-black text-amber-500 mt-1">{user?.role}</p>
               </div>
-              <div className="w-11 h-11 rounded-2xl premium-gradient flex items-center justify-center text-white font-black text-lg shadow-lg shadow-indigo-200 border-2 border-white">
+              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-[1.25rem] bg-amber-500 flex items-center justify-center text-white font-black text-lg shadow-2xl shadow-amber-200 border-2 md:border-4 border-white/20">
                 {user?.name?.charAt(0)}
               </div>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          {isExpiringSoon && (
+        <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar relative">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div 
-              initial={{ height: 0, opacity: 0 }} 
-              animate={{ height: 'auto', opacity: 1 }}
-              className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-[2rem] flex items-center justify-between"
+              key={location.pathname.split('/')[2] || 'root'} 
+              initial={{ opacity:0, y:10 }} 
+              animate={{ opacity:1, y:0 }} 
+              exit={{ opacity:0, y:-10 }} 
+              transition={{ duration:0.15, ease: "easeOut" }}
+              className="min-h-full"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-400 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-black text-amber-900">Subscription Expiring Soon</h4>
-                  <p className="text-sm text-amber-700 font-medium">Your plan will expire on {new Date(user.plan.expires_at).toLocaleDateString()}. Renew now to avoid service interruption.</p>
-                </div>
-              </div>
-              <Link to="/dashboard/settings?tab=billing" className="px-6 py-3 bg-amber-500 text-white font-black rounded-xl shadow-lg shadow-amber-100 hover:scale-105 transition-all">
-                Renew Now
-              </Link>
-            </motion.div>
-          )}
-
-          <AnimatePresence mode="wait">
-            <motion.div key={location.pathname} initial={{ opacity:0, y:15 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-15 }} transition={{ duration:0.2 }}>
               <Routes>
-                <Route path="/"        element={<Overview />} />
-                <Route path="/chats"   element={<ChatConsole />} />
-                <Route path="/team"    element={<TeamChat />} />
-                <Route path="/leads"   element={<Leads />} />
+                <Route path="/" element={<Overview statsUrl={STATS_URL} />} />
+                <Route path="/chats" element={<ChatConsole />} />
+                <Route path="/team" element={<TeamChat />} />
+                <Route path="/leads" element={<Leads />} />
                 <Route path="/websites" element={<Websites />} />
-                 <Route path="/agents"  element={<TeamPage />} />
+                <Route path="/agents" element={<TeamPage />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/tickets" element={<Tickets />} />
                 <Route path="/super-admin" element={<SuperAdmin />} />
+                <Route path="/help" element={<Help />} />
               </Routes>
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
 
+      {/* Welcome Modal */}
       <AnimatePresence>
         {showWelcome && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={closeWelcome}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 40 }}
-              className="relative w-full max-w-2xl bg-white rounded-[3.5rem] shadow-2xl overflow-hidden border border-white"
-            >
-              <div className="premium-gradient p-12 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-                  <Rocket className="w-48 h-48" />
-                </div>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 md:p-8">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeWelcome} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xl" />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }} className="relative w-full max-w-xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-3xl overflow-hidden border-4 md:border-[8px] border-white">
+              <div className="bg-amber-500 p-8 md:p-12 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 opacity-10 rotate-12 scale-125"><TopBee size={80} /></div>
                 <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Sparkles className="w-8 h-8 text-amber-300 animate-pulse" />
-                    <span className="text-xs font-black uppercase tracking-[0.3em] opacity-80">Welcome to the Hive</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-amber-300" />
+                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] opacity-80">Welcome to the Empire</span>
                   </div>
-                  <h2 className="text-5xl font-black tracking-tight leading-tight mb-2">Let's Launch Your <br/>AI Assistant</h2>
-                  <p className="text-indigo-100 font-medium text-lg">Follow these 3 simple steps to start automating your support 24/7.</p>
+                  <h2 className="text-2xl md:text-4xl font-black tracking-tighter leading-tight mb-2 uppercase">Initialize Hive.</h2>
+                  <p className="text-amber-50 font-bold uppercase tracking-widest text-[9px] md:text-xs opacity-90">3 Steps to Dominance.</p>
                 </div>
               </div>
-
-              <div className="p-12 space-y-8">
-                <div className="flex items-start gap-6">
-                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/50">
-                    <Globe className="w-7 h-7" />
+              <div className="p-8 md:p-12 space-y-6 md:space-y-8">
+                {[
+                  { icon: Globe, title: "1. Estate Connection", desc: "Initialize your domain in 'My Domains'." },
+                  { icon: BrainCircuit, title: "2. Logic Ingestion", desc: "Feed the hive with knowledge base articles." },
+                  { icon: Zap, title: "3. Neural Activation", desc: "Toggle 'AI Bot' to active mode." }
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-4 md:gap-6 group">
+                    <div className="w-10 h-10 md:w-14 md:h-14 bg-amber-50 text-amber-500 rounded-lg md:rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform"><step.icon className="w-5 h-5 md:w-7 md:h-7" /></div>
+                    <div>
+                      <h4 className="text-lg md:text-xl font-black text-slate-900 mb-1 uppercase tracking-tighter">{step.title}</h4>
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[8px] md:text-[9px] leading-relaxed">{step.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-black text-slate-900 mb-1">1. Connect Your Website</h4>
-                    <p className="text-slate-500 font-medium">Head to 'My Websites' and add your domain to get your unique chat widget script.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-6">
-                  <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-purple-100/50">
-                    <BrainCircuit className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black text-slate-900 mb-1">2. Train Your AI Brain</h4>
-                    <p className="text-slate-500 font-medium">Add some FAQ items in the Knowledge Base. This is what your bot will use to answer customers.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-6">
-                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-amber-100/50">
-                    <Zap className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black text-slate-900 mb-1">3. Launch Auto-Pilot</h4>
-                    <p className="text-slate-500 font-medium">Toggle the 'AI Bot' switch to Active. Your bot will now handle support while you sleep!</p>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={closeWelcome}
-                  className="w-full py-5 premium-gradient text-white rounded-[2rem] font-black text-xl shadow-xl shadow-indigo-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
-                >
-                  Got it, Let's Build! <ChevronRight className="w-6 h-6" />
-                </button>
-
-                <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                  Built with <Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> for your business
-                </p>
+                ))}
+                <button onClick={closeWelcome} className="w-full py-4 md:py-5 bg-slate-900 text-white rounded-xl md:rounded-[2rem] font-black text-lg md:text-xl shadow-xl hover:bg-amber-500 transition-all flex items-center justify-center gap-3 uppercase tracking-tighter">Commence Build <ChevronRight className="w-5 h-5 md:w-7 md:h-7" /></button>
               </div>
             </motion.div>
           </div>
@@ -318,198 +379,211 @@ export default function Dashboard() {
   );
 }
 
-/* ─── Overview with REAL data ──────────────────────────────── */
-function Overview() {
-  const [stats,   setStats]   = useState(null);
+// --- HIVE INSIGHTS (AI SUMMARY) ---
+const HiveInsights = () => (
+  <div className="glass p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border-2 border-white shadow-2xl shadow-amber-500/5 bg-white relative overflow-hidden">
+    <div className="absolute top-0 right-0 p-8 opacity-5"><BrainCircuit className="w-24 h-24 text-amber-500" /></div>
+    <div className="flex items-center gap-4 mb-8">
+      <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-100">
+        <Sparkles className="w-6 h-6" />
+      </div>
+      <div>
+        <h4 className="text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">Neural Insights</h4>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1">AI System Analysis</p>
+      </div>
+    </div>
+    <div className="space-y-6">
+      <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="flex items-center gap-3 mb-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <span className="text-[10px] font-black text-slate-900 uppercase">Traffic Surge Detected</span>
+        </div>
+        <p className="text-xs text-slate-500 font-medium">Your colony saw a 12% increase in visitor engagement today. AI handled 88% of initial pings autonomously.</p>
+      </div>
+      <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-100/50">
+        <div className="flex items-center gap-3 mb-2">
+          <TrendingUp className="w-4 h-4 text-amber-600" />
+          <span className="text-[10px] font-black text-slate-900 uppercase">Conversion Velocity</span>
+        </div>
+        <p className="text-xs text-slate-500 font-medium">High intent detected in "Pricing" queries. Consider active human intervention for these cells.</p>
+      </div>
+    </div>
+  </div>
+);
+
+// --- COLONY PULSE MAP (LIVE VISITOR VISUALIZER) ---
+const ColonyPulseMap = () => {
+  const dots = [
+    { top: '30%', left: '20%', delay: 0 },
+    { top: '45%', left: '75%', delay: 1.2 },
+    { top: '60%', left: '40%', delay: 0.5 },
+    { top: '25%', left: '60%', delay: 2.1 },
+    { top: '70%', left: '85%', delay: 1.7 },
+  ];
+
+  return (
+    <div className="glass p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border-2 border-white shadow-2xl shadow-amber-500/5 bg-slate-900 relative overflow-hidden">
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Colony Pulse</h4>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1">Live Resident Origins</p>
+        </div>
+        <div className="flex items-center gap-3 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+          <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Real-time</span>
+        </div>
+      </div>
+      
+      <div className="relative h-48 md:h-64 bg-slate-800/30 rounded-[2rem] border border-white/5 overflow-hidden">
+        {/* Mock World Map Silhouette */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10,20 Q30,10 50,20 T90,20 M10,50 Q30,40 50,50 T90,50 M10,80 Q30,70 50,80 T90,80' stroke='%23fff' fill='none'/%3E%3C/svg%3E")` }} />
+        
+        {dots.map((dot, i) => (
+          <div key={i} className="absolute" style={{ top: dot.top, left: dot.left }}>
+            <motion.div 
+              animate={{ scale: [1, 2, 1], opacity: [1, 0, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: dot.delay }}
+              className="w-4 h-4 bg-amber-500/40 rounded-full"
+            />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,1)]" />
+          </div>
+        ))}
+
+        <div className="absolute bottom-4 left-6 flex items-center gap-2">
+           <div className="flex -space-x-2">
+              {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-amber-500 flex items-center justify-center text-[8px] font-black text-white"><TopBee size={12} /></div>)}
+           </div>
+           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">5 New Entries Found</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function Overview({ statsUrl }) {
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const r = await axios.get(STATS_URL, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+        const r = await axios.get(statsUrl, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
         setStats(r.data);
-      } catch { /* silent */ } finally { setLoading(false); }
+      } catch { } finally { setLoading(false); }
     };
-    fetch();
-    const t = setInterval(fetch, 8000);
-    return () => clearInterval(t);
-  }, []);
+    fetch(); const t = setInterval(fetch, 8000); return () => clearInterval(t);
+  }, [statsUrl]);
 
   const cards = stats ? [
-    { label: 'Online Now',         value: stats.online_now,     icon: Radio,          color: 'from-emerald-400 to-emerald-600', note: `${stats.live_chats} in chat` },
-    { label: 'Total Leads',        value: stats.total_leads,    icon: Users,           color: 'from-indigo-500 to-indigo-700', note: `${stats.ended_today} ended today` },
-    { label: 'Total Messages',     value: stats.total_messages, icon: MessageSquare,   color: 'from-purple-500 to-pink-600',  note: 'all time activity' },
-    { label: 'Active Websites',    value: stats.websites,       icon: Globe,           color: 'from-orange-400 to-amber-600',  note: `${stats.agents} agents` },
+    { label: 'Live Residents', value: stats.online_now || 0, icon: Radio, color: 'from-emerald-400 to-emerald-600', note: `${stats.live_chats || 0} active` },
+    { label: 'Lead Ingestion', value: stats.total_leads || 0, icon: Target, color: 'from-amber-500 to-amber-700', note: `${stats.ended_today || 0} today` },
+    { label: 'Avg Response', value: `${stats.avg_response_time || 0}s`, icon: Clock, color: 'from-blue-400 to-blue-600', note: 'last 24h' },
+    { label: 'Colony Assets', value: stats.websites || 0, icon: Globe, color: 'from-slate-700 to-slate-900', note: `${stats.agents || 0} agents` },
   ] : [];
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-10 md:space-y-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">
-            Executive <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Overview</span>
-          </h2>
-          <p className="text-slate-500 font-medium mt-1">Real-time performance metrics — live data.</p>
+          <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">Hive <span className="text-amber-500">Intelligence</span></h2>
+          <p className="text-slate-400 font-black mt-1.5 uppercase tracking-[0.3em] text-[8px] md:text-[9px]">Real-time system execution metrics.</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigate('/dashboard/leads')} className="premium-gradient text-white px-6 py-3.5 rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
-            <Radio className="w-5 h-5" /> Live Chat Console
-          </button>
-        </div>
+        <button onClick={() => navigate('/dashboard/leads')} className="bg-amber-500 text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-[2rem] font-black shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest">
+          <Radio className="w-5 h-5 md:w-6 md:h-6" /> Live Console
+        </button>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {loading ? Array(4).fill(0).map((_,i) => (
-          <div key={i} className="glass p-6 rounded-[2.5rem] animate-pulse h-40 bg-slate-100"/>
-        )) : cards.map((stat, i) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        {loading ? Array(4).fill(0).map((_,i) => <div key={i} className="glass p-8 rounded-[2.5rem] animate-pulse h-40 bg-white/50"/>) : cards.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div key={i} whileHover={{ y:-5 }} className="glass p-6 rounded-[2.5rem] relative overflow-hidden group cursor-default">
-              <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-[0.04] rounded-bl-[5rem] group-hover:scale-150 transition-transform duration-700`}/>
-              <div className="flex items-center justify-between mb-6">
-                <div className={`bg-gradient-to-br ${stat.color} p-4 rounded-3xl text-white shadow-xl shadow-indigo-100`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">{stat.note}</span>
+            <motion.div key={i} whileHover={{ y:-5 }} className="glass p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group bg-white border-2 border-slate-50 shadow-xl shadow-amber-500/5 cursor-default">
+              <div className={`absolute top-0 right-0 w-20 md:w-28 h-20 md:h-28 bg-gradient-to-br ${stat.color} opacity-[0.08] rounded-bl-[4rem] md:rounded-bl-[5rem] group-hover:scale-150 transition-transform duration-700`}/>
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <div className={`bg-gradient-to-br ${stat.color} p-3.5 md:p-4 rounded-xl md:rounded-[1.25rem] text-white shadow-lg`}><Icon className="w-5 h-5 md:w-6 md:h-6" /></div>
+                <span className="text-[8px] md:text-[9px] font-black text-amber-600 bg-amber-50 px-2.5 md:px-3 py-1 rounded-full uppercase tracking-widest border border-amber-100">{stat.note}</span>
               </div>
               <div>
-                <p className="text-slate-400 text-xs font-black uppercase tracking-widest">{stat.label}</p>
-                <p className="text-3xl font-black text-slate-900 mt-1">{stat.value ?? '—'}</p>
+                <p className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+                <p className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter">{stat.value ?? '0'}</p>
               </div>
             </motion.div>
           );
         })}
       </div>
       
-      {/* Activity Graph */}
-      <div className="glass p-10 rounded-[3rem] border border-slate-200/50 relative overflow-hidden">
-        <div className="flex items-center justify-between mb-12">
+      <div className="glass p-10 md:p-16 rounded-[3rem] md:rounded-[4rem] border-2 border-slate-50 relative overflow-hidden bg-white shadow-xl shadow-amber-500/5">
+        <div className="flex items-center justify-between mb-10 md:mb-16">
           <div>
-            <h3 className="font-black text-2xl text-slate-900 tracking-tight flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-indigo-600" /> Platform Activity
-            </h3>
-            <p className="text-slate-400 text-sm font-bold mt-1 uppercase tracking-widest">New leads across all sites — Last 7 Days</p>
-          </div>
-          <div className="flex gap-2">
-             <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-emerald-100">Growth: +{(stats?.total_leads / 10).toFixed(1)}%</div>
+            <h3 className="font-black text-2xl md:text-3xl text-slate-900 tracking-tight flex items-center gap-3 uppercase"><TrendingUp className="w-8 h-8 md:w-10 md:h-10 text-amber-500" /> Platform Velocity</h3>
+            <p className="text-slate-400 text-[9px] md:text-[10px] font-black mt-2 uppercase tracking-[0.4em]">Neural ingestion rate — Last 7 Days</p>
           </div>
         </div>
-
-        <div className="h-64 flex items-end gap-3 md:gap-6 px-4 relative">
-          {/* Chart Grid Lines */}
-          <div className="absolute inset-x-0 top-0 h-px bg-slate-100/50" />
-          <div className="absolute inset-x-0 top-1/4 h-px bg-slate-100/50" />
-          <div className="absolute inset-x-0 top-2/4 h-px bg-slate-100/50" />
-          <div className="absolute inset-x-0 top-3/4 h-px bg-slate-100/50" />
-          
-          {loading ? Array(7).fill(0).map((_,i) => (
-            <div key={i} className="flex-1 bg-slate-50 rounded-t-2xl animate-pulse" style={{ height: `${20+i*10}%` }} />
-          )) : stats?.daily_stats?.map((day, i) => {
+        <div className="h-64 md:h-80 flex items-end gap-4 md:gap-10 px-4 md:px-8 relative">
+          {loading ? Array(7).fill(0).map((_,i) => <div key={i} className="flex-1 bg-slate-50 rounded-t-2xl md:rounded-t-[2.5rem] animate-pulse" style={{ height: `${20+i*10}%` }} />) : stats?.daily_stats?.map((day, i) => {
             const max = Math.max(...stats.daily_stats.map(d => d.count)) || 1;
             const h = (day.count / max) * 100;
             return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
-                <div className="w-full relative h-64 flex items-end">
-                  <motion.div 
-                    initial={{ height: 0 }}
-                    animate={{ height: `${Math.max(h, 5)}%` }}
-                    transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
-                    className="w-full bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t-2xl group-hover:from-indigo-500 group-hover:to-purple-500 transition-all shadow-lg shadow-indigo-100 relative"
-                  >
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-2 py-1 rounded-lg text-[10px] font-black opacity-0 group-hover:opacity-100 transition-opacity">
-                      {day.count}
-                    </div>
-                  </motion.div>
+              <div key={i} className="flex-1 flex flex-col items-center gap-4 md:gap-6 group">
+                <div className="w-full relative h-64 md:h-80 flex items-end">
+                  <motion.div initial={{ height: 0 }} animate={{ height: `${Math.max(h, 8)}%` }} transition={{ duration: 1, delay: i * 0.1 }}
+                    className="w-full bg-slate-900 rounded-t-xl md:rounded-t-[2.5rem] group-hover:bg-amber-500 transition-all shadow-xl relative"
+                  ><div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-3 py-1 rounded-xl text-[10px] font-black opacity-0 group-hover:opacity-100 transition-all">{day.count}</div></motion.div>
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">{day.date}</span>
+                <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-amber-500 transition-colors">{day.date}</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Live visitors */}
-        <div className="lg:col-span-2 glass p-8 rounded-[3rem]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-xl text-slate-900 flex items-center gap-2">
-              <Radio className="w-5 h-5 text-indigo-500"/> Live Visitors Right Now
-            </h3>
-            <button onClick={() => navigate('/dashboard/leads')} className="text-xs font-black text-indigo-500 hover:text-indigo-700">View All →</button>
-          </div>
-          {loading ? (
-            <div className="space-y-3">{Array(3).fill(0).map((_,i) => <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse"/>)}</div>
-          ) : !stats?.recent_live?.length ? (
-            <div className="h-48 flex flex-col items-center justify-center text-slate-300">
-              <Radio className="w-10 h-10 mb-3 opacity-30"/>
-              <p className="font-bold text-sm">No live visitors right now</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {stats.recent_live.map((lead, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/leads')}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xs font-mono">
-                      {(lead.visitor_uid||'BEE').slice(-3)}
-                    </div>
-                    <div>
-                      <p className="font-black text-sm text-slate-900 font-mono">{lead.visitor_uid || 'BEE-??????'}</p>
-                      <p className="text-xs text-slate-400 font-bold">{lead.domain} · {lead.phone||'No contact'}</p>
-                    </div>
+      {!loading && stats?.plan_utilization && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+           <div className="glass p-10 md:p-12 rounded-[3rem] border-2 border-slate-50 bg-white shadow-xl shadow-amber-500/5">
+              <div className="flex items-center gap-4 mb-10">
+                 <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg"><Zap className="w-6 h-6" /></div>
+                 <div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Empire Quota</h3>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Resource Utilization</p>
+                 </div>
+              </div>
+              <div className="space-y-8">
+                <div>
+                  <div className="flex items-center justify-between mb-3 px-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Digital Assets (Websites)</span>
+                    <span className="text-xs font-black text-slate-900">{stats.plan_utilization.websites_used} / {stats.plan_utilization.websites_max}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {(!lead.assigned_to || lead.chat_status === 'waiting') ? (
-                      <span className="text-[10px] bg-amber-100 text-amber-700 font-black px-2.5 py-1 rounded-full border border-amber-200 animate-pulse">WAITING</span>
-                    ) : (
-                      <span className="text-[10px] bg-emerald-100 text-emerald-700 font-black px-2.5 py-1 rounded-full border border-emerald-200">ACTIVE</span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-indigo-400 transition-colors"/>
+                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(stats.plan_utilization.websites_used / stats.plan_utilization.websites_max) * 100}%` }} className="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.3)]" />
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div>
+                  <div className="flex items-center justify-between mb-3 px-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural Units (Agents)</span>
+                    <span className="text-xs font-black text-slate-900">{stats.plan_utilization.agents_used} / {stats.plan_utilization.agents_max}</span>
+                  </div>
+                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(stats.plan_utilization.agents_used / stats.plan_utilization.agents_max) * 100}%` }} className="h-full bg-slate-900 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]" />
+                  </div>
+                </div>
+              </div>
+           </div>
 
-        {/* Agents */}
-        <div className="glass p-8 rounded-[3rem]">
-          <h3 className="font-black text-xl text-slate-900 mb-6 flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-500"/> Team Members
-          </h3>
-          {loading ? (
-            <div className="space-y-4">{Array(4).fill(0).map((_,i) => <div key={i} className="h-12 bg-slate-100 rounded-2xl animate-pulse"/>)}</div>
-          ) : !stats?.agent_list?.length ? (
-            <div className="text-center text-slate-300 py-8">
-              <Users className="w-8 h-8 mx-auto mb-2 opacity-30"/>
-              <p className="text-sm font-bold">No agents yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {stats.agent_list.map((a, i) => (
-                <div key={i} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 rounded-2xl transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm shadow-sm">
-                      {a.name?.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-slate-900">{a.name}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{a.role}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-indigo-400 transition-colors" />
-                </div>
-              ))}
-            </div>
-          )}
-          <button onClick={() => navigate('/dashboard/agents')} className="w-full mt-6 py-3.5 rounded-2xl bg-slate-50 text-slate-500 font-black text-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-            Manage Team
-          </button>
+           <div className="glass p-10 md:p-12 rounded-[3rem] border-2 border-slate-50 bg-slate-900 text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all duration-700" />
+              <Shield className="w-12 h-12 text-amber-500 mb-6" />
+              <h3 className="text-xl font-black mb-2 uppercase tracking-tighter">Plan Security</h3>
+              <p className="text-slate-400 text-xs font-bold leading-relaxed mb-8">Your account is secured with Enterprise-grade encryption. Need more seats or assets? Upgrade your hive anytime.</p>
+              <button onClick={() => navigate('/dashboard/settings')} className="px-8 py-4 bg-amber-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all">Upgrade Empire</button>
+           </div>
         </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+         <HiveInsights />
+         <ColonyPulseMap />
       </div>
     </div>
   );
 }
-
-
