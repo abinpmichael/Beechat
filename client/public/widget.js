@@ -10,7 +10,9 @@
         return;
     }
 
-    var baseUrl = 'http://localhost:5173'; // Change to production URL when deploying
+    // Dynamically get the base URL from the script source
+    var scriptUrl = new URL(script.src);
+    var baseUrl = scriptUrl.origin;
 
     // Create iframe
     var iframe = document.createElement('iframe');

@@ -1,0 +1,62 @@
+name: Deploy to Hostinger cPanel
+
+on:
+  push:
+    branches:
+      - main # Triggers when you push or merge to the main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+      
+      - name: 🏗️ Setup Node.js (Dockerized environment)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'client/package-lock.json'
+          
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: 🛠️ Build React App
+        run: |
+          cd client
+          npm run build
+
+      - name: 📂 Prepare Deployment Folder
+        run: |
+          mkdir deploy_package
+          # Copy the built React app to the root of the deployment package
+          cp -r client/dist/* deploy_package/
+          # Copy the PHP server backend
+          cp -r server deploy_package/
+          # Copy the widget script
+          cp client/public/widget.js deploy_package/ 2>/dev/null || true
+          # Copy the .htaccess for routing
+          cp client/public/.htaccess deploy_package/ 2>/dev/null || true
+
+      - name: 🔐 Inject Live Database Credentials
+        run: |
+          CONFIG_FILE="deploy_package/server/api/config.php"
+          if [ -f "$CONFIG_FILE" ]; then
+            sed -i "s/\$host = 'localhost';/\$host = '${{ secrets.DB_HOST || 'localhost' }}';/g" "$CONFIG_FILE"
+            sed -i "s/\$db   = 'bee_chat';/\$db   = '${{ secrets.DB_DATABASE }}';/g" "$CONFIG_FILE"
+            sed -i "s/\$user = 'root';/\$user = '${{ secrets.DB_USERNAME }}';/g" "$CONFIG_FILE"
+            sed -i "s/\$pass = '';/\$pass = '${{ secrets.DB_PASSWORD }}';/g" "$CONFIG_FILE"
+          fi
+
+      - name: 🚀 Sync to Hostinger cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy_package/
+          server-dir: /public_html/ # Adjust if your root folder is different
