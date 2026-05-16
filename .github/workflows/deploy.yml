@@ -44,13 +44,23 @@ jobs:
 
       - name: 🔐 Inject Live Database Credentials
         run: |
-          CONFIG_FILE="deploy_package/server/api/config.php"
-          if [ -f "$CONFIG_FILE" ]; then
-            sed -i "s/\$host = 'localhost';/\$host = '${{ secrets.DB_HOST || 'localhost' }}';/g" "$CONFIG_FILE"
-            sed -i "s/\$db   = 'bee_chat';/\$db   = '${{ secrets.DB_DATABASE }}';/g" "$CONFIG_FILE"
-            sed -i "s/\$user = 'root';/\$user = '${{ secrets.DB_USERNAME }}';/g" "$CONFIG_FILE"
-            sed -i "s/\$pass = '';/\$pass = '${{ secrets.DB_PASSWORD }}';/g" "$CONFIG_FILE"
-          fi
+          php -r '
+            $f = "deploy_package/server/api/config.php";
+            if (file_exists($f)) {
+              $c = file_get_contents($f);
+              $h = getenv("DB_HOST") ?: "localhost";
+              $c = str_replace("\$host = '\''localhost'\'';", "\$host = '\''" . $h . "'\'';", $c);
+              $c = str_replace("\$db   = '\''bee_chat'\'';", "\$db   = '\''" . getenv("DB_DB") . "'\'';", $c);
+              $c = str_replace("\$user = '\''root'\'';", "\$user = '\''" . getenv("DB_USER") . "'\'';", $c);
+              $c = str_replace("\$pass = '\'''\'';", "\$pass = '\''" . getenv("DB_PASS") . "'\'';", $c);
+              file_put_contents($f, $c);
+            }
+          '
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DB: ${{ secrets.DB_DATABASE }}
+          DB_USER: ${{ secrets.DB_USERNAME }}
+          DB_PASS: ${{ secrets.DB_PASSWORD }}
 
       - name: 🚀 Sync to Hostinger cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
