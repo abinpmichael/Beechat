@@ -46,7 +46,13 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
         filter: ["drop-shadow(0 0 0px rgba(251,191,36,0))", "drop-shadow(0 0 30px rgba(251,191,36,0.6))", "drop-shadow(0 0 0px rgba(251,191,36,0))"]
       } : {}}
       transition={{ duration: isWiggling ? 0.5 : 3.5, repeat: isWiggling ? 0 : Infinity, ease: "easeInOut" }}
-      style={{ overflow: 'visible' }}
+      style={{ 
+        width: typeof size === 'number' ? `${size}px` : '100%', 
+        height: typeof size === 'number' ? `${size}px` : '100%', 
+        overflow: 'visible', 
+        display: 'block', 
+        flexShrink: 0 
+      }}
     >
       <defs>
         <filter id={`fuzz${idPrefix}`} x="-50%" y="-50%" width="200%" height="200%">
@@ -410,11 +416,19 @@ const BeeFactStrip = () => {
 
 const BrandLogo = ({ size = 'md', light = false }) => (
   <a href="/" className="flex items-center gap-2.5 md:gap-4 group cursor-pointer text-decoration-none">
-    <div className={`
-      ${size === 'sm' ? 'w-8 h-8 p-1 md:w-10 md:h-10 md:p-1.5 rounded-xl md:rounded-2xl' : size === 'lg' ? 'w-11 h-11 p-1 md:w-16 md:h-16 md:p-2 rounded-2xl md:rounded-[1.75rem]' : 'w-10 h-10 p-1 md:w-14 md:h-14 md:p-2 rounded-2xl md:rounded-3xl'} 
-      bg-white flex items-center justify-center shadow-xl md:shadow-2xl border-2 border-amber-100 group-hover:scale-105 transition-all duration-500 relative shrink-0 overflow-hidden
-    `}>
-       <TopBee size="100%" className="w-full h-full min-w-[28px] min-h-[28px] md:min-w-[44px] md:min-h-[44px] block aspect-square" />
+    <div 
+      className="bg-white flex items-center justify-center shadow-xl md:shadow-2xl border-2 border-amber-100 group-hover:scale-105 transition-all duration-500 relative shrink-0 overflow-hidden rounded-2xl md:rounded-[1.75rem]"
+      style={{ 
+        width: size === 'sm' ? '36px' : (size === 'lg' ? '54px' : '46px'), 
+        height: size === 'sm' ? '36px' : (size === 'lg' ? '54px' : '46px'),
+        minWidth: size === 'sm' ? '36px' : (size === 'lg' ? '54px' : '46px'), 
+        minHeight: size === 'sm' ? '36px' : (size === 'lg' ? '54px' : '46px'),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+       <TopBee size={size === 'sm' ? 26 : (size === 'lg' ? 38 : 32)} />
        <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all pointer-events-none" />
     </div>
     <div className="flex flex-col justify-center">
