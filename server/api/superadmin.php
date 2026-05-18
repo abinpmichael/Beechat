@@ -203,7 +203,7 @@ try {
         }
 
         if ($action === 'add_global_knowledge') {
-            $stmt = $pdo->prepare("INSERT INTO knowledge_base (tenant_id, website_id, title, content) VALUES (0, 0, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO knowledge_base (tenant_id, website_id, title, content) VALUES (NULL, NULL, ?, ?)");
             $stmt->execute([$data['title'], $data['content']]);
             echo json_encode(["message" => "Global knowledge added"]);
             exit;

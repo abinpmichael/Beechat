@@ -162,6 +162,7 @@ export default function SuperAdmin() {
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [editData, setEditData] = useState({ plan_id: 1, expires_at: '', is_active: 1 });
   const [planEditData, setPlanEditData] = useState({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] });
+  const [newKItem, setNewKItem] = useState({ title: '', content: '' });
 
   const API_URL = `${API_BASE_URL}/superadmin.php`;
 
