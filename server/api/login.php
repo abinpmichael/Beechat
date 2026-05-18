@@ -29,13 +29,19 @@ if (empty($email) || empty($passwordRaw)) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT u.*, t.slug as tenant_slug FROM users u JOIN tenants t ON u.tenant_id = t.id WHERE u.email = ?");
+    $stmt = $pdo->prepare("SELECT u.*, t.slug as tenant_slug, t.is_active FROM users u JOIN tenants t ON u.tenant_id = t.id WHERE u.email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($passwordRaw, $user['password'])) {
         http_response_code(401);
         echo json_encode(["message" => "Invalid credentials"]);
+        exit;
+    }
+
+    if (isset($user['is_active']) && (int)$user['is_active'] === 0 && (int)$user['is_superadmin'] === 0) {
+        http_response_code(403);
+        echo json_encode(["message" => "Account suspended. Please contact support or renew subscription."]);
         exit;
     }
 

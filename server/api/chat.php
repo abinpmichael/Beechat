@@ -17,7 +17,7 @@ if (empty($apiKey)) {
 if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
     try {
         $stmt = $pdo->prepare("
-            SELECT w.*, s.opening_time, s.closing_time, s.timezone, t.status as tenant_status, p.name as plan_name
+            SELECT w.*, s.opening_time, s.closing_time, s.timezone, t.status as tenant_status, t.is_active, p.name as plan_name
             FROM websites w 
             LEFT JOIN tenant_settings s ON w.tenant_id = s.tenant_id 
             JOIN tenants t ON w.tenant_id = t.id
@@ -27,7 +27,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
         $stmt->execute([$_GET['apiKey']]);
         $res = $stmt->fetch();
         
-        if ($res && $res['tenant_status'] === 'suspended') {
+        if ($res && ($res['tenant_status'] === 'suspended' || (isset($res['is_active']) && (int)$res['is_active'] === 0))) {
             echo json_encode(["error" => "Account Suspended. Please contact support."]);
             exit;
         }

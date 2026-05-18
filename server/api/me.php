@@ -25,7 +25,7 @@ $userId = $decoded['id'];
 try {
     $stmt = $pdo->prepare("
         SELECT u.id, u.name, u.email, u.role, u.tenant_id, u.is_superadmin,
-               t.status as tenant_status, p.name as plan_name, p.max_websites, p.max_agents, p.ai_enabled
+               t.status as tenant_status, t.is_active, p.name as plan_name, p.max_websites, p.max_agents, p.ai_enabled
         FROM users u 
         JOIN tenants t ON u.tenant_id = t.id
         LEFT JOIN plans p ON t.plan_id = p.id
@@ -37,6 +37,12 @@ try {
     if (!$user) {
         http_response_code(404);
         echo json_encode(["message" => "User not found"]);
+        exit;
+    }
+
+    if (isset($user['is_active']) && (int)$user['is_active'] === 0 && (int)$user['is_superadmin'] === 0) {
+        http_response_code(403);
+        echo json_encode(["message" => "Account suspended. Please contact support or renew subscription."]);
         exit;
     }
 
