@@ -11,7 +11,7 @@ import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 
 // --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
-const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "bee" }) => {
+const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "bee", className = "" }) => {
   const [isWiggling, setIsWiggling] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   
@@ -35,7 +35,10 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
 
   return (
     <motion.svg 
-      width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      width={typeof size === 'number' ? size : undefined} 
+      height={typeof size === 'number' ? size : undefined} 
+      className={`${className || (typeof size === 'string' ? 'w-full h-full' : '')}`}
+      viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
       animate={animated ? { 
         y: isWiggling ? [0, -12, 0] : [0, -4, 0],
         rotate: isWiggling ? [0, 10, -10, 7, 0] : [0, 3, -3, 0],
@@ -408,11 +411,11 @@ const BeeFactStrip = () => {
 const BrandLogo = ({ size = 'md', light = false }) => (
   <a href="/" className="flex items-center gap-2.5 md:gap-4 group cursor-pointer text-decoration-none">
     <div className={`
-      ${size === 'sm' ? 'w-8 h-8 p-1 md:w-10 md:h-10 md:p-1.5 rounded-xl md:rounded-2xl' : size === 'lg' ? 'w-11 h-11 p-1.5 md:w-16 md:h-16 md:p-2.5 rounded-2xl md:rounded-[1.75rem]' : 'w-10 h-10 p-1.5 md:w-14 md:h-14 md:p-2 rounded-2xl md:rounded-3xl'} 
+      ${size === 'sm' ? 'w-8 h-8 p-1 md:w-10 md:h-10 md:p-1.5 rounded-xl md:rounded-2xl' : size === 'lg' ? 'w-11 h-11 p-1 md:w-16 md:h-16 md:p-2 rounded-2xl md:rounded-[1.75rem]' : 'w-10 h-10 p-1 md:w-14 md:h-14 md:p-2 rounded-2xl md:rounded-3xl'} 
       bg-white flex items-center justify-center shadow-xl md:shadow-2xl border-2 border-amber-100 group-hover:scale-105 transition-all duration-500 relative shrink-0 overflow-hidden
     `}>
-       <TopBee size="100%" />
-       <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all" />
+       <TopBee size="100%" className="w-full h-full min-w-[28px] min-h-[28px] md:min-w-[44px] md:min-h-[44px] block aspect-square" />
+       <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all pointer-events-none" />
     </div>
     <div className="flex flex-col justify-center">
       <span className={`
