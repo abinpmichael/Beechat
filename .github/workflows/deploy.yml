@@ -68,8 +68,9 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
+          protocol: ftps
+          security: loose
           port: 21
-          timeout: 60000
+          timeout: 600000
           local-dir: ./deploy_package/
           server-dir: ./ # Hostinger FTP accounts usually open directly in public_html
