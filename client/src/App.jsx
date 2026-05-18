@@ -87,7 +87,7 @@ const TopBee = ({ size = 40, animated = true }) => {
           <path d="M46 55Q48 50 50 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
         </g>
         <path d="M36 75Q38 78 40 75Q42 78 44 75" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '40px', originY: '30px' }}>
+        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ transformOrigin: '33% 25%' }}>
           <path d="M30 35Q25 10 15 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
           <path d="M50 35Q55 10 65 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
           <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity }} d="M15 15L17 13L15 11L13 13Z" fill="#FF85A2" />
@@ -98,7 +98,7 @@ const TopBee = ({ size = 40, animated = true }) => {
       <motion.g 
         animate={animated ? { rotateX: [0, -85, 0], scale: [1, 1.1, 1], opacity: [0.9, 0.5, 0.9] } : {}} 
         transition={{ duration: 0.02, repeat: Infinity }}
-        style={{ originX: '50px', originY: '50px' }}
+        style={{ transformOrigin: '42% 42%' }}
       >
         <path d="M45 45C60 0 115 -5 120 40C125 85 85 95 45 45Z" fill="#F0F9FF" fillOpacity="0.3" stroke="#BAE6FD" strokeOpacity="0.4" strokeWidth="0.8" />
       </motion.g>

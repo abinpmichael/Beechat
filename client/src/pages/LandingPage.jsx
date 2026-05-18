@@ -86,7 +86,7 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
       <motion.g 
         animate={animated ? { rotate: isWiggling ? [-8, 8, -8] : [-2, 2] } : {}} 
         transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}
-        style={{ originX: '40px', originY: '60px' }}
+        style={{ transformOrigin: '33% 50%' }}
       >
         <circle cx="40" cy="60" r="35" fill={`url(#honey${idPrefix})`} filter={`url(#fuzz${idPrefix})`} />
         <circle cx="40" cy="60" r="32" fill={`url(#honey${idPrefix})`} fillOpacity="0.2" />
@@ -101,7 +101,7 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
           <circle cx="64" cy="60" r="3" fill="white" fillOpacity="0.6" />
         </g>
         <path d="M36 75Q38 78 40 75Q42 78 44 75" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ originX: '40px', originY: '30px' }}>
+        <motion.g animate={animated ? { rotate: [-15, 15] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} style={{ transformOrigin: '33% 25%' }}>
           <path d="M30 35Q25 10 15 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
           <path d="M50 35Q55 10 65 15" stroke="#1F2937" strokeWidth="3" strokeLinecap="round" fill="none" />
           <motion.path animate={animated ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.6, repeat: Infinity }} d="M15 15L17 13L15 11L13 13Z" fill="#FF85A2" />
@@ -112,7 +112,7 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
       <motion.g 
         animate={animated ? { rotateX: [0, -85, 0], scale: [1, 1.1, 1], opacity: [0.9, 0.5, 0.9] } : {}} 
         transition={{ duration: 0.02, repeat: Infinity }}
-        style={{ originX: '50px', originY: '50px' }}
+        style={{ transformOrigin: '42% 42%' }}
       >
         <path d="M50 50C70 10 130 10 130 50C130 90 70 130 50 110C30 130 -30 90 -30 50C-30 10 30 10 50 50Z" fill="#F0F9FF" fillOpacity="0.4" stroke="#BAE6FD" strokeWidth="1" transform="scale(0.6) translate(40, -20)" />
       </motion.g>
