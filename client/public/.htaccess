@@ -6,6 +6,12 @@
   RewriteCond %{REQUEST_URI} ^/server/ [NC]
   RewriteRule ^ - [L]
 
+  # Dynamic SEO & AEO endpoints
+  RewriteRule ^llms\.txt$ /server/api/llms.php [L]
+  RewriteRule ^ai\.txt$ /server/api/llms.php [L]
+  RewriteRule ^robots\.txt$ /server/api/robots.php [L]
+  RewriteRule ^sitemap\.xml$ /server/api/sitemap.php [L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

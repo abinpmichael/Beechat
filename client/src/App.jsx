@@ -152,6 +152,80 @@ function App() {
         setGoogleClientId(d.google_client_id);
         setLandingActive(parseInt(d.landing_page_active ?? 1) === 1);
         if (d.seo_title) document.title = d.seo_title;
+
+        const updateTag = (selector, attr, value, tagType = 'meta') => {
+          if (!value) return;
+          let el = document.querySelector(`${tagType}[${selector}]`);
+          if (!el) {
+            el = document.createElement(tagType);
+            const [k, v] = selector.split('=');
+            el.setAttribute(k, v.replace(/["']/g, ''));
+            document.head.appendChild(el);
+          }
+          el.setAttribute(attr, value);
+        };
+
+        updateTag('name="description"', 'content', d.seo_description);
+        updateTag('name="keywords"', 'content', d.seo_keywords);
+        updateTag('name="author"', 'content', d.seo_author);
+        updateTag('name="robots"', 'content', d.seo_robots);
+
+        // Open Graph & Social
+        updateTag('property="og:title"', 'content', d.og_title || d.seo_title);
+        updateTag('property="og:description"', 'content', d.og_description || d.seo_description);
+        updateTag('property="og:image"', 'content', d.og_image);
+        updateTag('property="og:type"', 'content', 'website');
+        updateTag('property="twitter:card"', 'content', 'summary_large_image');
+        updateTag('property="twitter:title"', 'content', d.og_title || d.seo_title);
+        updateTag('property="twitter:description"', 'content', d.og_description || d.seo_description);
+        updateTag('property="twitter:image"', 'content', d.og_image);
+        if (d.twitter_handle) updateTag('name="twitter:site"', 'content', d.twitter_handle);
+
+        // Canonical Link
+        if (d.seo_canonical_url) {
+          let link = document.querySelector('link[rel="canonical"]');
+          if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
+          link.href = d.seo_canonical_url;
+        }
+
+        // Generative Engine Optimization (GEO) & Geotargeting
+        updateTag('name="geo.region"', 'content', d.geo_region);
+        updateTag('name="geo.placename"', 'content', d.geo_placename);
+        updateTag('name="geo.position"', 'content', d.geo_position);
+        updateTag('name="ICBM"', 'content', d.geo_position);
+
+        // JSON-LD Structured Schema (Software & FAQ for Answer Boxes)
+        let script = document.querySelector('script[type="application/ld+json"]');
+        if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; document.head.appendChild(script); }
+        let faqList = [];
+        try { faqList = JSON.parse(d.aeo_faq_json || '[]'); } catch(e){}
+        const schemaObj = {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "SoftwareApplication",
+              "name": d.platform_name || "Bee Chat",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "All",
+              "description": d.seo_description
+            },
+            {
+              "@type": "Organization",
+              "name": d.platform_name || "Bee Chat",
+              "url": d.seo_canonical_url || window.location.origin,
+              "logo": window.location.origin + "/logo.png"
+            },
+            faqList.length > 0 ? {
+              "@type": "FAQPage",
+              "mainEntity": faqList.map(item => ({
+                "@type": "Question",
+                "name": item.q,
+                "acceptedAnswer": { "@type": "Answer", "text": item.a }
+              }))
+            } : null
+          ].filter(Boolean)
+        };
+        script.textContent = JSON.stringify(schemaObj);
       } catch (err) { } finally { setSettingsLoading(false); }
     };
     fetchSettings();

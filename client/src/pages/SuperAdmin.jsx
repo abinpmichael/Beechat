@@ -114,6 +114,20 @@ export default function SuperAdmin() {
     seo_title: '',
     seo_description: '',
     seo_keywords: '',
+    seo_canonical_url: 'https://www.beechat.online/',
+    seo_author: 'Bee Chat Team',
+    seo_robots: 'index, follow',
+    og_title: '',
+    og_description: '',
+    og_image: '/og-image.png',
+    twitter_handle: '@BeeChatAI',
+    aeo_llm_summary: '',
+    aeo_product_features: '',
+    aeo_faq_json: '',
+    geo_region: 'US-CA',
+    geo_placename: 'San Francisco, California',
+    geo_position: '37.7749;-122.4194',
+    geo_target_country: 'Global',
     gtm_id: '',
     enable_registration: 1,
     enable_ai_bot: 1,
@@ -689,46 +703,94 @@ export default function SuperAdmin() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> SEO Meta Title</label>
-              <input 
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
-                value={platformSettings.seo_title} 
-                onChange={(e) => setPlatformSettings({...platformSettings, seo_title: e.target.value})}
-                placeholder="Bee Chat | AI-Powered Customer Support"
-              />
-            </div>
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Search className="w-3.5 h-3.5" /> GTM Container ID</label>
-              <input 
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
-                value={platformSettings.gtm_id} 
-                onChange={(e) => setPlatformSettings({...platformSettings, gtm_id: e.target.value})}
-                placeholder="GTM-XXXXXXX"
-              />
-            </div>
-          </div>
+          <div className="glass p-10 rounded-[3rem] border border-white shadow-xl space-y-8">
+            <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+              <Globe className="w-6 h-6 text-amber-500" /> Search & Social Optimization (SEO / AEO / GEO)
+            </h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">
+              Configure search metadata, AI answer engine overviews (`/llms.txt`), and local geotargeting tags dynamically.
+            </p>
 
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><LayoutDashboard className="w-3.5 h-3.5" /> SEO Meta Description</label>
-            <textarea 
-              rows="3"
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
-              value={platformSettings.seo_description} 
-              onChange={(e) => setPlatformSettings({...platformSettings, seo_description: e.target.value})}
-              placeholder="Describe your platform for search engines..."
-            />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SEO Title</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.seo_title || ''} onChange={(e) => setPlatformSettings({...platformSettings, seo_title: e.target.value})} placeholder="Bee Chat | AI-Powered Support" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Canonical URL</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.seo_canonical_url || ''} onChange={(e) => setPlatformSettings({...platformSettings, seo_canonical_url: e.target.value})} placeholder="https://www.beechat.online/" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SEO Description</label>
+                <textarea rows="2" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.seo_description || ''} onChange={(e) => setPlatformSettings({...platformSettings, seo_description: e.target.value})} placeholder="Description for Google search..." />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SEO Keywords</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.seo_keywords || ''} onChange={(e) => setPlatformSettings({...platformSettings, seo_keywords: e.target.value})} placeholder="AI Chat, Live Support, Customer Engagement" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Robots Directive</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.seo_robots || ''} onChange={(e) => setPlatformSettings({...platformSettings, seo_robots: e.target.value})} placeholder="index, follow" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">GTM Container ID</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.gtm_id || ''} onChange={(e) => setPlatformSettings({...platformSettings, gtm_id: e.target.value})} placeholder="GTM-XXXXXXX" />
+              </div>
+            </div>
 
-          <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5" /> SEO Keywords</label>
-            <input 
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
-              value={platformSettings.seo_keywords} 
-              onChange={(e) => setPlatformSettings({...platformSettings, seo_keywords: e.target.value})}
-              placeholder="AI Chat, Live Support, Customer Engagement, SaaS"
-            />
+            <div className="pt-6 border-t border-slate-100">
+              <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">📱 Social Media / Open Graph</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">OG Title</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.og_title || ''} onChange={(e) => setPlatformSettings({...platformSettings, og_title: e.target.value})} placeholder="Social share title..." />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Twitter Handle</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.twitter_handle || ''} onChange={(e) => setPlatformSettings({...platformSettings, twitter_handle: e.target.value})} placeholder="@BeeChatAI" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">OG Description</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.og_description || ''} onChange={(e) => setPlatformSettings({...platformSettings, og_description: e.target.value})} placeholder="Social share description..." />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100">
+              <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">🤖 Answer Engine Optimization (AEO - For ChatGPT, Gemini, Claude)</h4>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">AI Prompt Summary (`/llms.txt` or `/ai.txt`)</label>
+                  <textarea rows="3" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" value={platformSettings.aeo_llm_summary || ''} onChange={(e) => setPlatformSettings({...platformSettings, aeo_llm_summary: e.target.value})} placeholder="# Bee Chat AI Overview..." />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Structured Key Features (JSON List)</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" value={platformSettings.aeo_product_features || ''} onChange={(e) => setPlatformSettings({...platformSettings, aeo_product_features: e.target.value})} placeholder='["Feature 1", "Feature 2"]' />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Structured FAQ JSON (For Google AI Overviews & Answer Boxes)</label>
+                  <textarea rows="3" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" value={platformSettings.aeo_faq_json || ''} onChange={(e) => setPlatformSettings({...platformSettings, aeo_faq_json: e.target.value})} placeholder='[{"q":"What is Bee Chat?","a":"Answer..."}]' />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100">
+              <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">📍 Generative Engine & Geotargeting (GEO)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Region Code</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.geo_region || ''} onChange={(e) => setPlatformSettings({...platformSettings, geo_region: e.target.value})} placeholder="US-CA" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Place Name</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.geo_placename || ''} onChange={(e) => setPlatformSettings({...platformSettings, geo_placename: e.target.value})} placeholder="San Francisco, California" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lat;Long (ICBM)</label>
+                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.geo_position || ''} onChange={(e) => setPlatformSettings({...platformSettings, geo_position: e.target.value})} placeholder="37.7749;-122.4194" />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end">
