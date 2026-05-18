@@ -77,7 +77,7 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
       </motion.g>
 
       <motion.g animate={animated ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }}>
-        <circle cx="75" cy="75" r="30" fill={`url(#honey${idPrefix})`} filter={`url(#fuzz${idPrefix})`} />
+        <circle cx="75" cy="75" r="30" fill={`url(#honey${idPrefix})`} />
         <path d="M85 55Q95 55 100 75L95 100Q85 105 75 100" fill="#1F2937" fillOpacity="0.9" />
         <path d="M100 65Q110 70 115 80L108 95Q100 100 92 95" fill="#1F2937" fillOpacity="0.9" />
         <circle cx="102" cy="75" r="2" fill="#000" />
@@ -88,7 +88,7 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
         transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}
         style={{ transformOrigin: '33% 50%' }}
       >
-        <circle cx="40" cy="60" r="35" fill={`url(#honey${idPrefix})`} filter={`url(#fuzz${idPrefix})`} />
+        <circle cx="40" cy="60" r="35" fill={`url(#honey${idPrefix})`} />
         <circle cx="40" cy="60" r="32" fill={`url(#honey${idPrefix})`} fillOpacity="0.2" />
         <circle cx="15" cy="70" r="10" fill={`url(#blush${idPrefix})`} />
         <circle cx="65" cy="70" r="10" fill={`url(#blush${idPrefix})`} />
