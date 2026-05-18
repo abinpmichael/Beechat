@@ -35,9 +35,9 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
 
   return (
     <motion.svg 
-      width={typeof size === 'number' ? size : undefined} 
-      height={typeof size === 'number' ? size : undefined} 
-      className={`${className || (typeof size === 'string' ? 'w-full h-full' : '')}`}
+      width={size} 
+      height={size} 
+      className={`w-full h-full max-w-full max-h-full aspect-square ${className}`}
       viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
       animate={animated ? { 
         y: isWiggling ? [0, -12, 0] : [0, -4, 0],
@@ -49,6 +49,8 @@ const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "
       style={{ 
         width: typeof size === 'number' ? `${size}px` : '100%', 
         height: typeof size === 'number' ? `${size}px` : '100%', 
+        maxWidth: typeof size === 'number' ? `${size}px` : '100%',
+        maxHeight: typeof size === 'number' ? `${size}px` : '100%',
         overflow: 'visible', 
         display: 'block', 
         flexShrink: 0 
@@ -425,10 +427,13 @@ const BrandLogo = ({ size = 'md', light = false }) => (
         minHeight: size === 'sm' ? '36px' : (size === 'lg' ? '54px' : '46px'),
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        boxSizing: 'border-box'
       }}
     >
-       <TopBee size={size === 'sm' ? 26 : (size === 'lg' ? 38 : 32)} />
+       <div className="w-full h-full flex items-center justify-center p-1 md:p-1.5" style={{ boxSizing: 'border-box', maxWidth: '100%', maxHeight: '100%' }}>
+          <TopBee size="100%" />
+       </div>
        <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all pointer-events-none" />
     </div>
     <div className="flex flex-col justify-center">
