@@ -50,6 +50,9 @@ try {
         $action = $_GET['action'] ?? 'list_tenants';
 
         if ($action === 'list_tenants') {
+            // Auto-check expired dates and suspend any expired accounts (except System tenant #1)
+            $pdo->exec("UPDATE tenants SET is_active = 0 WHERE expires_at IS NOT NULL AND expires_at < NOW() AND id != 1");
+
             $stmt = $pdo->prepare("
                 SELECT t.*, p.name as plan_name, 
                        (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
@@ -60,6 +63,7 @@ try {
             ");
             $stmt->execute();
             echo json_encode($stmt->fetchAll());
+            exit;
         }
         
         if ($action === 'get_plans') {
@@ -130,8 +134,8 @@ try {
         if ($action === 'update_plan') {
             $tenantId = $data['tenant_id'];
             $planId   = $data['plan_id'];
-            $expiresAt = $data['expires_at'] ?? null;
-            $isActive  = $data['is_active'] ?? 1;
+            $expiresAt = !empty($data['expires_at']) ? $data['expires_at'] . " 23:59:59" : null;
+            $isActive  = (int)($data['is_active'] ?? 1);
 
             $stmt = $pdo->prepare("UPDATE tenants SET plan_id = ?, expires_at = ?, is_active = ? WHERE id = ?");
             $stmt->execute([$planId, $expiresAt, $isActive, $tenantId]);

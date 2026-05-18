@@ -18,12 +18,16 @@ try {
         plan VARCHAR(50) DEFAULT 'pro',
         status VARCHAR(20) DEFAULT 'active',
         plan_id INT DEFAULT NULL,
+        expires_at TIMESTAMP NULL DEFAULT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
         trial_ends_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
     try { $pdo->exec("ALTER TABLE tenants ADD COLUMN status VARCHAR(20) DEFAULT 'active'"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE tenants ADD COLUMN plan_id INT DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE tenants ADD COLUMN expires_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE tenants ADD COLUMN is_active BOOLEAN DEFAULT TRUE"); } catch (Exception $e) {}
 
     // 2. Users Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
