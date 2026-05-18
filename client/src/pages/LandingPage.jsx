@@ -405,26 +405,48 @@ const BeeFactStrip = () => {
   );
 };
 
-const BrandLogo = ({ size = 'md', light = false }) => (
-  <div className="flex items-center gap-3 md:gap-5 group cursor-pointer">
-    <div className={`
-      ${size === 'sm' ? 'w-10 h-10 p-1.5' : size === 'lg' ? 'w-20 h-20 p-3' : 'w-14 h-14 p-2'} 
-      bg-white rounded-[1.25rem] md:rounded-[1.75rem] flex items-center justify-center shadow-2xl border-2 border-amber-50 group-hover:scale-110 transition-all duration-500 relative
-    `}>
-       <TopBee size={size === 'sm' ? 30 : size === 'lg' ? 70 : 50} />
-       <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all" />
-    </div>
-    <div className="flex flex-col">
-      <span className={`
-        ${size === 'sm' ? 'text-lg' : size === 'lg' ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl'} 
-        font-black tracking-tighter uppercase leading-none ${light ? 'text-white' : 'text-slate-900'}
+const BrandLogo = ({ size = 'md', light = false }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const getContainerClass = () => {
+    if (size === 'sm') return 'w-10 h-10 p-1.5 rounded-xl md:rounded-2xl';
+    if (size === 'lg') return isMobile ? 'w-12 h-12 p-2 rounded-2xl' : 'w-20 h-20 p-3 rounded-[1.75rem]';
+    return isMobile ? 'w-10 h-10 p-1.5 rounded-xl' : 'w-14 h-14 p-2 rounded-3xl';
+  };
+
+  const getBeeSize = () => {
+    if (size === 'sm') return 28;
+    if (size === 'lg') return isMobile ? 32 : 64;
+    return isMobile ? 28 : 44;
+  };
+
+  return (
+    <a href="/" className="flex items-center gap-2.5 md:gap-5 group cursor-pointer text-decoration-none">
+      <div className={`
+        ${getContainerClass()} 
+        bg-white flex items-center justify-center shadow-xl md:shadow-2xl border-2 border-amber-100 group-hover:scale-105 transition-all duration-500 relative shrink-0 overflow-hidden
       `}>
-        BEE<span className="text-amber-500">CHAT</span>
-      </span>
-      <span className={`text-[7px] md:text-[9px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] ${light ? 'text-white/40' : 'text-slate-400'} mt-0.5 md:mt-1`}>The Hive Intelligence</span>
-    </div>
-  </div>
-);
+         <TopBee size={getBeeSize()} />
+         <div className="absolute inset-0 bg-amber-400/5 blur-xl rounded-full group-hover:bg-amber-400/10 transition-all" />
+      </div>
+      <div className="flex flex-col">
+        <span className={`
+          ${size === 'sm' ? 'text-lg' : size === 'lg' ? (isMobile ? 'text-2xl' : 'text-4xl') : (isMobile ? 'text-xl' : 'text-3xl')} 
+          font-black tracking-tighter uppercase leading-none ${light ? 'text-white' : 'text-slate-900'}
+        `}>
+          BEE<span className="text-amber-500">CHAT</span>
+        </span>
+        <span className={`text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.5em] ${light ? 'text-white/40' : 'text-slate-400'} mt-0.5 md:mt-1`}>The Hive Intelligence</span>
+      </div>
+    </a>
+  );
+};
 
 const FlyingBee = ({ delay = 0, customPath, scale = 1, type = "top" }) => (
   <motion.div
@@ -457,7 +479,7 @@ const Nav = () => {
       style={{ backgroundColor: navBg, borderBottomColor: navBorder }}
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl border-b transition-colors"
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-10 h-24 md:h-32 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 md:h-32 flex items-center justify-between">
         <BrandLogo size="lg" />
         <div className="hidden lg:flex items-center gap-10 xl:gap-16">
           {['Features', 'Benefits', 'Pricing'].map(link => (
@@ -475,8 +497,8 @@ const Nav = () => {
           <a href="/login" className="text-[10px] font-black text-slate-900 hover:text-amber-500 transition-colors uppercase tracking-[0.4em]">Login</a>
           <a href="/register" className="bg-slate-900 text-white px-8 xl:px-12 py-4 xl:py-5 rounded-2xl md:rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-amber-500 hover:scale-105 transition-all">Join Hive</a>
         </div>
-        <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-4 bg-slate-900 rounded-2xl text-white shadow-xl">
-          {isOpen ? <X /> : <Menu />}
+        <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-3 bg-slate-900 rounded-2xl text-white shadow-xl">
+          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
       <AnimatePresence>
