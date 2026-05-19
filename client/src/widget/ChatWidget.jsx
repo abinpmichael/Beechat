@@ -298,13 +298,21 @@ export default function ChatWidget({ apiKey }) {
             const newAgentMsgs = dbMapped.filter(m => m.role === 'agent' && !prevAgentIds.has(m.id));
             if (newAgentMsgs.length === 0) return prev;
             setLastSeenMsgId(Math.max(...newAgentMsgs.map(m => m.id)));
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
             return [...prev, ...newAgentMsgs];
           });
         });
     }, 2000); return () => clearInterval(tick);
   }, [isLive, isOpen, lastSeenMsgId, apiKey]);
 
-  const addMsg = useCallback((role, text, image = null) => setMessages(p => [...p, { role, text, image }]), []);
+  const addMsg = useCallback((role, text, image = null) => {
+    setMessages(p => [...p, { role, text, image }]);
+    if (role !== 'visitor') {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    }
+  }, []);
   
   const handleImageUpload = async (e) => {
      const file = e.target.files[0];
