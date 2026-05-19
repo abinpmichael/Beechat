@@ -84,7 +84,7 @@ class MailService {
             $mail->SMTPAuth   = true;
             $mail->Username   = $user;
             $mail->Password   = $pass;
-            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPSecure = ($port === 465) ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
 
             // Recipients

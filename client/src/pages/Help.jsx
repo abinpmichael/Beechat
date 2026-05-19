@@ -341,14 +341,40 @@ export default function Help() {
               </button>
               
               <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
-                <video 
-                  className="w-full h-full object-contain"
-                  controls
-                  autoPlay
-                  src={platformSettings.tutorial_video_url || "https://www.w3schools.com/html/mov_bbb.mp4"}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                {(() => {
+                  const url = platformSettings.tutorial_video_url || "/tutorial.webp";
+                  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                    return (
+                      <iframe 
+                        className="w-full h-full"
+                        src={url}
+                        title="Bee Chat Pro Tutorial"
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                      ></iframe>
+                    );
+                  }
+                  if (url.endsWith('.webp') || url.endsWith('.gif') || url.endsWith('.png') || url.endsWith('.jpg')) {
+                    return (
+                      <img 
+                        className="w-full h-full object-contain max-h-[85vh]"
+                        src={url}
+                        alt="Bee Chat Walkthrough Tutorial" 
+                      />
+                    );
+                  }
+                  return (
+                    <video 
+                      className="w-full h-full object-contain max-h-[85vh]"
+                      controls
+                      autoPlay
+                      src={url}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  );
+                })()}
               </div>
             </motion.div>
           </div>
