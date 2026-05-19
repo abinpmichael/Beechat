@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -18,8 +18,10 @@ import { API_BASE_URL } from './config';
 const queryClient = new QueryClient();
 
 // --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
-const TopBee = ({ size = 40, animated = true }) => {
+const TopBee = ({ size = 40, animated = true, idPrefix: customPrefix = "appBee", className = "" }) => {
   const [isWiggling, setIsWiggling] = useState(false);
+  const reactId = React.useId().replace(/[-:.]/g, '');
+  const idPrefix = `${customPrefix}_${reactId}`;
   
   useEffect(() => {
     if (!animated) return;
@@ -35,6 +37,7 @@ const TopBee = ({ size = 40, animated = true }) => {
   return (
     <motion.svg 
       width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"
+      className={className}
       animate={animated ? { 
         y: isWiggling ? [0, -12, 0] : [0, -4, 0],
         rotate: isWiggling ? [0, 10, -10, 7, 0] : [0, 3, -3, 0],
@@ -45,17 +48,17 @@ const TopBee = ({ size = 40, animated = true }) => {
       style={{ overflow: 'visible' }}
     >
       <defs>
-        <filter id="megaKawaiiFuzz" x="-50%" y="-50%" width="200%" height="200%">
+        <filter id={`fuzz${idPrefix}`} x="-50%" y="-50%" width="200%" height="200%">
           <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="3" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" />
         </filter>
-        <linearGradient id="megaHoney" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={`honey${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FFFBEB" /><stop offset="40%" stopColor="#FEF3C7" /><stop offset="80%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#92400E" />
         </linearGradient>
-        <radialGradient id="kawaiiEye" cx="30%" cy="30%" r="70%">
+        <radialGradient id={`eye${idPrefix}`} cx="30%" cy="30%" r="70%">
           <stop offset="0%" stopColor="#4B5563" /><stop offset="60%" stopColor="#111827" /><stop offset="100%" stopColor="#000000" />
         </radialGradient>
-        <radialGradient id="deepBlush" cx="50%" cy="50%" r="50%">
+        <radialGradient id={`blush${idPrefix}`} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#FF85A2" stopOpacity="0.8" /><stop offset="100%" stopColor="#FF85A2" stopOpacity="0" />
         </radialGradient>
       </defs>
@@ -65,23 +68,23 @@ const TopBee = ({ size = 40, animated = true }) => {
       </motion.g>
 
       <motion.g animate={animated ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 2, repeat: Infinity }}>
-        <circle cx="75" cy="75" r="30" fill="url(#megaHoney)" />
+        <circle cx="75" cy="75" r="30" fill={`url(#honey${idPrefix})`} />
         <path d="M85 55Q95 55 100 75L95 100Q85 105 75 100" fill="#1F2937" fillOpacity="0.9" />
         <path d="M100 65Q110 70 115 80L108 95Q100 100 92 95" fill="#1F2937" fillOpacity="0.9" />
         <circle cx="102" cy="75" r="2" fill="#000" />
       </motion.g>
 
       <motion.g animate={animated ? { rotate: isWiggling ? [-8, 8, -8] : [-2, 2] } : {}} transition={{ duration: isWiggling ? 0.3 : 4, repeat: isWiggling ? 4 : Infinity }}>
-        <circle cx="40" cy="60" r="35" fill="url(#megaHoney)" />
-        <circle cx="40" cy="60" r="32" fill="url(#megaHoney)" fillOpacity="0.2" />
-        <circle cx="15" cy="70" r="10" fill="url(#deepBlush)" />
-        <circle cx="65" cy="70" r="10" fill="url(#deepBlush)" />
+        <circle cx="40" cy="60" r="35" fill={`url(#honey${idPrefix})`} />
+        <circle cx="40" cy="60" r="32" fill={`url(#honey${idPrefix})`} fillOpacity="0.2" />
+        <circle cx="15" cy="70" r="10" fill={`url(#blush${idPrefix})`} />
+        <circle cx="65" cy="70" r="10" fill={`url(#blush${idPrefix})`} />
         <g>
-          <circle cx="22" cy="55" r="16" fill="url(#kawaiiEye)" />
+          <circle cx="22" cy="55" r="16" fill={`url(#eye${idPrefix})`} />
           <circle cx="16" cy="48" r="7" fill="white" fillOpacity="0.95" />
           <circle cx="28" cy="60" r="3" fill="white" fillOpacity="0.6" />
           <path d="M10 55Q12 50 14 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-          <circle cx="58" cy="55" r="16" fill="url(#kawaiiEye)" />
+          <circle cx="58" cy="55" r="16" fill={`url(#eye${idPrefix})`} />
           <circle cx="52" cy="48" r="7" fill="white" fillOpacity="0.95" />
           <circle cx="64" cy="60" r="3" fill="white" fillOpacity="0.6" />
           <path d="M46 55Q48 50 50 55" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3" />

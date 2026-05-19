@@ -11,9 +11,11 @@ import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 
 // --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
-const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix = "bee", className = "" }) => {
+const TopBee = ({ size = 40, animated = true, followsMouse = false, idPrefix: customPrefix = "bee", className = "" }) => {
   const [isWiggling, setIsWiggling] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const reactId = React.useId().replace(/[-:.]/g, '');
+  const idPrefix = `${customPrefix}_${reactId}`;
   
   useEffect(() => {
     if (!animated) return;
