@@ -340,15 +340,15 @@ export default function Help() {
                 <ChevronRight className="w-6 h-6 rotate-90" />
               </button>
               
-              <div className="absolute inset-0 flex items-center justify-center">
-                <iframe 
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-                  title="Bee Chat Pro Tutorial"
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
-                ></iframe>
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
+                <video 
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  src={platformSettings.tutorial_video_url || "https://www.w3schools.com/html/mov_bbb.mp4"}
+                >
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </motion.div>
           </div>

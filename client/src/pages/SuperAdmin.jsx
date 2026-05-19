@@ -139,6 +139,7 @@ export default function SuperAdmin() {
     support_phone: '',
     support_whatsapp: '',
     help_center_url: '',
+    tutorial_video_url: '',
     openai_api_key: '',
     smtp_host: '',
     smtp_port: '',
@@ -666,7 +667,11 @@ export default function SuperAdmin() {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Help Center URL</label>
-                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.help_center_url} onChange={(e) => setPlatformSettings({...platformSettings, help_center_url: e.target.value})} placeholder="https://help.beechat.com" />
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.help_center_url || ''} onChange={(e) => setPlatformSettings({...platformSettings, help_center_url: e.target.value})} placeholder="https://help.beechat.com" />
+              </div>
+              <div className="space-y-2 col-span-1 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Video Tutorial MP4 / Video URL</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" value={platformSettings.tutorial_video_url || ''} onChange={(e) => setPlatformSettings({...platformSettings, tutorial_video_url: e.target.value})} placeholder="https://www.w3schools.com/html/mov_bbb.mp4" />
               </div>
             </div>
           </div>

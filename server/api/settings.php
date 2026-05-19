@@ -23,6 +23,7 @@ if ($method === 'GET' && !$auth) {
     if (!isset($settings['support_phone'])) $settings['support_phone'] = '';
     if (!isset($settings['support_whatsapp'])) $settings['support_whatsapp'] = '';
     if (!isset($settings['help_center_url'])) $settings['help_center_url'] = '';
+    if (!isset($settings['tutorial_video_url'])) $settings['tutorial_video_url'] = 'https://www.w3schools.com/html/mov_bbb.mp4';
 
     // SEO, AEO, GEO Defaults
     if (!isset($settings['platform_name'])) $settings['platform_name'] = 'Bee Chat';
