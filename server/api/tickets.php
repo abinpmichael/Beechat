@@ -89,6 +89,9 @@ try {
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, message) VALUES (?, ?)");
         $stmt->execute([$ticketId, $message]);
 
+        // Trigger Notification
+        triggerNotification($site['tenant_id'], 'new_ticket', 'New Ticket Raised', "Ticket #$trackingId: $subject", "/dashboard/tickets");
+
         // 5. Send Notification (SMTP Integration)
         require_once 'mail_service.php';
         $mail = new MailService($pdo);
@@ -162,6 +165,42 @@ try {
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message, is_private) VALUES (?, ?, ?, ?)");
         $stmt->execute([$ticketId, $userId, $message, $isPrivate]);
 
+        if ($trackingId) {
+            // Visitor replied -> Notify Agent/Tenant
+            $stmt = $pdo->prepare("SELECT tenant_id, tracking_id FROM tickets WHERE id = ?");
+            $stmt->execute([$ticketId]);
+            $tDetails = $stmt->fetch();
+            if ($tDetails) {
+                triggerNotification($tDetails['tenant_id'], 'ticket_reply', 'New Ticket Reply', "Visitor replied to Ticket #{$tDetails['tracking_id']}", "/dashboard/tickets");
+            }
+        } else {
+            // Agent replied -> Notify Visitor if public reply (isPrivate == 0)
+            if ((int)$isPrivate === 0) {
+                $stmt = $pdo->prepare("SELECT l.session_id, t.tracking_id FROM tickets t JOIN leads l ON t.lead_id = l.id WHERE t.id = ?");
+                $stmt->execute([$ticketId]);
+                $tLead = $stmt->fetch();
+                if ($tLead) {
+                    $payload = json_encode([
+                        'sessionId' => $tLead['session_id'],
+                        'type' => 'ticket_reply',
+                        'data' => [
+                            'ticketId' => $ticketId,
+                            'trackingId' => $tLead['tracking_id'],
+                            'message' => $message
+                        ]
+                    ]);
+                    $ch = curl_init("http://localhost:3000/notify-visitor");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                    curl_exec($ch);
+                    curl_close($ch);
+                }
+            }
+        }
+
         echo json_encode(["success" => true]);
         exit;
     }
@@ -193,8 +232,7 @@ try {
         $pdo->prepare("UPDATE leads SET chat_status = 'ticket' WHERE id = ?")->execute([$leadId]);
 
         // 5. Create Notification for the tenant
-        $pdo->prepare("INSERT INTO notifications (tenant_id, type, title, message, link) VALUES (?, 'ticket', 'Chat Escalated', ?, ?)")
-            ->execute([$tenantId, "Chat #$leadId was converted to Ticket #$trackingId", "/dashboard/tickets"]);
+        triggerNotification($tenantId, 'ticket', 'Chat Escalated', "Chat #$leadId was converted to Ticket #$trackingId", "/dashboard/tickets");
 
         // 6. Send Mail to Visitor if email exists
         if (!empty($email)) {
@@ -239,6 +277,9 @@ try {
         // Add Initial Message
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)");
         $stmt->execute([$ticketId, $userId, $message]);
+
+        // Trigger Notification
+        triggerNotification($tenantId, 'new_ticket', 'New Internal Ticket Raised', "Ticket #$trackingId: $subject", "/dashboard/tickets");
 
         // Send Notification
         require_once 'mail_service.php';

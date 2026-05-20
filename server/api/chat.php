@@ -46,6 +46,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
             
             $res['is_open'] = $isOpen;
 
+            // IP Country Lookup for Colony Pulse
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            if ($ip === '::1' || $ip === '127.0.0.1') {
+                $ip = '104.244.42.1'; // fallback public IP
+            }
+            $country = 'United States';
+            $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+            $geoJson = @file_get_contents("http://ip-api.com/json/" . $ip, false, $ctx);
+            if ($geoJson) {
+                $geoData = json_decode($geoJson, true);
+                if (isset($geoData['country']) && !empty($geoData['country'])) {
+                    $country = $geoData['country'];
+                }
+            }
+            $res['country'] = $country;
+
             // GLOBAL SETTINGS
             $gStmt = $pdo->query("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key IN ('enable_live_chat', 'enable_ai_bot', 'enable_ticketing')");
             foreach ($gStmt->fetchAll() as $row) {

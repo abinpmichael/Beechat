@@ -14,6 +14,7 @@ if (empty($sessionId) || empty($apiKey)) {
     exit;
 }
 
+try {
     $country = $data['country'] ?? 'Unknown';
     $browser = $data['browser'] ?? 'Unknown';
     $device  = $data['device']  ?? 'Desktop';

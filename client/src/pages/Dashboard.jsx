@@ -20,6 +20,8 @@ import TeamChat from './TeamChat';
 import SuperAdmin from './SuperAdmin';
 import Help from './Help';
 import Tickets from './Tickets';
+import NotificationsHistory from './NotificationsHistory';
+import { io } from 'socket.io-client';
 import { API_BASE_URL } from '../config';
 
 const STATS_URL = `${API_BASE_URL}/stats.php`;
@@ -122,6 +124,7 @@ export default function Dashboard() {
   const [sysSettings, setSysSettings]     = useState({});
   const [notifications, setNotifications] = useState([]);
   const [isNotifOpen, setIsNotifOpen]     = useState(false);
+  const [liveVisitors, setLiveVisitors]   = useState([]);
 
   const fetchNotifs = async () => {
     try {
@@ -135,6 +138,44 @@ export default function Dashboard() {
     const t = setInterval(fetchNotifs, 10000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if (!user || !user.tenant_id) return;
+
+    // Connect to Socket.IO server on port 3000
+    const socket = io('http://localhost:3000');
+
+    // Join room for this tenant
+    socket.emit('join_tenant', user.tenant_id);
+
+    // Listen to real-time notifications
+    socket.on('notification', (notif) => {
+      setNotifications(prev => [notif, ...prev]);
+
+      // Play alert sound
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(() => {});
+
+      // Show native browser notification if allowed
+      if (Notification.permission === 'granted') {
+        new Notification(notif.title, { body: notif.message });
+      }
+    });
+
+    // Listen to active visitor events
+    socket.on('live_visitors_list', (list) => {
+      setLiveVisitors(list);
+    });
+
+    // Request notification permission if not prompted yet
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   const markAllRead = async () => {
     try {
@@ -291,7 +332,7 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div className="p-6 text-center border-t-2 border-slate-50 bg-white">
-                         <Link to="/dashboard/leads" onClick={() => setIsNotifOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors">View All Activities</Link>
+                         <Link to="/dashboard/notifications" onClick={() => setIsNotifOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors">View All Activities</Link>
                       </div>
                     </motion.div>
                   </>
@@ -322,7 +363,7 @@ export default function Dashboard() {
               className="min-h-full"
             >
               <Routes>
-                <Route path="/" element={<Overview statsUrl={STATS_URL} />} />
+                <Route path="/" element={<Overview statsUrl={STATS_URL} liveVisitors={liveVisitors} />} />
                 <Route path="/chats" element={<ChatConsole />} />
                 <Route path="/team" element={<TeamChat />} />
                 <Route path="/leads" element={<Leads />} />
@@ -330,6 +371,7 @@ export default function Dashboard() {
                 <Route path="/agents" element={<TeamPage />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/tickets" element={<Tickets />} />
+                <Route path="/notifications" element={<NotificationsHistory />} />
                 <Route path="/super-admin" element={<SuperAdmin />} />
                 <Route path="/help" element={<Help />} />
               </Routes>
@@ -412,55 +454,139 @@ const HiveInsights = () => (
 );
 
 // --- COLONY PULSE MAP (LIVE VISITOR VISUALIZER) ---
-const ColonyPulseMap = () => {
-  const dots = [
-    { top: '30%', left: '20%', delay: 0 },
-    { top: '45%', left: '75%', delay: 1.2 },
-    { top: '60%', left: '40%', delay: 0.5 },
-    { top: '25%', left: '60%', delay: 2.1 },
-    { top: '70%', left: '85%', delay: 1.7 },
-  ];
+const ColonyPulseMap = ({ liveVisitors = [] }) => {
+  const getCoordinates = (visitor) => {
+    let hash = 0;
+    const str = (visitor.country || '') + (visitor.ip || '') + (visitor.sessionId || '');
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const top = 15 + Math.abs(hash % 70) + '%';
+    const left = 15 + Math.abs((hash >> 8) % 70) + '%';
+    return { top, left };
+  };
 
   return (
-    <div className="glass p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border-2 border-white shadow-2xl shadow-amber-500/5 bg-slate-900 relative overflow-hidden">
-      <div className="flex items-center justify-between mb-10">
+    <div className="glass p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border-2 border-white shadow-2xl shadow-amber-500/5 bg-slate-900 text-white relative overflow-hidden lg:col-span-2">
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 relative z-10">
         <div>
-          <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Colony Pulse</h4>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1">Live Resident Origins</p>
+          <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+            Colony Pulse
+          </h4>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1.5">Live Resident Origins & Activity</p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+        <div className="flex items-center gap-3 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20 shrink-0">
           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-          <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Real-time</span>
+          <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">{liveVisitors.length} Bees Active</span>
         </div>
       </div>
-      
-      <div className="relative h-48 md:h-64 bg-slate-800/30 rounded-[2rem] border border-white/5 overflow-hidden">
-        {/* Mock World Map Silhouette */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10,20 Q30,10 50,20 T90,20 M10,50 Q30,40 50,50 T90,50 M10,80 Q30,70 50,80 T90,80' stroke='%23fff' fill='none'/%3E%3C/svg%3E")` }} />
-        
-        {dots.map((dot, i) => (
-          <div key={i} className="absolute" style={{ top: dot.top, left: dot.left }}>
-            <motion.div 
-              animate={{ scale: [1, 2, 1], opacity: [1, 0, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity, delay: dot.delay }}
-              className="w-4 h-4 bg-amber-500/40 rounded-full"
-            />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,1)]" />
-          </div>
-        ))}
 
-        <div className="absolute bottom-4 left-6 flex items-center gap-2">
-           <div className="flex -space-x-2">
-              {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-amber-500 flex items-center justify-center text-[8px] font-black text-white"><TopBee size={12} /></div>)}
-           </div>
-           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">5 New Entries Found</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+        {/* Visual Map Silhouette */}
+        <div className="lg:col-span-1 relative h-64 bg-slate-800/30 rounded-[2rem] border border-white/5 overflow-hidden flex flex-col justify-between p-6">
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10,20 Q30,10 50,20 T90,20 M10,50 Q30,40 50,50 T90,50 M10,80 Q30,70 50,80 T90,80' stroke='%23fff' fill='none'/%3E%3C/svg%3E")` }} />
+          
+          {liveVisitors.map((visitor, i) => {
+            const coords = getCoordinates(visitor);
+            return (
+              <div key={visitor.sessionId || i} className="absolute" style={{ top: coords.top, left: coords.left }}>
+                <motion.div 
+                  animate={{ scale: [1, 2.5, 1], opacity: [0.8, 0, 0.8] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: (i * 0.4) % 2 }}
+                  className="w-5 h-5 bg-emerald-500/30 rounded-full"
+                />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_12px_rgba(52,211,153,1)]" />
+              </div>
+            );
+          })}
+
+          <div className="relative z-10 text-center my-auto">
+            {liveVisitors.length === 0 ? (
+              <p className="text-xs font-black text-slate-500 uppercase tracking-widest">No active pings</p>
+            ) : (
+              <div>
+                <p className="text-4xl font-black tracking-tighter text-white animate-pulse">{liveVisitors.length}</p>
+                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mt-1">Live Beings</p>
+              </div>
+            )}
+          </div>
+
+          <div className="relative z-10 flex items-center gap-2">
+             <div className="flex -space-x-2">
+                {liveVisitors.slice(0, 3).map((v, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-slate-900 bg-amber-500 flex items-center justify-center text-[8px] font-black text-white">
+                    🐝
+                  </div>
+                ))}
+             </div>
+             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+               {liveVisitors.length > 0 ? `${liveVisitors.length} Session Cells` : 'Silence'}
+             </span>
+          </div>
+        </div>
+
+        {/* Live Visitor Details Grid */}
+        <div className="lg:col-span-2 bg-slate-800/20 rounded-[2rem] border border-white/5 overflow-hidden flex flex-col justify-between max-h-[16rem] overflow-y-auto custom-scrollbar">
+          <div className="w-full">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest sticky top-0 bg-slate-900 z-10">
+                  <th className="px-6 py-4">Visitor / Origin</th>
+                  <th className="px-6 py-4">Current Page</th>
+                  <th className="px-6 py-4">Specs</th>
+                  <th className="px-6 py-4 text-right">Duration</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-[10px]">
+                {liveVisitors.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 font-bold uppercase tracking-widest text-[9px]">
+                      Waiting for active visitors...
+                    </td>
+                  </tr>
+                ) : (
+                  liveVisitors.map((visitor) => (
+                    <tr key={visitor.sessionId} className="hover:bg-white/5 transition-all">
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm" title={visitor.country}>{visitor.country === 'United States' ? '🇺🇸' : visitor.country === 'Canada' ? '🇨🇦' : visitor.country === 'India' ? '🇮🇳' : '🌐'}</span>
+                          <div>
+                            <p className="font-black text-white truncate max-w-[100px]">{visitor.visitorUid || 'Anonymous'}</p>
+                            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{visitor.ip || 'Unknown IP'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded-lg text-[9px] font-black uppercase tracking-wider max-w-[120px] truncate block">
+                          {visitor.page || '/'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <span className="font-bold uppercase text-[8px] tracking-widest bg-slate-800 px-1.5 py-0.5 rounded text-white border border-white/5">{visitor.browser || 'Browser'}</span>
+                          <span className="font-bold uppercase text-[8px] tracking-widest bg-slate-800 px-1.5 py-0.5 rounded text-white border border-white/5">{visitor.device || 'desktop'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <span className="font-black text-emerald-400 font-mono">{visitor.sessionDuration || 0}s</span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-function Overview({ statsUrl }) {
+function Overview({ statsUrl, liveVisitors = [] }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -582,7 +708,7 @@ function Overview({ statsUrl }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
          <HiveInsights />
-         <ColonyPulseMap />
+         <ColonyPulseMap liveVisitors={liveVisitors} />
       </div>
     </div>
   );

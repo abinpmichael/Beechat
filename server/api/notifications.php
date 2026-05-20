@@ -25,6 +25,10 @@ try {
             }
             echo json_encode(["success" => true]);
         }
+        if (isset($data['action']) && $data['action'] === 'clear_all') {
+            $pdo->prepare("DELETE FROM notifications WHERE tenant_id = ?")->execute([$tenantId]);
+            echo json_encode(["success" => true]);
+        }
     }
 } catch (Exception $e) {
     http_response_code(500);

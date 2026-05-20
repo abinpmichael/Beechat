@@ -22,6 +22,35 @@ if ($method === 'POST') {
         $isLive  = (isset($details['status']) && $details['status'] === 'human_requested') ? 1 : 0;
         $status  = $isLive ? 'waiting' : 'lead';
 
+        // Parse user agent
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $browser = 'Chrome';
+        if (strpos($userAgent, 'Firefox') !== false) $browser = 'Firefox';
+        else if (strpos($userAgent, 'Safari') !== false && strpos($userAgent, 'Chrome') === false) $browser = 'Safari';
+        else if (strpos($userAgent, 'Edge') !== false) $browser = 'Edge';
+
+        $device = 'Desktop';
+        if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i', $userAgent)) {
+            $device = 'Tablet';
+        } else if (preg_match('/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Opera Mini/i', $userAgent)) {
+            $device = 'Mobile';
+        }
+
+        // Look up IP and country
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        if ($ip === '::1' || $ip === '127.0.0.1') {
+            $ip = '104.244.42.1'; // Twitter IP for lookup
+        }
+        $country = 'United States';
+        $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+        $geoJson = @file_get_contents("http://ip-api.com/json/" . $ip, false, $ctx);
+        if ($geoJson) {
+            $geoData = json_decode($geoJson, true);
+            if (isset($geoData['country']) && !empty($geoData['country'])) {
+                $country = $geoData['country'];
+            }
+        }
+
         // ── DUPLICATE PROTECTION: Check for existing active lead ──
         $stmt = $pdo->prepare("SELECT id, visitor_uid FROM leads WHERE session_id = ? AND website_id = ? AND chat_status != 'ended' LIMIT 1");
         $stmt->execute([$sessionId, $site['id']]);
@@ -29,8 +58,8 @@ if ($method === 'POST') {
 
         if ($existing) {
             // Update existing instead of creating new
-            $stmt = $pdo->prepare("UPDATE leads SET is_live = ?, chat_status = ?, last_seen_at = NOW() WHERE id = ?");
-            $stmt->execute([$isLive, $status, $existing['id']]);
+            $stmt = $pdo->prepare("UPDATE leads SET is_live = ?, chat_status = ?, last_seen_at = NOW(), country = ?, browser = ?, device = ? WHERE id = ?");
+            $stmt->execute([$isLive, $status, $country, $browser, $device, $existing['id']]);
             $leadId = $existing['id'];
             $uid    = $existing['visitor_uid'];
             $msg    = "Session resumed";
@@ -38,8 +67,8 @@ if ($method === 'POST') {
             // Generate a human-friendly visitor UID
             $uid = 'BEE-' . strtoupper(substr(md5($sessionId . microtime()), 0, 6));
 
-            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id,website_id,session_id,phone,details,is_live,chat_status,visitor_uid) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->execute([$site['tenant_id'], $site['id'], $sessionId, $phone, json_encode($details), $isLive, $status, $uid]);
+            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id,website_id,session_id,phone,details,is_live,chat_status,visitor_uid,country,browser,device) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([$site['tenant_id'], $site['id'], $sessionId, $phone, json_encode($details), $isLive, $status, $uid, $country, $browser, $device]);
             $leadId = $pdo->lastInsertId();
             $msg    = "Lead captured";
         }
@@ -48,6 +77,9 @@ if ($method === 'POST') {
         if ($isLive) {
             $pdo->prepare("INSERT INTO messages (lead_id,sender_type,content,agent_name) VALUES (?,'agent',?,'System')")
                 ->execute([$leadId, "🟡 Visitor $uid is active."]);
+
+            // Notify tenant dashboard about waiting visitor
+            triggerNotification($site['tenant_id'], 'visitor_waiting', 'Visitor Requesting Human Agent', "Visitor $uid is waiting for an agent to claim the chat.", "/dashboard/leads");
         }
 
         // Queue Ticket Confirmation if it's a lead (and has email)

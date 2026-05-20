@@ -106,6 +106,61 @@ try {
                     $url = 'api/uploads/' . $name;
                     $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, image) VALUES (?, ?, ?, ?)");
                     $stmt->execute([$leadId, $sender, 'Sent an image', $url]);
+                    $msgId = $pdo->lastInsertId();
+
+                    // Fetch lead details
+                    $stmt = $pdo->prepare("SELECT tenant_id, session_id, visitor_uid FROM leads WHERE id = ?");
+                    $stmt->execute([$leadId]);
+                    $lead = $stmt->fetch();
+
+                    if ($lead) {
+                        if ($sender === 'visitor') {
+                            triggerNotification($lead['tenant_id'], 'visitor_message', 'New Visitor Message (Image)', "Visitor " . ($lead['visitor_uid'] ?? 'Visitor') . " sent an image.", "/dashboard/leads");
+
+                            $payload = json_encode([
+                                'tenantId' => (int)$lead['tenant_id'],
+                                'type' => 'message',
+                                'data' => [
+                                    'id' => $msgId,
+                                    'lead_id' => $leadId,
+                                    'sender_type' => 'visitor',
+                                    'content' => 'Sent an image',
+                                    'image' => $url,
+                                    'created_at' => date('Y-m-d H:i:s')
+                                ]
+                            ]);
+                            $ch = curl_init("http://localhost:3000/notify");
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_POST, true);
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                            curl_exec($ch);
+                            curl_close($ch);
+                        } else {
+                            $payload = json_encode([
+                                'sessionId' => $lead['session_id'],
+                                'type' => 'message',
+                                'data' => [
+                                    'id' => $msgId,
+                                    'lead_id' => $leadId,
+                                    'sender_type' => 'agent',
+                                    'content' => 'Sent an image',
+                                    'image' => $url,
+                                    'created_at' => date('Y-m-d H:i:s')
+                                ]
+                            ]);
+                            $ch = curl_init("http://localhost:3000/notify-visitor");
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_POST, true);
+                            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                            curl_exec($ch);
+                            curl_close($ch);
+                        }
+                    }
+
                     echo json_encode(["status" => "success", "url" => $url]);
                     exit;
                 }
@@ -122,6 +177,30 @@ try {
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, 'agent', ?, ?, ?)");
             $stmt->execute([$leadId, "✅ Agent $agentName has joined the chat.", $agentId, $agentName]);
 
+            // GET tenant_id of this lead
+            $stmt = $pdo->prepare("SELECT tenant_id, session_id FROM leads WHERE id = ?");
+            $stmt->execute([$leadId]);
+            $lead = $stmt->fetch();
+            if ($lead) {
+                // Notify other agents that this chat is claimed
+                triggerNotification($lead['tenant_id'], 'chat_assigned', "Chat Claimed", "Agent $agentName joined Chat #$leadId", "/dashboard/leads");
+                
+                // Notify the visitor widget via Socket.io
+                $payload = json_encode([
+                    'sessionId' => $lead['session_id'],
+                    'type' => 'chat_assigned',
+                    'data' => ['agentId' => $agentId, 'agentName' => $agentName]
+                ]);
+                $ch = curl_init("http://localhost:3000/notify-visitor");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                curl_exec($ch);
+                curl_close($ch);
+            }
+
             echo json_encode(["status" => "claimed"]);
             exit;
         }
@@ -133,6 +212,67 @@ try {
 
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, 'agent', ?, ?, ?)");
             $stmt->execute([$leadId, "🔴 The chat has been ended by $agentName.", $agentId, $agentName]);
+
+            // GET lead details
+            $stmt = $pdo->prepare("SELECT * FROM leads WHERE id = ?");
+            $stmt->execute([$leadId]);
+            $lead = $stmt->fetch();
+            if ($lead) {
+                $tenantId = $lead['tenant_id'];
+                triggerNotification($tenantId, 'chat_ended', "Chat Ended", "Chat with " . ($lead['visitor_uid'] ?? 'Visitor') . " ended", "/dashboard/leads");
+
+                // Notify visitor widget
+                $payload = json_encode([
+                    'sessionId' => $lead['session_id'],
+                    'type' => 'chat_ended',
+                    'data' => ['agentName' => $agentName]
+                ]);
+                $ch = curl_init("http://localhost:3000/notify-visitor");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                curl_exec($ch);
+                curl_close($ch);
+
+                // Auto-create ticket if unresolved
+                $tCheck = $pdo->prepare("SELECT id FROM tickets WHERE lead_id = ?");
+                $tCheck->execute([$leadId]);
+                if (!$tCheck->fetch()) {
+                    $trackingId = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 10));
+                    $subject = "Live Chat Transcript - " . ($lead['visitor_uid'] ?? 'Visitor');
+                    
+                    $stmt = $pdo->prepare("SELECT * FROM messages WHERE lead_id = ? ORDER BY created_at ASC");
+                    $stmt->execute([$leadId]);
+                    $msgs = $stmt->fetchAll();
+                    $transcript = "";
+                    foreach ($msgs as $m) {
+                        $senderLabel = $m['sender_type'] === 'visitor' ? 'Visitor' : ($m['agent_name'] ?? 'Agent');
+                        $transcript .= "[" . $m['created_at'] . "] " . $senderLabel . ": " . $m['content'] . "\n";
+                    }
+
+                    $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status) VALUES (?, ?, ?, ?, 'open')");
+                    $stmt->execute([$tenantId, $leadId, $trackingId, $subject]);
+                    $ticketId = $pdo->lastInsertId();
+
+                    $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, message) VALUES (?, ?)");
+                    $stmt->execute([$ticketId, "Auto-generated Ticket from Live Chat.\n\nTranscript:\n" . $transcript]);
+
+                    $leadDetails = json_decode($lead['details'], true) ?? [];
+                    $email = $leadDetails['email'] ?? '';
+                    if (!empty($email)) {
+                        require_once 'mail_service.php';
+                        $mail = new MailService($pdo);
+                        $trackingLink = "http://localhost:5173/ticket/" . $trackingId;
+                        $mail->queue($email, 'ticket_created', [
+                            'subject' => $subject,
+                            'tracking_id' => $trackingId,
+                            'tracking_link' => $trackingLink
+                        ]);
+                    }
+                }
+            }
 
             echo json_encode(["status" => "ended"]);
             exit;
@@ -153,17 +293,61 @@ try {
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, 'agent', ?, ?, ?)");
             $stmt->execute([$leadId, "🔄 Chat transferred from $agentName to $toAgentName.", $agentId, $agentName]);
 
+            // Get tenant & session details
+            $stmt = $pdo->prepare("SELECT tenant_id, session_id FROM leads WHERE id = ?");
+            $stmt->execute([$leadId]);
+            $lead = $stmt->fetch();
+            if ($lead) {
+                // Trigger notification for the transferred agent B
+                triggerNotification($lead['tenant_id'], 'chat_assigned', "Chat Transferred", "Chat #$leadId transferred to $toAgentName", "/dashboard/leads");
+
+                // Notify visitor widget
+                $payload = json_encode([
+                    'sessionId' => $lead['session_id'],
+                    'type' => 'chat_assigned',
+                    'data' => ['agentId' => $toAgentId, 'agentName' => $toAgentName]
+                ]);
+                $ch = curl_init("http://localhost:3000/notify-visitor");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                curl_exec($ch);
+                curl_close($ch);
+            }
+
             echo json_encode(["status" => "transferred", "toAgentId" => $toAgentId, "toAgentName" => $toAgentName]);
             exit;
         }
 
         // ── FLAG FOR FOLLOWUP ──
         if ($action === 'flag_followup') {
-            $stmt = $pdo->prepare("UPDATE leads SET followup_required = 1 WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE leads SET followup_required = 1, status = 'Pending Follow-up' WHERE id = ?");
             $stmt->execute([$leadId]);
             
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, 'agent', ?, ?, ?)");
             $stmt->execute([$leadId, "📧 Ticket flagged for email follow-up by $agentName.", $agentId, $agentName]);
+
+            // Get tenant & visitor details
+            $stmt = $pdo->prepare("SELECT tenant_id, visitor_uid, details FROM leads WHERE id = ?");
+            $stmt->execute([$leadId]);
+            $lead = $stmt->fetch();
+            if ($lead) {
+                triggerNotification($lead['tenant_id'], 'followup_required', 'Email Follow-up Request', "Lead #" . $leadId . " (" . ($lead['visitor_uid'] ?? 'Visitor') . ") flagged for email follow-up.", "/dashboard/leads");
+
+                // Send automatic email to the customer
+                $leadDetails = json_decode($lead['details'], true) ?? [];
+                $email = $leadDetails['email'] ?? '';
+                if (!empty($email)) {
+                    require_once 'mail_service.php';
+                    $mail = new MailService($pdo);
+                    $mail->queue($email, 'followup_initiated', [
+                        'ticket_id' => $leadId,
+                        'subject' => 'We are following up on your inquiry'
+                    ]);
+                }
+            }
 
             echo json_encode(["status" => "flagged"]);
             exit;
@@ -187,11 +371,69 @@ try {
 
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$leadId, $sender, $content, $agentId, $agentName]);
+            $msgId = $pdo->lastInsertId();
 
             // Keep lead live while messages flow
             $pdo->prepare("UPDATE leads SET is_live = 1 WHERE id = ? AND is_live = 0")->execute([$leadId]);
 
-            echo json_encode(["status" => "success", "id" => $pdo->lastInsertId()]);
+            // Fetch lead details (tenant_id, session_id, visitor_uid)
+            $stmt = $pdo->prepare("SELECT tenant_id, session_id, visitor_uid FROM leads WHERE id = ?");
+            $stmt->execute([$leadId]);
+            $lead = $stmt->fetch();
+
+            if ($lead) {
+                if ($sender === 'visitor') {
+                    // 1. Trigger Dashboard Notification for new visitor message
+                    triggerNotification($lead['tenant_id'], 'visitor_message', 'New Visitor Message', "Visitor " . ($lead['visitor_uid'] ?? 'Visitor') . ": " . $content, "/dashboard/leads");
+
+                    // 2. Broadcast visitor message via Socket.IO
+                    $payload = json_encode([
+                        'tenantId' => (int)$lead['tenant_id'],
+                        'type' => 'message',
+                        'data' => [
+                            'id' => $msgId,
+                            'lead_id' => $leadId,
+                            'sender_type' => 'visitor',
+                            'content' => $content,
+                            'created_at' => date('Y-m-d H:i:s')
+                        ]
+                    ]);
+                    $ch = curl_init("http://localhost:3000/notify");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                    curl_exec($ch);
+                    curl_close($ch);
+
+                } else if ($sender === 'agent') {
+                    // Broadcast agent message to visitor widget via Socket.IO
+                    $payload = json_encode([
+                        'sessionId' => $lead['session_id'],
+                        'type' => 'message',
+                        'data' => [
+                            'id' => $msgId,
+                            'lead_id' => $leadId,
+                            'sender_type' => 'agent',
+                            'content' => $content,
+                            'agent_id' => $agentId,
+                            'agent_name' => $agentName,
+                            'created_at' => date('Y-m-d H:i:s')
+                        ]
+                    ]);
+                    $ch = curl_init("http://localhost:3000/notify-visitor");
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+                    curl_exec($ch);
+                    curl_close($ch);
+                }
+            }
+
+            echo json_encode(["status" => "success", "id" => $msgId]);
             exit;
         }
 

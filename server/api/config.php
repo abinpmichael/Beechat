@@ -83,4 +83,41 @@ if (!function_exists('decodeJwt')) {
     }
 }
 
+if (!function_exists('triggerNotification')) {
+    function triggerNotification($tenantId, $type, $title, $message, $link = '') {
+        global $pdo;
+        try {
+            // 1. Insert into database
+            $stmt = $pdo->prepare("INSERT INTO notifications (tenant_id, type, title, message, link, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, NOW())");
+            $stmt->execute([$tenantId, $type, $title, $message, $link]);
+            $notifId = $pdo->lastInsertId();
+
+            // Fetch the inserted notification to get full object
+            $stmt = $pdo->prepare("SELECT * FROM notifications WHERE id = ?");
+            $stmt->execute([$notifId]);
+            $notification = $stmt->fetch();
+
+            // 2. Broadcast via Socket.IO server REST endpoint
+            $payload = json_encode([
+                'tenantId' => (int)$tenantId,
+                'type' => 'notification',
+                'data' => $notification
+            ]);
+
+            $ch = curl_init("http://localhost:3000/notify");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 2); // Fast timeout to avoid blocking
+            curl_exec($ch);
+            curl_close($ch);
+            
+            return $notification;
+        } catch (Exception $e) {
+            error_log("Failed to trigger notification: " . $e->getMessage());
+        }
+        return false;
+    }
+}
 ?>

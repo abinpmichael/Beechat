@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../config';
+import { io } from 'socket.io-client';
 
 const API = API_BASE_URL;
 const HEARTBEAT_INTERVAL = 20000;
@@ -101,6 +102,8 @@ const TopBee = ({ size = 40, animated = true }) => {
 export default function ChatWidget({ apiKey }) {
   const [isOpen, setIsOpen]         = useState(false);
   const [branding, setBranding]     = useState({ 
+    tenant_id: null,
+    country: 'United States',
     name:'Bee Bot', 
     image: null, 
     color:'#f59e0b', 
@@ -134,6 +137,8 @@ export default function ChatWidget({ apiKey }) {
   const scrollRef   = useRef(null);
   const surveyDataRef = useRef({});
   const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'));
+  const widgetLoadTime = useRef(Date.now());
+  const socketRef = useRef(null);
 
   useEffect(() => { leadIdRef.current = leadId; }, [leadId]);
   useEffect(() => {
@@ -204,6 +209,8 @@ export default function ChatWidget({ apiKey }) {
       .then(d => {
         if (!d || d.error) return;
         setBranding({
+          tenant_id: d.tenant_id,
+          country:  d.country || 'United States',
           name:     d.bot_name        || 'Bee Bot',
           image:    d.bot_image       || null,
           color:    d.theme_color     || '#f59e0b',
@@ -256,6 +263,7 @@ export default function ChatWidget({ apiKey }) {
     localStorage.setItem(`bee_device_id`, newSid); sessionRef.current = newSid; initChat(newSid);
   };
 
+  // HTTP Heartbeat Backup
   useEffect(() => {
     if (!isOpen) return;
     const ping = () => {
@@ -274,37 +282,100 @@ export default function ChatWidget({ apiKey }) {
     const t = setInterval(ping, HEARTBEAT_INTERVAL); return () => clearInterval(t);
   }, [isOpen, apiKey]);
 
+  // Socket.IO Real-time Messaging and Activity Reporting (Colony Pulse Map)
   useEffect(() => {
-    if (!isLive) return;
-    const tick = setInterval(() => {
-      const lid = leadIdRef.current; const sid = sessionRef.current; if (!lid || !sid) return;
-      fetch(`${API}/conversations.php?leadId=${lid}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
-        .then(r => r.json())
-        .then(rows => {
-          if (!Array.isArray(rows)) return;
-          if (rows.length > 0) {
-             const hasAgent = rows.some(r => r.sender_type === 'agent');
-             const isEnded  = rows.some(r => r.content.includes('ended'));
-             if (isEnded) setChatStatus('ended'); else if (hasAgent) setChatStatus('active');
+    const sid = sessionRef.current;
+    if (!sid || !branding.tenant_id) return;
+
+    // Connect to WebSockets
+    const socket = io('http://localhost:3000');
+    socketRef.current = socket;
+
+    // Join visitor's room to receive real-time messages from agents
+    socket.emit('join_visitor', sid);
+
+    socket.on('message', (msg) => {
+      if (msg.sender_type === 'agent') {
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+
+          // Play message received sound
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(() => {});
+
+          if (msg.content.includes('ended')) {
+            setChatStatus('ended');
+          } else {
+            setChatStatus('active');
           }
-          const agentMsgs = rows.filter(r => r.sender_type === 'agent');
-          if (!isOpen && agentMsgs.length > 0) {
-            const latest = agentMsgs[agentMsgs.length-1];
-            if (latest.id > lastSeenMsgId) { setNotification(latest.content); setLastSeenMsgId(latest.id); audioRef.current.play(); }
+
+          if (!isOpen) {
+            setNotification(msg.content);
           }
-          setMessages(prev => {
-            const dbMapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor_db', text: r.content, id: r.id, image: r.image }));
-            const prevAgentIds = new Set(prev.filter(m => m.id).map(m => m.id));
-            const newAgentMsgs = dbMapped.filter(m => m.role === 'agent' && !prevAgentIds.has(m.id));
-            if (newAgentMsgs.length === 0) return prev;
-            setLastSeenMsgId(Math.max(...newAgentMsgs.map(m => m.id)));
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-            return [...prev, ...newAgentMsgs];
-          });
+
+          return [...prev, { role: 'agent', text: msg.content, id: msg.id, image: msg.image }];
         });
-    }, 2000); return () => clearInterval(tick);
-  }, [isLive, isOpen, lastSeenMsgId, apiKey]);
+      }
+    });
+
+    socket.on('chat_assigned', (data) => {
+      setChatStatus('active');
+      setMessages(prev => [
+        ...prev,
+        { role: 'agent', text: `✅ Agent ${data.agentName} has joined the chat.` }
+      ]);
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    });
+
+    socket.on('chat_ended', (data) => {
+      setChatStatus('ended');
+      setMessages(prev => [
+        ...prev,
+        { role: 'agent', text: `🔴 The chat has been ended by ${data.agentName}.` }
+      ]);
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    });
+
+    socket.on('ticket_reply', (data) => {
+      // Play sound for ticket replies too
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+      
+      setMessages(prev => [
+        ...prev,
+        { role: 'agent', text: `📧 Reply received for Ticket #${data.trackingId}: "${data.message}"` }
+      ]);
+    });
+
+    // Report real-time activity metrics to Colony Pulse map every 5s
+    const emitActivity = () => {
+      const browser = /Chrome/i.test(navigator.userAgent) ? 'Chrome' : /Firefox/i.test(navigator.userAgent) ? 'Firefox' : /Safari/i.test(navigator.userAgent) ? 'Safari' : 'Edge';
+      const device = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+      const page = window.location.pathname || '/';
+
+      socket.emit('visitor_activity', {
+        tenantId: branding.tenant_id,
+        sessionId: sid,
+        visitorUid: `Visitor (${sid.slice(-4)})`,
+        country: branding.country || 'United States',
+        browser,
+        device,
+        page,
+        sessionDuration: Math.floor((Date.now() - widgetLoadTime.current) / 1000),
+        ip: '127.0.0.1'
+      });
+    };
+
+    emitActivity();
+    const interval = setInterval(emitActivity, 5000);
+
+    return () => {
+      socket.disconnect();
+      clearInterval(interval);
+    };
+  }, [branding.tenant_id, branding.country, isOpen]);
 
   const addMsg = useCallback((role, text, image = null) => {
     setMessages(p => [...p, { role, text, image }]);
