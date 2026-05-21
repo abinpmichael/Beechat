@@ -206,6 +206,7 @@ export default function ChatWidget({ apiKey }) {
   const [ticketFormVisible, setTicketFormVisible] = useState(false);
   const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '' });
   const [ticketLoading, setTicketLoading] = useState(false);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   const [assignedAgent, setAssignedAgent] = useState(() => {
     try {
@@ -405,6 +406,21 @@ export default function ChatWidget({ apiKey }) {
     const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
+    socket.on('connect', () => {
+      console.log('Socket.IO connected');
+      setIsSocketConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket.IO disconnected');
+      setIsSocketConnected(false);
+    });
+
+    socket.on('connect_error', () => {
+      console.log('Socket.IO connection error');
+      setIsSocketConnected(false);
+    });
+
     // Join visitor's room to receive real-time messages from agents
     socket.emit('join_visitor', sid);
 
@@ -439,10 +455,13 @@ export default function ChatWidget({ apiKey }) {
         setAssignedAgent(agent);
         localStorage.setItem(`bee_assigned_agent_${apiKey}`, JSON.stringify(agent));
       }
-      setMessages(prev => [
-        ...prev,
-        { role: 'agent', text: `✅ Agent ${data.agentName} has joined the chat.` }
-      ]);
+      setMessages(prev => {
+        if (prev.some(m => m.text && m.text.includes('has joined the chat'))) return prev;
+        return [
+          ...prev,
+          { role: 'agent', text: `✅ Agent ${data.agentName} has joined the chat.` }
+        ];
+      });
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
     });
@@ -451,10 +470,13 @@ export default function ChatWidget({ apiKey }) {
       setChatStatus('ended');
       setAssignedAgent(null);
       localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
-      setMessages(prev => [
-        ...prev,
-        { role: 'agent', text: `🔴 The chat has been ended by ${data.agentName}.` }
-      ]);
+      setMessages(prev => {
+        if (prev.some(m => m.text && m.text.includes('ended by'))) return prev;
+        return [
+          ...prev,
+          { role: 'agent', text: `🔴 The chat has been ended by ${data.agentName}.` }
+        ];
+      });
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
     });
@@ -495,8 +517,113 @@ export default function ChatWidget({ apiKey }) {
     return () => {
       socket.disconnect();
       clearInterval(interval);
+      setIsSocketConnected(false);
     };
   }, [branding.tenant_id, branding.country, isOpen]);
+
+  // Fallback Polling when Socket.IO is disconnected
+  useEffect(() => {
+    // Only poll if the chat is open, we have a lead ID, and the socket is not connected
+    if (!isOpen || !leadId || isSocketConnected) return;
+
+    const pollMessagesAndSession = () => {
+      const sid = sessionRef.current;
+      if (!sid || !leadId) return;
+
+      // 1. Poll for messages
+      fetch(`${API}/conversations.php?leadId=${leadId}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
+        .then(r => r.json())
+        .then(rows => {
+          if (!Array.isArray(rows)) return;
+          
+          setMessages(prev => {
+            // Check if there are new messages
+            const hasNew = rows.length > prev.length || rows.some((row, index) => {
+              const existing = prev[index];
+              return !existing || existing.id !== row.id;
+            });
+
+            if (!hasNew) return prev;
+
+            const mapped = rows.map(r => ({
+              role: r.sender_type === 'agent' ? 'agent' : 'visitor',
+              text: r.content,
+              id: r.id,
+              image: r.image
+            }));
+
+            // Play sound and trigger notification if new agent message received
+            const lastRow = rows[rows.length - 1];
+            const lastPrev = prev[prev.length - 1];
+            if (lastRow && lastRow.sender_type === 'agent' && (!lastPrev || lastPrev.id !== lastRow.id)) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(() => {});
+              
+              if (!isOpen) {
+                setNotification(lastRow.content);
+              }
+            }
+
+            return mapped;
+          });
+        })
+        .catch(err => console.error("Error polling messages:", err));
+
+      // 2. Poll for session status
+      fetch(`${API}/leads.php?action=check_session&sessionId=${sid}&apiKey=${encodeURIComponent(apiKey)}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.id) {
+            setIsLive(res.is_live);
+            
+            // Check if chat status changed to ended
+            setChatStatus(prevStatus => {
+              if (prevStatus !== 'ended' && res.chat_status === 'ended') {
+                setMessages(prevMsgs => {
+                  if (prevMsgs.some(m => m.text && m.text.includes('ended by'))) return prevMsgs;
+                  return [
+                    ...prevMsgs,
+                    { role: 'agent', text: `🔴 The chat has been ended by ${res.agent_name || 'Agent'}.` }
+                  ];
+                });
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(() => {});
+              }
+              return res.chat_status || 'lead';
+            });
+
+            // Check if agent assigned
+            setAssignedAgent(prevAgent => {
+              if (res.assigned_to && res.agent_name) {
+                const newAgent = { id: res.assigned_to, name: res.agent_name };
+                if (!prevAgent || prevAgent.id !== res.assigned_to) {
+                  setMessages(prevMsgs => {
+                    if (prevMsgs.some(m => m.text && m.text.includes('has joined the chat'))) return prevMsgs;
+                    return [
+                      ...prevMsgs,
+                      { role: 'agent', text: `✅ Agent ${res.agent_name} has joined the chat.` }
+                    ];
+                  });
+                  audioRef.current.currentTime = 0;
+                  audioRef.current.play().catch(() => {});
+                  localStorage.setItem(`bee_assigned_agent_${apiKey}`, JSON.stringify(newAgent));
+                  return newAgent;
+                }
+              } else if (!res.assigned_to && prevAgent) {
+                localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
+                return null;
+              }
+              return prevAgent;
+            });
+          }
+        })
+        .catch(err => console.error("Error polling session status:", err));
+    };
+
+    pollMessagesAndSession();
+    const interval = setInterval(pollMessagesAndSession, 4000);
+    return () => clearInterval(interval);
+  }, [isOpen, leadId, isSocketConnected, apiKey]);
 
   const addMsg = useCallback((role, text, image = null) => {
     setMessages(p => [...p, { role, text, image }]);
