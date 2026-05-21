@@ -521,10 +521,10 @@ export default function ChatWidget({ apiKey }) {
     };
   }, [branding.tenant_id, branding.country, isOpen]);
 
-  // Fallback Polling when Socket.IO is disconnected
+  // Fallback Polling for messages and session status updates
   useEffect(() => {
-    // Only poll if the chat is open, we have a lead ID, and the socket is not connected
-    if (!isOpen || !leadId || isSocketConnected) return;
+    // Only poll if the chat is open and we have a lead ID
+    if (!isOpen || !leadId) return;
 
     const pollMessagesAndSession = () => {
       const sid = sessionRef.current;
@@ -537,34 +537,30 @@ export default function ChatWidget({ apiKey }) {
           if (!Array.isArray(rows)) return;
           
           setMessages(prev => {
-            // Check if there are new messages
-            const hasNew = rows.length > prev.length || rows.some((row, index) => {
-              const existing = prev[index];
-              return !existing || existing.id !== row.id;
+            // Filter rows to only get agent messages that are not already in prev
+            const newAgentMsgs = rows.filter(row => {
+              return row.sender_type === 'agent' && !prev.some(m => m.id === row.id);
             });
 
-            if (!hasNew) return prev;
+            if (newAgentMsgs.length === 0) return prev;
 
-            const mapped = rows.map(r => ({
-              role: r.sender_type === 'agent' ? 'agent' : 'visitor',
+            const mappedNew = newAgentMsgs.map(r => ({
+              role: 'agent',
               text: r.content,
               id: r.id,
               image: r.image
             }));
 
             // Play sound and trigger notification if new agent message received
-            const lastRow = rows[rows.length - 1];
-            const lastPrev = prev[prev.length - 1];
-            if (lastRow && lastRow.sender_type === 'agent' && (!lastPrev || lastPrev.id !== lastRow.id)) {
-              audioRef.current.currentTime = 0;
-              audioRef.current.play().catch(() => {});
-              
-              if (!isOpen) {
-                setNotification(lastRow.content);
-              }
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+            
+            if (!isOpen) {
+              const lastNew = mappedNew[mappedNew.length - 1];
+              setNotification(lastNew.text);
             }
 
-            return mapped;
+            return [...prev, ...mappedNew];
           });
         })
         .catch(err => console.error("Error polling messages:", err));
@@ -623,7 +619,7 @@ export default function ChatWidget({ apiKey }) {
     pollMessagesAndSession();
     const interval = setInterval(pollMessagesAndSession, 4000);
     return () => clearInterval(interval);
-  }, [isOpen, leadId, isSocketConnected, apiKey]);
+  }, [isOpen, leadId, apiKey]);
 
   const addMsg = useCallback((role, text, image = null) => {
     setMessages(p => [...p, { role, text, image }]);
