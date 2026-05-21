@@ -271,15 +271,47 @@ export default function ChatWidget({ apiKey }) {
     }
     sessionRef.current = sid;
 
-    fetch(`${API}/leads.php?action=check_session&sessionId=${sid}&apiKey=${encodeURIComponent(apiKey)}`)
-      .then(r => r.json())
-      .then(res => {
+    const sessionPromise = fetch(`${API}/leads.php?action=check_session&sessionId=${sid}&apiKey=${encodeURIComponent(apiKey)}`)
+      .then(r => r.json());
+
+    const brandingPromise = fetch(`${API}/chat.php?action=get_branding&apiKey=${encodeURIComponent(apiKey)}`)
+      .then(r => r.json());
+
+    Promise.all([sessionPromise, brandingPromise])
+      .then(([res, d]) => {
+        if (d && !d.error) {
+          let forms = [];
+          try {
+            forms = d.form_config ? (typeof d.form_config === 'string' ? JSON.parse(d.form_config) : d.form_config) : [];
+          } catch (e) { forms = []; }
+          setBranding({
+            tenant_id: d.tenant_id,
+            country:  d.country || 'United States',
+            name:     d.bot_name        || 'Bee Bot',
+            image:    d.bot_image       || null,
+            color:    d.theme_color     || '#f59e0b',
+            welcome:  d.welcome_message || 'Hello! How can we help?',
+            subtitle: d.bot_subtitle    || 'Support Assistant',
+            success:  d.success_message || 'Thank you! We will be in touch.',
+            headerBg: d.header_bg_gradient || null,
+            sound:    d.notification_sound || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
+            icon:     d.widget_icon || null,
+            is_open:  d.is_open !== false,
+            enable_live_chat: d.enable_live_chat,
+            enable_ai_bot: d.enable_ai_bot,
+            form_config: Array.isArray(forms) ? forms : []
+          });
+        }
+
         if (res.id) {
           setLeadId(res.id);
           leadIdRef.current = res.id;
           setIsLive(res.is_live);
           setChatStatus(res.chat_status || 'lead');
-          setSurveyDone(true);
+
+          const priority = d ? parseInt(d.survey_priority ?? 1) : 1;
+          const surveyCompletedLocally = localStorage.getItem(`bee_survey_completed_${apiKey}_${sid}`) === 'true';
+          const hasAgent = !!(res.assigned_to && res.agent_name);
 
           if (res.assigned_to && res.agent_name) {
             const agent = { id: res.assigned_to, name: res.agent_name };
@@ -290,45 +322,53 @@ export default function ChatWidget({ apiKey }) {
             localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
           }
 
-          fetch(`${API}/conversations.php?leadId=${res.id}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
-            .then(r => r.json())
-            .then(rows => {
-              if (!Array.isArray(rows)) return;
-              const mapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor', text: r.content, id: r.id, image: r.image }));
-              setMessages(mapped);
-              if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
-            });
+          if (priority === 1 && !surveyCompletedLocally && !hasAgent) {
+            // Check conversation history first
+            fetch(`${API}/conversations.php?leadId=${res.id}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
+              .then(r => r.json())
+              .then(rows => {
+                const hasConversations = Array.isArray(rows) && rows.length > 0;
+                if (hasConversations) {
+                  setSurveyDone(true);
+                  const mapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor', text: r.content, id: r.id, image: r.image }));
+                  setMessages(mapped);
+                  if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
+                } else {
+                  // No conversations and survey not completed: initialize survey
+                  setSurveyDone(false);
+                  let parsed = [];
+                  if (d && d.survey_config) parsed = typeof d.survey_config === 'string' ? JSON.parse(d.survey_config) : d.survey_config;
+                  setSteps(parsed);
+                  const welcome = d.is_open ? (d.welcome_message || 'Hello!') : "👋 We're currently closed, but you can leave a message below!";
+                  const init = [{ role:'bot', text: welcome }];
+                  if (parsed.length > 0) {
+                    init.push({ role:'bot', text: parsed[0].question, options: parsed[0].type === 'options' ? parsed[0].options : null });
+                    setStepId(parsed[0].id);
+                  }
+                  setMessages(init);
+                }
+              })
+              .catch(() => {
+                setSurveyDone(true);
+              });
+          } else {
+            setSurveyDone(true);
+            fetch(`${API}/conversations.php?leadId=${res.id}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
+              .then(r => r.json())
+              .then(rows => {
+                if (!Array.isArray(rows)) return;
+                const mapped = rows.map(r => ({ role: r.sender_type === 'agent' ? 'agent' : 'visitor', text: r.content, id: r.id, image: r.image }));
+                setMessages(mapped);
+                if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
+              });
+          }
         } else {
           setAssignedAgent(null);
           localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
         }
-      });
-
-    fetch(`${API}/chat.php?action=get_branding&apiKey=${encodeURIComponent(apiKey)}`)
-      .then(r => r.json())
-      .then(d => {
-        if (!d || d.error) return;
-        let forms = [];
-        try {
-          forms = d.form_config ? (typeof d.form_config === 'string' ? JSON.parse(d.form_config) : d.form_config) : [];
-        } catch (e) { forms = []; }
-        setBranding({
-          tenant_id: d.tenant_id,
-          country:  d.country || 'United States',
-          name:     d.bot_name        || 'Bee Bot',
-          image:    d.bot_image       || null,
-          color:    d.theme_color     || '#f59e0b',
-          welcome:  d.welcome_message || 'Hello! How can we help?',
-          subtitle: d.bot_subtitle    || 'Support Assistant',
-          success:  d.success_message || 'Thank you! We will be in touch.',
-          headerBg: d.header_bg_gradient || null,
-          sound:    d.notification_sound || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
-          icon:     d.widget_icon || null,
-          is_open:  d.is_open !== false,
-          enable_live_chat: d.enable_live_chat,
-          enable_ai_bot: d.enable_ai_bot,
-          form_config: Array.isArray(forms) ? forms : []
-        });
+      })
+      .catch(err => {
+        console.error("Initialization error:", err);
       });
   }, [apiKey]);
 
@@ -374,6 +414,7 @@ export default function ChatWidget({ apiKey }) {
     setMessages([]); setLeadId(null); leadIdRef.current = null; setChatStatus('lead'); setIsLive(false); setSurveyDone(false); setStepId(null); setLastSeenMsgId(0); setNotification(null);
     setAssignedAgent(null);
     localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
+    localStorage.removeItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`);
     const newSid = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     localStorage.setItem(`bee_device_id`, newSid); sessionRef.current = newSid; initChat(newSid);
   };
@@ -668,8 +709,23 @@ export default function ChatWidget({ apiKey }) {
   const handleStep = useCallback((label, next) => {
     addMsg('visitor', label); surveyDataRef.current[stepId] = label;
     recordActivity();
-    if (next === 'human') { setIsLive(true); setSurveyDone(true); setStepId(null); submitLead({ ...surveyDataRef.current, status:'human_requested' }, true); return; }
-    if (!next || next === 'finish') { submitLead({ ...surveyDataRef.current }); setSurveyDone(true); setStepId(null); setIsTyping(true); setTimeout(() => { addMsg('bot', branding.success); setIsTyping(false); }, 700); return; }
+    if (next === 'human') { 
+       setIsLive(true); 
+       setSurveyDone(true); 
+       localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
+       setStepId(null); 
+       submitLead({ ...surveyDataRef.current, status:'human_requested' }, true); 
+       return; 
+    }
+    if (!next || next === 'finish') { 
+       submitLead({ ...surveyDataRef.current }); 
+       setSurveyDone(true); 
+       localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
+       setStepId(null); 
+       setIsTyping(true); 
+       setTimeout(() => { addMsg('bot', branding.success); setIsTyping(false); }, 700); 
+       return; 
+    }
     const nxt = steps.find(s => s.id == next); 
     if (nxt) { 
        setStepId(next); 
@@ -748,6 +804,9 @@ export default function ChatWidget({ apiKey }) {
     const storageKey = msgId ? `bee_form_submitted_${leadId}_${msgId}` : `bee_form_submitted_${leadId}_idx_${msgIdx}`;
     return submittedForms[storageKey] || localStorage.getItem(storageKey) === 'true';
   };
+
+  const currentStep = steps.find(s => s.id === stepId);
+  const isInputDisabled = !surveyDone && (!currentStep || currentStep.type !== 'text');
 
   return (
     <div className="relative font-sans flex flex-col items-end selection:bg-amber-100 selection:text-amber-600 pointer-events-none">
@@ -859,12 +918,25 @@ export default function ChatWidget({ apiKey }) {
 
             <div className="p-6 bg-white border-t-2 border-slate-50">
               <form onSubmit={handleSend} className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border-2 border-transparent focus-within:border-amber-100 focus-within:bg-white transition-all">
-                <label className="p-2 cursor-pointer hover:bg-slate-200 rounded-xl transition-all relative">
+                <label className={`p-2 cursor-pointer hover:bg-slate-200 rounded-xl transition-all relative ${!surveyDone ? 'opacity-50 pointer-events-none' : ''}`}>
                    <Image className={`w-6 h-6 ${isUploading ? 'animate-pulse text-amber-500' : 'text-slate-400'}`} />
-                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading || !surveyDone} />
                 </label>
-                <input placeholder="Enter message to hive..." className="flex-1 bg-transparent border-none text-sm font-bold outline-none text-slate-700 placeholder:uppercase placeholder:text-[10px]" value={input} onChange={e => { setInput(e.target.value); recordActivity(); }} />
-                <button type="submit" className="p-3.5 rounded-xl text-white transition-all hover:scale-105" style={{backgroundColor:branding.color}}><Send className="w-6 h-6"/></button>
+                <input 
+                  disabled={isInputDisabled}
+                  placeholder={isInputDisabled ? "SELECT AN OPTION ABOVE" : "Enter message to hive..."} 
+                  className="flex-1 bg-transparent border-none text-sm font-bold outline-none text-slate-700 placeholder:uppercase placeholder:text-[10px] disabled:opacity-50" 
+                  value={input} 
+                  onChange={e => { setInput(e.target.value); recordActivity(); }} 
+                />
+                <button 
+                  disabled={isInputDisabled}
+                  type="submit" 
+                  className="p-3.5 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100" 
+                  style={{backgroundColor:branding.color}}
+                >
+                  <Send className="w-6 h-6"/>
+                </button>
               </form>
             </div>
           </motion.div>
