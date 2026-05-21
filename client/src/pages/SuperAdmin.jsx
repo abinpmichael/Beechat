@@ -164,6 +164,10 @@ export default function SuperAdmin() {
   const [editData, setEditData] = useState({ plan_id: 1, expires_at: '', is_active: 1 });
   const [planEditData, setPlanEditData] = useState({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] });
   const [newKItem, setNewKItem] = useState({ title: '', content: '' });
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [postEditData, setPostEditData] = useState({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' });
 
   const API_URL = `${API_BASE_URL}/superadmin.php`;
 
@@ -174,13 +178,14 @@ export default function SuperAdmin() {
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const [tRes, pRes, sRes, kRes, rRes, eRes] = await Promise.all([
+      const [tRes, pRes, sRes, kRes, rRes, eRes, bRes] = await Promise.all([
         axios.get(`${API_URL}?action=list_tenants`, { headers }),
         axios.get(`${API_URL}?action=get_plans`, { headers }),
         axios.get(`${API_URL}?action=get_platform_settings`, { headers }),
         axios.get(`${API_URL}?action=list_all_knowledge`, { headers }),
         axios.get(`${API_URL}?action=get_revenue_stats`, { headers }),
-        axios.get(`${API_URL}?action=list_email_templates`, { headers })
+        axios.get(`${API_URL}?action=list_email_templates`, { headers }),
+        axios.get(`${API_BASE_URL}/blog.php?action=list_all`, { headers }).catch(err => ({ data: [] }))
       ]);
       setTenants(Array.isArray(tRes.data) ? tRes.data : []);
       setPlans((Array.isArray(pRes.data) ? pRes.data : []).map(p => {
@@ -204,6 +209,7 @@ export default function SuperAdmin() {
         monthly_stats: Array.isArray(rRes.data?.monthly_stats) ? rRes.data.monthly_stats : []
       });
       setEmailTemplates(Array.isArray(eRes.data) ? eRes.data : []);
+      setBlogPosts(Array.isArray(bRes.data) ? bRes.data : []);
       
       const supRes = await axios.get(`${API_BASE_URL}/support.php?action=list_conversations`, { headers });
       setSupportConvs(supRes.data);
@@ -305,6 +311,63 @@ export default function SuperAdmin() {
     }
   };
 
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.post(`${API_BASE_URL}/blog.php`, {
+        action: 'create',
+        ...postEditData
+      }, { headers });
+      setIsCreatingPost(false);
+      setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' });
+      fetchData();
+      alert("Blog post created successfully!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error creating blog post");
+    }
+  };
+
+  const handleUpdatePost = async (e) => {
+    e.preventDefault();
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.post(`${API_BASE_URL}/blog.php`, {
+        action: 'update',
+        ...postEditData
+      }, { headers });
+      setSelectedPost(null);
+      fetchData();
+      alert("Blog post updated successfully!");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error updating blog post");
+    }
+  };
+
+  const handleDeletePost = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this blog post?")) return;
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.post(`${API_BASE_URL}/blog.php`, {
+        action: 'delete',
+        id
+      }, { headers });
+      fetchData();
+      alert("Blog post deleted successfully!");
+    } catch (err) {
+      alert("Error deleting blog post");
+    }
+  };
+
   const filtered = tenants.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
     t.slug.toLowerCase().includes(search.toLowerCase())
@@ -370,6 +433,7 @@ export default function SuperAdmin() {
         {[
           { id: 'tenants', name: 'Manage Tenants' },
           { id: 'plans', name: 'Subscription Plans' },
+          { id: 'blog', name: 'Blog Hub' },
           { id: 'ai', name: 'AI Training Oversight' },
           { id: 'revenue', name: 'Financial Insights' },
           { id: 'settings', name: 'Gateway & Settings' },
@@ -834,6 +898,87 @@ export default function SuperAdmin() {
         </div>
       )}
 
+      {activeTab === 'blog' && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-2xl font-black text-slate-900">Blog Hub</h3>
+              <p className="text-sm text-slate-500 font-medium mt-1">Publish news, insights, and marketing articles for visitors.</p>
+            </div>
+            <button 
+              onClick={() => { 
+                setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' }); 
+                setIsCreatingPost(true); 
+              }} 
+              className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3 w-fit"
+            >
+              <Plus className="w-5 h-5" /> Write Blog Post
+            </button>
+          </div>
+
+          <div className="glass rounded-[3rem] border border-white shadow-2xl overflow-hidden">
+            {blogPosts.length === 0 ? (
+              <div className="p-20 text-center">
+                <TopBee size={60} animated={false} className="mx-auto opacity-30 mb-6" />
+                <p className="text-slate-400 font-black text-lg italic">No blog posts found. Write the first one!</p>
+              </div>
+            ) : (
+              <table className="w-full text-left">
+                <thead className="bg-slate-50/50">
+                  <tr>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Article</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Author</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Created At</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {blogPosts.map((post) => (
+                    <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={post.id} className="hover:bg-slate-50/50 transition-all group">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          {post.image_url ? (
+                            <img src={post.image_url} alt="" className="w-16 h-10 object-cover rounded-xl border border-slate-100 shrink-0" />
+                          ) : (
+                            <div className="w-16 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 text-slate-400 font-black">B</div>
+                          )}
+                          <div>
+                            <h4 className="font-black text-slate-900 line-clamp-1 max-w-[280px]">{post.title}</h4>
+                            <p className="text-xs text-slate-400 font-medium">/{post.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-sm font-bold text-slate-700">{post.author}</td>
+                      <td className="px-8 py-6">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${post.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {post.status}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{new Date(post.created_at).toLocaleDateString()}</td>
+                      <td className="px-8 py-6 text-right space-x-2">
+                        <button 
+                          onClick={() => { setSelectedPost(post); setPostEditData({ ...post }); }} 
+                          className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                        >
+                          <Shield className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePost(post.id)} 
+                          className="p-3 bg-slate-100 text-rose-600 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeTab === 'support' && (
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -951,6 +1096,105 @@ export default function SuperAdmin() {
                 <textarea rows="10" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs leading-relaxed" value={templateEditData.body} onChange={(e) => setTemplateEditData({...templateEditData, body: e.target.value})} />
               </div>
               <button type="submit" className="w-full bg-amber-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-amber-100 hover:bg-slate-900 transition-all uppercase tracking-widest">Save Template Changes</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {(selectedPost || isCreatingPost) && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-6 overflow-y-auto">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => { setSelectedPost(null); setIsCreatingPost(false); }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-3xl bg-white rounded-[3rem] p-10 shadow-2xl border border-white my-8 z-10 max-h-[90vh] overflow-y-auto no-scrollbar">
+            <h3 className="text-3xl font-black text-slate-900 mb-6 text-center">{isCreatingPost ? 'Write Blog Post' : 'Edit Blog Post'}</h3>
+            <form onSubmit={isCreatingPost ? handleCreatePost : handleUpdatePost} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                  <input 
+                    type="text" required 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+                    placeholder="e.g. Scaling customer interactions" 
+                    value={postEditData.title} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPostEditData({
+                        ...postEditData,
+                        title: val,
+                        slug: isCreatingPost ? generateSlug(val) : postEditData.slug
+                      });
+                    }} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Slug (URL Name)</label>
+                  <input 
+                    type="text" required 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" 
+                    placeholder="e.g. scaling-customer-interactions" 
+                    value={postEditData.slug} 
+                    onChange={(e) => setPostEditData({...postEditData, slug: generateSlug(e.target.value)})} 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Author</label>
+                  <input 
+                    type="text" required 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+                    value={postEditData.author} 
+                    onChange={(e) => setPostEditData({...postEditData, author: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Image URL</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" 
+                    placeholder="https://unsplash.com/..." 
+                    value={postEditData.image_url || ''} 
+                    onChange={(e) => setPostEditData({...postEditData, image_url: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                  <select 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" 
+                    value={postEditData.status} 
+                    onChange={(e) => setPostEditData({...postEditData, status: e.target.value})}
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Summary (Short Excerpt)</label>
+                <textarea 
+                  rows="2" required 
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm leading-relaxed" 
+                  placeholder="Summarize the post in 2-3 sentences..." 
+                  value={postEditData.summary} 
+                  onChange={(e) => setPostEditData({...postEditData, summary: e.target.value})} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Content (HTML / Markdown style)</label>
+                <textarea 
+                  rows="8" required 
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs leading-relaxed" 
+                  placeholder="<h1>Heading</h1><p>Start writing article here...</p>" 
+                  value={postEditData.content} 
+                  onChange={(e) => setPostEditData({...postEditData, content: e.target.value})} 
+                />
+              </div>
+
+              <button type="submit" className="w-full bg-amber-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-amber-100 hover:bg-slate-900 transition-all uppercase tracking-widest">
+                {isCreatingPost ? 'Publish Article' : 'Save Changes'}
+              </button>
             </form>
           </motion.div>
         </div>
