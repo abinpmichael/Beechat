@@ -449,6 +449,35 @@ export default function Websites() {
                               </div>
                            </div>
 
+                           <form onSubmit={handleAddKnowledge} className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-6">
+                              <h5 className="text-sm font-black text-slate-900 uppercase tracking-widest">Train Agent / Manual Entry</h5>
+                              <div className="space-y-2">
+                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Document Title / Topic</label>
+                                 <input 
+                                    type="text" 
+                                    required 
+                                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-4 ring-amber-50 outline-none transition-all" 
+                                    placeholder="e.g. Refund Policy, Company FAQ, etc."
+                                    value={newKItem.title} 
+                                    onChange={(e) => setNewKItem({...newKItem, title: e.target.value})} 
+                                 />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Content / Details</label>
+                                 <textarea 
+                                    rows="6" 
+                                    required 
+                                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-sm leading-relaxed focus:ring-4 ring-amber-50 outline-none transition-all" 
+                                    placeholder="Enter raw text training data or edit the digested document content here..."
+                                    value={newKItem.content} 
+                                    onChange={(e) => setNewKItem({...newKItem, content: e.target.value})} 
+                                 />
+                              </div>
+                              <button type="submit" className="w-full bg-slate-900 text-white hover:bg-amber-500 font-black py-5 rounded-2xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                 <BrainCircuit className="w-5 h-5" /> Train AI Agent
+                               </button>
+                           </form>
+
                            <div className="space-y-6">
                               <div className="flex items-center justify-between border-b border-slate-50 pb-6">
                                  <h4 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Memory Cells</h4>
@@ -595,13 +624,115 @@ export default function Websites() {
                                ))}
                             </div>
 
-                            {Array.isArray(editData.survey_config) && editData.survey_config.length > 0 && (
-                               <button onClick={handleUpdateBranding} className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black shadow-2xl shadow-slate-200 hover:bg-amber-500 transition-all uppercase text-sm tracking-widest flex items-center justify-center gap-4">
-                                  <Save className="w-6 h-6" /> Save Neural Configuration
-                               </button>
-                            )}
-                         </div>
-                       )}
+                             {/* Form Config Builder Section */}
+                             <div className="border-t border-slate-100 pt-10 mt-10 space-y-6">
+                                <div className="flex items-center justify-between border-b border-slate-50 pb-6">
+                                   <div>
+                                      <h4 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Lead Data Collection Form</h4>
+                                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Configure fields displayed to visitors when the AI requests user contact details.</p>
+                                   </div>
+                                   <button onClick={() => {
+                                     const config = Array.isArray(editData.form_config) ? editData.form_config : [];
+                                     const newField = { id: Date.now().toString(), name: 'custom_field_' + Date.now().toString().slice(-4), label: 'New Field', type: 'text', required: false };
+                                     setEditData({...editData, form_config: [...config, newField]});
+                                   }} className="px-6 py-3 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-amber-600 transition-all shadow-lg shadow-amber-100">
+                                      <Plus className="w-4 h-4" /> Add Form Field
+                                   </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                   {(!Array.isArray(editData.form_config) || editData.form_config.length === 0) ? (
+                                     <div className="p-8 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No custom form fields defined. Default Name, Email, and Phone will be used.</p>
+                                     </div>
+                                   ) : editData.form_config.map((field, fIdx) => (
+                                     <div key={field.id || fIdx} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 grid grid-cols-1 md:grid-cols-4 gap-4 items-center relative group">
+                                        <div className="space-y-1">
+                                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Field Label</label>
+                                           <input 
+                                              type="text" 
+                                              className="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl font-bold text-xs" 
+                                              value={field.label} 
+                                              onChange={(e) => {
+                                                 const updated = [...editData.form_config];
+                                                 updated[fIdx].label = e.target.value;
+                                                 // Keep slugified name aligned unless it is a standard field
+                                                 if (!['name', 'email', 'phone'].includes(updated[fIdx].name)) {
+                                                    updated[fIdx].name = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                                                 }
+                                                 setEditData({...editData, form_config: updated});
+                                              }} 
+                                           />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Field ID (JSON Key)</label>
+                                           <input 
+                                              type="text" 
+                                              disabled={['name', 'email', 'phone'].includes(field.name)}
+                                              className="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl font-bold font-mono text-[10px] disabled:opacity-60" 
+                                              value={field.name} 
+                                              onChange={(e) => {
+                                                 const updated = [...editData.form_config];
+                                                 updated[fIdx].name = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                                                 setEditData({...editData, form_config: updated});
+                                              }} 
+                                           />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Input Type</label>
+                                           <select 
+                                              className="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl font-bold text-xs" 
+                                              value={field.type} 
+                                              onChange={(e) => {
+                                                 const updated = [...editData.form_config];
+                                                 updated[fIdx].type = e.target.value;
+                                                 setEditData({...editData, form_config: updated});
+                                              }}
+                                           >
+                                              <option value="text">Text</option>
+                                              <option value="email">Email</option>
+                                              <option value="tel">Phone</option>
+                                              <option value="number">Number</option>
+                                           </select>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4 pt-4 md:pt-0">
+                                           <label className="flex items-center gap-2 cursor-pointer select-none">
+                                              <input 
+                                                 type="checkbox" 
+                                                 className="rounded border-slate-200 text-amber-500 focus:ring-amber-500 w-4 h-4" 
+                                                 checked={!!field.required} 
+                                                 onChange={(e) => {
+                                                    const updated = [...editData.form_config];
+                                                    updated[fIdx].required = e.target.checked;
+                                                    setEditData({...editData, form_config: updated});
+                                                 }} 
+                                              />
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Required</span>
+                                           </label>
+
+                                           <button 
+                                              onClick={() => {
+                                                 const updated = editData.form_config.filter((_, i) => i !== fIdx);
+                                                 setEditData({...editData, form_config: updated});
+                                              }} 
+                                              className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                           >
+                                              <X className="w-4 h-4" />
+                                           </button>
+                                        </div>
+                                     </div>
+                                   ))}
+                                </div>
+                             </div>
+
+                             <button onClick={handleUpdateBranding} className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black shadow-2xl shadow-slate-200 hover:bg-amber-500 transition-all uppercase text-sm tracking-widest flex items-center justify-center gap-4 mt-8">
+                                <Save className="w-6 h-6" /> Save Neural Configuration
+                             </button>
+                          </div>
+                        )}
 
                       {activeTab === 'behavior' && (
                          <div className="space-y-10">

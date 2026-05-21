@@ -99,6 +99,80 @@ const TopBee = ({ size = 40, animated = true }) => {
   );
 };
 
+const DynamicForm = ({ formConfig, onSubmit, color, isSubmitted }) => {
+  const [formData, setFormData] = useState({});
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const fields = (formConfig && formConfig.length > 0) ? formConfig : [
+    { id: '1', name: 'name', label: 'Name', type: 'text', required: true },
+    { id: '2', name: 'email', label: 'Email', type: 'email', required: true },
+    { id: '3', name: 'phone', label: 'Phone', type: 'tel', required: false }
+  ];
+
+  if (isSubmitted) {
+    return (
+      <div className="flex items-center gap-2 p-4 bg-emerald-50 text-emerald-700 rounded-3xl border border-emerald-100 text-xs font-bold w-full mt-2">
+        <CheckCircle className="w-4 h-4 shrink-0" />
+        <span>Details submitted successfully!</span>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    for (const field of fields) {
+      if (field.required && !formData[field.name]) {
+        setError(`${field.label} is required.`);
+        return;
+      }
+    }
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } catch (err) {
+      setError('Failed to submit. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 p-5 bg-white border border-slate-100 rounded-3xl shadow-md mt-2 w-full text-slate-800 pointer-events-auto">
+      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Please provide your details</div>
+      {fields.map((field) => (
+        <div key={field.id} className="space-y-1">
+          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+            {field.label} {field.required && <span className="text-rose-500">*</span>}
+          </label>
+          <input
+            type={field.type || 'text'}
+            required={!!field.required}
+            className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-medium outline-none focus:border-amber-500 transition-all text-slate-800"
+            placeholder={field.label.toUpperCase()}
+            value={formData[field.name] || ''}
+            onChange={(e) => handleChange(field.name, e.target.value)}
+          />
+        </div>
+      ))}
+      {error && <div className="text-[10px] font-bold text-rose-500">{error}</div>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-amber-500 active:scale-[0.98] flex items-center justify-center gap-2"
+        style={{ backgroundColor: color }}
+      >
+        {loading ? 'Submitting...' : 'Submit Details'}
+      </button>
+    </form>
+  );
+};
+
 export default function ChatWidget({ apiKey }) {
   const [isOpen, setIsOpen]         = useState(false);
   const [branding, setBranding]     = useState({ 
@@ -112,7 +186,8 @@ export default function ChatWidget({ apiKey }) {
     success:'Thank you! We will be in touch.',
     headerBg: null,
     sound: 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
-    icon: null
+    icon: null,
+    form_config: []
   });
   const [idleTimer, setIdleTimer] = useState(0);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -131,6 +206,17 @@ export default function ChatWidget({ apiKey }) {
   const [ticketFormVisible, setTicketFormVisible] = useState(false);
   const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '' });
   const [ticketLoading, setTicketLoading] = useState(false);
+
+  const [assignedAgent, setAssignedAgent] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`bee_assigned_agent_${apiKey}`);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [submittedForms, setSubmittedForms] = useState({});
+
 
   const sessionRef  = useRef(null);
   const leadIdRef   = useRef(null);
@@ -193,6 +279,16 @@ export default function ChatWidget({ apiKey }) {
           setIsLive(res.is_live);
           setChatStatus(res.chat_status || 'lead');
           setSurveyDone(true);
+
+          if (res.assigned_to && res.agent_name) {
+            const agent = { id: res.assigned_to, name: res.agent_name };
+            setAssignedAgent(agent);
+            localStorage.setItem(`bee_assigned_agent_${apiKey}`, JSON.stringify(agent));
+          } else {
+            setAssignedAgent(null);
+            localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
+          }
+
           fetch(`${API}/conversations.php?leadId=${res.id}&apiKey=${encodeURIComponent(apiKey)}&sessionId=${sid}`)
             .then(r => r.json())
             .then(rows => {
@@ -201,6 +297,9 @@ export default function ChatWidget({ apiKey }) {
               setMessages(mapped);
               if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
             });
+        } else {
+          setAssignedAgent(null);
+          localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
         }
       });
 
@@ -208,6 +307,10 @@ export default function ChatWidget({ apiKey }) {
       .then(r => r.json())
       .then(d => {
         if (!d || d.error) return;
+        let forms = [];
+        try {
+          forms = d.form_config ? (typeof d.form_config === 'string' ? JSON.parse(d.form_config) : d.form_config) : [];
+        } catch (e) { forms = []; }
         setBranding({
           tenant_id: d.tenant_id,
           country:  d.country || 'United States',
@@ -222,7 +325,8 @@ export default function ChatWidget({ apiKey }) {
           icon:     d.widget_icon || null,
           is_open:  d.is_open !== false,
           enable_live_chat: d.enable_live_chat,
-          enable_ai_bot: d.enable_ai_bot
+          enable_ai_bot: d.enable_ai_bot,
+          form_config: Array.isArray(forms) ? forms : []
         });
       });
   }, [apiKey]);
@@ -248,7 +352,15 @@ export default function ChatWidget({ apiKey }) {
            init.push({ role:'bot', text: "How can I help you today?" });
         }
         setMessages(init);
-        setBranding(prev => ({ ...prev, ...d }));
+        let forms = [];
+        try {
+          forms = d.form_config ? (typeof d.form_config === 'string' ? JSON.parse(d.form_config) : d.form_config) : [];
+        } catch (e) { forms = []; }
+        setBranding(prev => ({ 
+          ...prev, 
+          ...d,
+          form_config: Array.isArray(forms) ? forms : []
+        }));
       });
   }, [apiKey]);
 
@@ -259,6 +371,8 @@ export default function ChatWidget({ apiKey }) {
   const handleResetChat = () => {
     if (!window.confirm("Start fresh?")) return;
     setMessages([]); setLeadId(null); leadIdRef.current = null; setChatStatus('lead'); setIsLive(false); setSurveyDone(false); setStepId(null); setLastSeenMsgId(0); setNotification(null);
+    setAssignedAgent(null);
+    localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
     const newSid = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     localStorage.setItem(`bee_device_id`, newSid); sessionRef.current = newSid; initChat(newSid);
   };
@@ -320,6 +434,11 @@ export default function ChatWidget({ apiKey }) {
 
     socket.on('chat_assigned', (data) => {
       setChatStatus('active');
+      if (data.agentId && data.agentName) {
+        const agent = { id: data.agentId, name: data.agentName };
+        setAssignedAgent(agent);
+        localStorage.setItem(`bee_assigned_agent_${apiKey}`, JSON.stringify(agent));
+      }
       setMessages(prev => [
         ...prev,
         { role: 'agent', text: `✅ Agent ${data.agentName} has joined the chat.` }
@@ -330,6 +449,8 @@ export default function ChatWidget({ apiKey }) {
 
     socket.on('chat_ended', (data) => {
       setChatStatus('ended');
+      setAssignedAgent(null);
+      localStorage.removeItem(`bee_assigned_agent_${apiKey}`);
       setMessages(prev => [
         ...prev,
         { role: 'agent', text: `🔴 The chat has been ended by ${data.agentName}.` }
@@ -474,6 +595,37 @@ export default function ChatWidget({ apiKey }) {
     }
   };
 
+  const handleFormSubmit = async (formData, msgIdx, msgId) => {
+    const phoneValue = formData.phone || formData.tel || '';
+    const res = await fetch(`${API}/leads.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey,
+        sessionId: sessionRef.current,
+        phone: phoneValue || 'Visitor',
+        details: formData
+      })
+    }).then(r => r.json());
+
+    if (res.id) {
+      setLeadId(res.id);
+      leadIdRef.current = res.id;
+      const storageKey = msgId ? `bee_form_submitted_${res.id}_${msgId}` : `bee_form_submitted_${res.id}_idx_${msgIdx}`;
+      localStorage.setItem(storageKey, 'true');
+      setSubmittedForms(prev => ({
+        ...prev,
+        [storageKey]: true
+      }));
+    }
+  };
+
+  const isFormSubmitted = (msgId, msgIdx) => {
+    if (!leadId) return false;
+    const storageKey = msgId ? `bee_form_submitted_${leadId}_${msgId}` : `bee_form_submitted_${leadId}_idx_${msgIdx}`;
+    return submittedForms[storageKey] || localStorage.getItem(storageKey) === 'true';
+  };
+
   return (
     <div className="relative font-sans flex flex-col items-end selection:bg-amber-100 selection:text-amber-600 pointer-events-none">
       <AnimatePresence>
@@ -488,9 +640,26 @@ export default function ChatWidget({ apiKey }) {
                      {branding.image ? <img src={branding.image} className="w-full h-full object-contain relative z-10" alt="bot"/> : <TopBee size={40} />}
                   </div>
                   <div>
-                    <h3 className="font-black text-xl leading-tight uppercase tracking-tighter">{branding.name}</h3>
+                    <h3 className="font-black text-xl leading-tight uppercase tracking-tighter">
+                      {assignedAgent ? assignedAgent.name : branding.name}
+                    </h3>
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 flex items-center gap-1.5 mt-1">
-                      {branding.is_open ? <><div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" /> Live Connection</> : <><div className="w-1.5 h-1.5 bg-amber-400 rounded-full" /> Away Mode</>}
+                      {assignedAgent ? (
+                        <>
+                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" />
+                          Speaking with {assignedAgent.name}
+                        </>
+                      ) : branding.is_open ? (
+                        <>
+                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" />
+                          Live Connection
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                          Away Mode
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -501,12 +670,26 @@ export default function ChatWidget({ apiKey }) {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50/20">
               {messages.map((msg, i) => {
                 const right = msg.role === 'visitor';
+                const hasForm = !right && msg.text && msg.text.includes('[FORM:DATA_REQUEST]');
+                const cleanText = hasForm ? msg.text.replace('[FORM:DATA_REQUEST]', '').trim() : (msg.text || '');
                 const isOptions = msg.options && msg.options.length > 0;
                 return (
-                  <div key={i} className={`flex flex-col ${right ? 'items-end' : 'items-start'}`}>
-                    <div className={`max-w-[85%] px-5 py-4 rounded-[2rem] text-sm font-bold shadow-sm ${right ? 'text-white' : 'bg-white border-2 border-slate-50 text-slate-800'}`} style={right ? {backgroundColor: branding.color} : {}}>
-                      {msg.image ? <img src={msg.image} className="w-full rounded-xl mb-2" alt="upload" /> : msg.text}
-                    </div>
+                  <div key={i} className={`flex flex-col ${right ? 'items-end' : 'items-start'} w-full`}>
+                    {(msg.image || cleanText) && (
+                      <div className={`max-w-[85%] px-5 py-4 rounded-[2rem] text-sm font-bold shadow-sm ${right ? 'text-white' : 'bg-white border-2 border-slate-50 text-slate-800'}`} style={right ? {backgroundColor: branding.color} : {}}>
+                        {msg.image ? <img src={msg.image} className="w-full rounded-xl mb-2" alt="upload" /> : cleanText}
+                      </div>
+                    )}
+                    {hasForm && (
+                      <div className="w-[85%]">
+                        <DynamicForm 
+                          formConfig={branding.form_config} 
+                          onSubmit={(fd) => handleFormSubmit(fd, i, msg.id)} 
+                          color={branding.color} 
+                          isSubmitted={isFormSubmitted(msg.id, i)} 
+                        />
+                      </div>
+                    )}
                     {isOptions && (
                       <div className="flex flex-wrap gap-2 mt-4 ml-2">
                         {msg.options.map((opt, idx) => (

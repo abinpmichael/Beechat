@@ -167,7 +167,7 @@ export default function SuperAdmin() {
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [postEditData, setPostEditData] = useState({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' });
+  const [postEditData, setPostEditData] = useState({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' });
 
   const API_URL = `${API_BASE_URL}/superadmin.php`;
 
@@ -329,7 +329,7 @@ export default function SuperAdmin() {
         ...postEditData
       }, { headers });
       setIsCreatingPost(false);
-      setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' });
+      setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' });
       fetchData();
       alert("Blog post created successfully!");
     } catch (err) {
@@ -907,7 +907,7 @@ export default function SuperAdmin() {
             </div>
             <button 
               onClick={() => { 
-                setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team' }); 
+                setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' }); 
                 setIsCreatingPost(true); 
               }} 
               className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3 w-fit"
@@ -1179,6 +1179,29 @@ export default function SuperAdmin() {
                   value={postEditData.summary} 
                   onChange={(e) => setPostEditData({...postEditData, summary: e.target.value})} 
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SEO Meta Title (Optional)</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm" 
+                    placeholder="Search engine title..." 
+                    value={postEditData.seo_title || ''} 
+                    onChange={(e) => setPostEditData({...postEditData, seo_title: e.target.value})} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SEO Meta Description (Optional)</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm" 
+                    placeholder="Search engine description..." 
+                    value={postEditData.seo_description || ''} 
+                    onChange={(e) => setPostEditData({...postEditData, seo_description: e.target.value})} 
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">

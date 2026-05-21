@@ -1007,6 +1007,37 @@ const LandingPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (activePost) {
+      const originalTitle = document.title;
+      const originalDesc = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+      
+      const newTitle = activePost.seo_title || `${activePost.title} | BeeChat`;
+      const newDesc = activePost.seo_description || activePost.summary;
+      
+      document.title = newTitle;
+      
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', newDesc);
+      
+      return () => {
+        document.title = originalTitle;
+        if (originalDesc) {
+          const currentMeta = document.querySelector('meta[name="description"]');
+          if (currentMeta) currentMeta.setAttribute('content', originalDesc);
+        } else {
+          const currentMeta = document.querySelector('meta[name="description"]');
+          if (currentMeta) currentMeta.remove();
+        }
+      };
+    }
+  }, [activePost]);
+
   const handleClosePost = () => {
     setActivePost(null);
     const url = new URL(window.location.href);
