@@ -56,13 +56,25 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
             echo json_encode(["error" => "Website not found"]);
         } else {
             // Check if open based on TENANT TIMEZONE
-            $timezone = $res['timezone'] ?? 'UTC';
-            $dateTime = new DateTime("now", new DateTimeZone($timezone));
+            $timezone = !empty($res['timezone']) ? $res['timezone'] : 'UTC';
+            try {
+                $tz = new DateTimeZone($timezone);
+            } catch (Exception $tzEx) {
+                $timezone = 'UTC';
+                $tz = new DateTimeZone('UTC');
+            }
+            $dateTime = new DateTime("now", $tz);
             $now = $dateTime->format('H:i:s');
             
-            $open   = $res['opening_time'] ?? '00:00:00';
-            $close  = $res['closing_time'] ?? '23:59:59';
-            $isOpen = ($now >= $open && $now <= $close);
+            $open   = !empty($res['opening_time']) ? $res['opening_time'] : '00:00:00';
+            $close  = !empty($res['closing_time']) ? $res['closing_time'] : '23:59:59';
+            
+            if ($open <= $close) {
+                $isOpen = ($now >= $open && $now <= $close);
+            } else {
+                // Spans midnight (e.g. 22:00:00 to 06:00:00)
+                $isOpen = ($now >= $open || $now <= $close);
+            }
             
             $res['is_open'] = $isOpen;
 
