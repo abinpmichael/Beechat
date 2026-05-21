@@ -539,7 +539,7 @@ export default function ChatWidget({ apiKey }) {
           setMessages(prev => {
             // Filter rows to only get agent messages that are not already in prev
             const newAgentMsgs = rows.filter(row => {
-              return row.sender_type === 'agent' && !prev.some(m => m.id === row.id);
+              return row.sender_type === 'agent' && !prev.some(m => m.id === row.id || (m.text === row.content && !m.id));
             });
 
             if (newAgentMsgs.length === 0) return prev;
