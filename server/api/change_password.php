@@ -3,11 +3,12 @@
 require_once 'config.php';
 
 $headers = getAuthHeaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $m)) {
-    http_response_code(401); exit;
+$decoded = decodeJwt($headers);
+if (!$decoded || !isset($decoded['id'])) {
+    http_response_code(401);
+    echo json_encode(["error" => "Unauthorized access."]);
+    exit;
 }
-$decoded = json_decode(base64_decode($m[1]), true);
 $myId = $decoded['id'];
 
 $data = json_decode(file_get_contents("php://input"), true) ?? [];

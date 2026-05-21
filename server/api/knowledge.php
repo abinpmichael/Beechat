@@ -3,16 +3,10 @@
 require_once 'config.php';
 
 $headers = getAuthHeaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-    http_response_code(401);
-    exit;
-}
-
 $decoded = decodeJwt($headers);
 
 if (!$decoded || !isset($decoded['tenant_id'])) {
+    error_log("Unauthorized knowledge request: invalid or missing bearer token.");
     http_response_code(401);
     echo json_encode(["error" => "Invalid or expired token"]);
     exit;
@@ -43,6 +37,7 @@ try {
 
         if ($action === 'add') {
             if (!isset($data['website_id']) || !isset($data['title']) || !isset($data['content'])) {
+                error_log("Knowledge validation failed for tenant " . ($tenantId ?? 'unknown') . ": website_id, title, or content missing. Received: " . json_encode($data));
                 http_response_code(400);
                 echo json_encode(["message" => "Required fields missing (website_id, title, content)"]);
                 exit;

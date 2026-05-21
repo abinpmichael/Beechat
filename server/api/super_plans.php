@@ -3,13 +3,15 @@
 require_once 'config.php';
 
 $headers = getAuthHeaders();
-$auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-if (empty($auth) || !preg_match('/Bearer\s+(.*)$/i', $auth, $m)) {
-    http_response_code(401); exit;
+$decoded = decodeJwt($headers);
+if (!$decoded || !isset($decoded['id'])) {
+    http_response_code(401);
+    echo json_encode(["error" => "Unauthorized access."]);
+    exit;
 }
 
 try {
-    $tokenData = json_decode(base64_decode($m[1]), true);
+    $tokenData = $decoded;
     $check = $pdo->prepare("SELECT is_superadmin FROM users WHERE id = ?");
     $check->execute([$tokenData['id']]);
     $currentUser = $check->fetch();
