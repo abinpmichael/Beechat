@@ -99,6 +99,26 @@ export default function Tickets() {
     }
   };
 
+  const handleUpdateStatus = async (status) => {
+    if (!selectedTicket || sending) return;
+    setSending(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/tickets.php?action=update_status`, {
+        ticket_id: selectedTicket.id,
+        status: status
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.error) throw new Error(res.data.error);
+      setSelectedTicket(prev => prev ? { ...prev, status: status } : null);
+      fetchTickets();
+    } catch (err) {
+      alert("Failed to update status: " + (err.response?.data?.error || err.message));
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-140px)] flex gap-8">
       {/* Sidebar List */}
@@ -165,7 +185,17 @@ export default function Tickets() {
                </div>
                <div className="flex items-center gap-3">
                   <button className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><MoreVertical className="w-5 h-5" /></button>
-                  <button className="px-6 py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-all">Close Ticket</button>
+                  <button 
+                    disabled={sending}
+                    onClick={() => handleUpdateStatus(selectedTicket.status === 'open' ? 'closed' : 'open')}
+                    className={`px-6 py-2.5 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all ${
+                      selectedTicket.status === 'open' 
+                        ? 'bg-slate-900 hover:bg-amber-500' 
+                        : 'bg-emerald-500 hover:bg-emerald-600'
+                    }`}
+                  >
+                    {selectedTicket.status === 'open' ? 'Close Ticket' : 'Reopen Ticket'}
+                  </button>
                </div>
             </div>
 

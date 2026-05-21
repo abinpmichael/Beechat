@@ -295,6 +295,67 @@ try {
         exit;
     }
 
+    if ($action === 'update_status') {
+        $ticketId = $data['ticket_id'] ?? null;
+        $status   = $data['status'] ?? 'open';
+
+        if (!$ticketId) exit(json_encode(["error" => "Ticket ID required"]));
+
+        // Verify ownership and get ticket/lead details
+        $stmt = $pdo->prepare("
+            SELECT t.id, t.tracking_id, t.subject, t.status, l.details 
+            FROM tickets t
+            LEFT JOIN leads l ON t.lead_id = l.id
+            WHERE t.id = ? AND t.tenant_id = ?
+        ");
+        $stmt->execute([$ticketId, $tenantId]);
+        $ticket = $stmt->fetch();
+
+        if (!$ticket) exit(json_encode(["error" => "Ticket not found"]));
+
+        // Update status
+        $stmt = $pdo->prepare("UPDATE tickets SET status = ? WHERE id = ?");
+        $stmt->execute([$status, $ticketId]);
+
+        // Get visitor email if exists
+        $email = null;
+        if (!empty($ticket['details'])) {
+            $details = json_decode($ticket['details'], true);
+            if (is_array($details) && !empty($details['email'])) {
+                $email = $details['email'];
+            }
+        }
+
+        if (!empty($email)) {
+            require_once 'mail_service.php';
+            $mail = new MailService($pdo);
+
+            // Auto-seed template if missing
+            $tplStmt = $pdo->prepare("SELECT id FROM email_templates WHERE name = ?");
+            $tplStmt->execute(['ticket_status_changed']);
+            if (!$tplStmt->fetch()) {
+                $insertTpl = $pdo->prepare("INSERT IGNORE INTO email_templates (name, subject, body) VALUES (?, ?, ?)");
+                $insertTpl->execute([
+                    'ticket_status_changed',
+                    'Ticket #{tracking_id} Status Updated: {status}',
+                    "Hello,\n\nThe status of your support ticket (Subject: \"{subject}\") has been updated to: {status}.\n\nYou can view the ticket details and communicate with our agents at:\n\n{tracking_link}\n\nTicket ID: {tracking_id}\n\nThank you,\nThe Bee Chat Team"
+                ]);
+            }
+
+            $trackingLink = getFrontendBaseUrl() . "/ticket/" . $ticket['tracking_id'];
+            $mail->queue($email, 'ticket_status_changed', [
+                'subject' => $ticket['subject'],
+                'tracking_id' => $ticket['tracking_id'],
+                'tracking_link' => $trackingLink,
+                'status' => ucfirst($status)
+            ]);
+        }
+
+        echo json_encode(["success" => true, "status" => $status]);
+        exit;
+    }
+
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(["error" => $e->getMessage()]);
