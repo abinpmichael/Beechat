@@ -10,15 +10,13 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
 
 $headers = getAuthHeaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+$decoded = decodeJwt($headers);
 
-if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+if (!$decoded || empty($decoded['tenant_id'])) {
     http_response_code(401);
+    echo json_encode(["error" => "Unauthorized access. Please log in again."]);
     exit;
 }
-
-$token = $matches[1];
-$decoded = json_decode(base64_decode($token), true);
 $tenantId = $decoded['tenant_id'];
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -161,6 +159,7 @@ try {
         }
     }
 } catch (Exception $e) {
+    error_log("Billing API Error for tenant " . ($tenantId ?? 'unknown') . ": " . $e->getMessage());
     http_response_code(500);
     echo json_encode(["error" => $e->getMessage()]);
 }

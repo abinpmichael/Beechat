@@ -10,8 +10,7 @@ if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches
     exit;
 }
 
-$token = $matches[1];
-$decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $token)), true);
+$decoded = decodeJwt($headers);
 
 if (!$decoded || !isset($decoded['tenant_id'])) {
     http_response_code(401);
@@ -67,6 +66,7 @@ try {
         exit;
     }
 } catch (Exception $e) {
+    error_log("Knowledge API Error for tenant " . ($tenantId ?? 'unknown') . ": " . $e->getMessage());
     http_response_code(500);
     echo json_encode(["error" => $e->getMessage()]);
 }

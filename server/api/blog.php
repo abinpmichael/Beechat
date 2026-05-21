@@ -84,8 +84,10 @@ try {
             $author = $data['author'] ?? 'Bee Chat Team';
             $imageUrl = $data['image_url'] ?? null;
             $status = $data['status'] ?? 'draft';
+            $seoTitle = $data['seo_title'] ?? null;
+            $seoDescription = $data['seo_description'] ?? null;
 
-            $stmt = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author, seo_title, seo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data['title'],
                 $data['slug'],
@@ -93,7 +95,9 @@ try {
                 $data['content'],
                 $imageUrl,
                 $status,
-                $author
+                $author,
+                $seoTitle,
+                $seoDescription
             ]);
 
             echo json_encode(["message" => "Blog post created successfully", "id" => $pdo->lastInsertId()]);
@@ -119,8 +123,10 @@ try {
             $author = $data['author'] ?? 'Bee Chat Team';
             $imageUrl = $data['image_url'] ?? null;
             $status = $data['status'] ?? 'draft';
+            $seoTitle = $data['seo_title'] ?? null;
+            $seoDescription = $data['seo_description'] ?? null;
 
-            $stmt = $pdo->prepare("UPDATE blog_posts SET title = ?, slug = ?, summary = ?, content = ?, image_url = ?, status = ?, author = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE blog_posts SET title = ?, slug = ?, summary = ?, content = ?, image_url = ?, status = ?, author = ?, seo_title = ?, seo_description = ? WHERE id = ?");
             $stmt->execute([
                 $data['title'],
                 $data['slug'],
@@ -129,6 +135,8 @@ try {
                 $imageUrl,
                 $status,
                 $author,
+                $seoTitle,
+                $seoDescription,
                 $data['id']
             ]);
 

@@ -57,12 +57,33 @@ if ($method === 'POST') {
         $existing = $stmt->fetch();
 
         if ($existing) {
+            // Fetch existing details first
+            $stmt = $pdo->prepare("SELECT details, phone FROM leads WHERE id = ?");
+            $stmt->execute([$existing['id']]);
+            $existingLead = $stmt->fetch();
+            $existingDetails = [];
+            if ($existingLead && !empty($existingLead['details'])) {
+                $existingDetails = json_decode($existingLead['details'], true) ?? [];
+            }
+            
+            // Merge existing details with incoming details
+            $mergedDetails = array_merge($existingDetails, $details);
+            
+            // Check if phone was submitted in the new details or as a direct parameter
+            $phoneToUpdate = $phone;
+            if (empty($phoneToUpdate) && isset($mergedDetails['phone'])) {
+                $phoneToUpdate = $mergedDetails['phone'];
+            }
+            if (empty($phoneToUpdate) && $existingLead) {
+                $phoneToUpdate = $existingLead['phone'];
+            }
+
             // Update existing instead of creating new
-            $stmt = $pdo->prepare("UPDATE leads SET is_live = ?, chat_status = ?, last_seen_at = NOW(), country = ?, browser = ?, device = ? WHERE id = ?");
-            $stmt->execute([$isLive, $status, $country, $browser, $device, $existing['id']]);
+            $stmt = $pdo->prepare("UPDATE leads SET is_live = ?, chat_status = ?, last_seen_at = NOW(), country = ?, browser = ?, device = ?, details = ?, phone = ? WHERE id = ?");
+            $stmt->execute([$isLive, $status, $country, $browser, $device, json_encode($mergedDetails), $phoneToUpdate, $existing['id']]);
             $leadId = $existing['id'];
             $uid    = $existing['visitor_uid'];
-            $msg    = "Session resumed";
+            $msg    = "Session resumed & details updated";
         } else {
             // Generate a human-friendly visitor UID
             $uid = 'BEE-' . strtoupper(substr(md5($sessionId . microtime()), 0, 6));
@@ -109,9 +130,10 @@ if ($method === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_se
     $apiKey    = $_GET['apiKey']    ?? '';
     try {
         $stmt = $pdo->prepare("
-            SELECT l.id, l.is_live, l.chat_status
+            SELECT l.id, l.is_live, l.chat_status, l.assigned_to, u.name AS agent_name
             FROM leads l
             JOIN websites w ON l.website_id = w.id
+            LEFT JOIN users u ON l.assigned_to = u.id
             WHERE l.session_id = ? AND w.api_key = ?
             ORDER BY l.created_at DESC LIMIT 1
         ");
