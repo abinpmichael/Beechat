@@ -264,7 +264,7 @@ try {
                     if (!empty($email)) {
                         require_once 'mail_service.php';
                         $mail = new MailService($pdo);
-                        $trackingLink = "http://localhost:5173/ticket/" . $trackingId;
+                        $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId;
                         $mail->queue($email, 'ticket_created', [
                             'subject' => $subject,
                             'tracking_id' => $trackingId,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, SOCKET_URL } from '../config';
 import { io } from 'socket.io-client';
 
 const API = API_BASE_URL;
@@ -402,7 +402,7 @@ export default function ChatWidget({ apiKey }) {
     if (!sid || !branding.tenant_id) return;
 
     // Connect to WebSockets
-    const socket = io('http://localhost:3000');
+    const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
     // Join visitor's room to receive real-time messages from agents

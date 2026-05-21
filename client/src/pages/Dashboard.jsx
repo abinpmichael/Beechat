@@ -22,7 +22,7 @@ import Help from './Help';
 import Tickets from './Tickets';
 import NotificationsHistory from './NotificationsHistory';
 import { io } from 'socket.io-client';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, SOCKET_URL } from '../config';
 
 const STATS_URL = `${API_BASE_URL}/stats.php`;
 
@@ -143,7 +143,7 @@ export default function Dashboard() {
     if (!user || !user.tenant_id) return;
 
     // Connect to Socket.IO server on port 3000
-    const socket = io('http://localhost:3000');
+    const socket = io(SOCKET_URL);
 
     // Join room for this tenant
     socket.emit('join_tenant', user.tenant_id);

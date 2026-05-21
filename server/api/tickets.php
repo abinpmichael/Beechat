@@ -95,7 +95,7 @@ try {
         // 5. Send Notification (SMTP Integration)
         require_once 'mail_service.php';
         $mail = new MailService($pdo);
-        $trackingLink = "http://localhost:5173/ticket/" . $trackingId; // TODO: Use platform setting for URL
+        $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId; // TODO: Use platform setting for URL
         
         if (!empty($email)) {
             $mail->queue($email, 'ticket_created', [
@@ -238,7 +238,7 @@ try {
         if (!empty($email)) {
             require_once 'mail_service.php';
             $mail = new MailService($pdo);
-            $trackingLink = "http://localhost:5173/ticket/" . $trackingId;
+            $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId;
             $mail->queue($email, 'ticket_created', [
                 'subject' => $subject,
                 'tracking_id' => $trackingId,
@@ -284,7 +284,7 @@ try {
         // Send Notification
         require_once 'mail_service.php';
         $mail = new MailService($pdo);
-        $trackingLink = "http://localhost:5173/ticket/" . $trackingId;
+        $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId;
         $mail->queue($visitorEmail, 'ticket_created', [
             'subject' => $subject,
             'tracking_id' => $trackingId,

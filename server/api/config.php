@@ -83,6 +83,38 @@ if (!function_exists('decodeJwt')) {
     }
 }
 
+if (!function_exists('getFrontendBaseUrl')) {
+    function getFrontendBaseUrl() {
+        global $pdo;
+        
+        // 1. Try from HTTP Referer first (dynamic and accurate for dev vs prod)
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (!empty($referer)) {
+            $parts = parse_url($referer);
+            if ($parts && !empty($parts['scheme']) && !empty($parts['host'])) {
+                $port = !empty($parts['port']) ? ':' . $parts['port'] : '';
+                return $parts['scheme'] . '://' . $parts['host'] . $port;
+            }
+        }
+        
+        // 2. Fallback to canonical URL from database
+        try {
+            $stmt = $pdo->prepare("SELECT setting_value FROM platform_settings WHERE setting_key = 'seo_canonical_url'");
+            $stmt->execute();
+            $canonical = $stmt->fetchColumn();
+            if (!empty($canonical)) {
+                return rtrim($canonical, '/');
+            }
+        } catch (Exception $e) {
+            // Ignore DB errors
+        }
+        
+        // 3. Ultimate fallback
+        return 'http://localhost:5173';
+    }
+}
+
+
 if (!function_exists('triggerNotification')) {
     function triggerNotification($tenantId, $type, $title, $message, $link = '') {
         global $pdo;

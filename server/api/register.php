@@ -59,7 +59,7 @@ try {
         $mail->queue($email, 'welcome_admin', [
             'name' => $name,
             'company' => $companyName,
-            'login_url' => 'http://localhost:5173/login'
+            'login_url' => getFrontendBaseUrl() . '/login'
         ]);
     } catch (Exception $e) { /* Silent fail for email queueing in registration */ }
 

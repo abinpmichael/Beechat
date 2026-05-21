@@ -41,7 +41,7 @@ try {
         $mail->queue($tenant['email'], 'plan_expired', [
             'name' => $tenant['user_name'],
             'company' => $tenant['company_name'],
-            'login_url' => 'http://localhost:5173/login'
+            'login_url' => getFrontendBaseUrl() . '/login'
         ]);
         echo "[".date('Y-m-d H:i:s')."] Suspended tenant ID " . $tenant['id'] . " and queued expiry email.\n";
     }

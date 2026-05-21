@@ -111,7 +111,7 @@ if ($method === 'POST') {
                 $mail->queue($details['email'], 'ticket_received', [
                     'ticket_id' => $leadId,
                     'subject' => $details['subject'] ?? 'Support Request',
-                    'tracking_url' => "http://localhost:5173/ticket/" . base64_encode($leadId)
+                    'tracking_url' => getFrontendBaseUrl() . "/ticket/" . base64_encode($leadId)
                 ]);
             } catch (Exception $e) { }
         }

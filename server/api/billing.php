@@ -102,8 +102,7 @@ try {
             require_once 'vendor/autoload.php';
             \Stripe\Stripe::setApiKey($stripeSecret);
 
-            // In production, you would map to existing Stripe Prices, but dynamically generating them here for ease
-            // Note: Stripe Checkout accepts price_data for recurring now, but requires a product.
+            $frontendUrl = getFrontendBaseUrl();
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
@@ -120,8 +119,8 @@ try {
                     'quantity' => 1,
                 ]],
                 'mode' => 'subscription',
-                'success_url' => 'http://localhost:5173/dashboard/settings?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'http://localhost:5173/dashboard/settings',
+                'success_url' => $frontendUrl . '/dashboard/settings?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $frontendUrl . '/dashboard/settings',
                 'metadata' => [
                     'tenant_id' => $tenantId,
                     'plan_id' => $planId,
@@ -149,9 +148,10 @@ try {
                 echo json_encode(["error" => "No billing history found."]); exit;
             }
 
+            $frontendUrl = getFrontendBaseUrl();
             $session = \Stripe\BillingPortal\Session::create([
                 'customer' => $customerId,
-                'return_url' => 'http://localhost:5173/dashboard/settings',
+                'return_url' => $frontendUrl . '/dashboard/settings',
             ]);
 
             echo json_encode(["status" => "success", "url" => $session->url]);
