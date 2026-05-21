@@ -16,6 +16,26 @@ if (empty($apiKey)) {
 /* ── GET BRANDING & HOURS ──────────────────────────────────── */
 if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
     try {
+        // Dynamic column check to ensure websites schema matches code expectations
+        try {
+            $colsToCheck = [
+                'survey_priority' => 'INT DEFAULT 1',
+                'survey_config' => 'LONGTEXT',
+                'form_config' => 'LONGTEXT',
+                'header_bg_gradient' => 'VARCHAR(255)',
+                'notification_sound' => 'TEXT',
+                'widget_icon' => 'TEXT'
+            ];
+            foreach ($colsToCheck as $colName => $colDef) {
+                $cols = $pdo->query("SHOW COLUMNS FROM websites LIKE '$colName'")->fetchAll();
+                if (empty($cols)) {
+                    $pdo->exec("ALTER TABLE websites ADD COLUMN $colName $colDef");
+                }
+            }
+        } catch (Exception $schemaEx) {
+            error_log("Websites schema check failed in chat.php: " . $schemaEx->getMessage());
+        }
+
         $stmt = $pdo->prepare("
             SELECT w.*, s.opening_time, s.closing_time, s.timezone, t.status as tenant_status, t.is_active, p.name as plan_name
             FROM websites w 
