@@ -4,7 +4,8 @@ import {
   MessageSquare, Bot, Zap, Shield, Users, BarChart3, 
   ChevronRight, Globe, Sparkles, CheckCircle2, ArrowRight,
   Hexagon, Heart, Menu, X, MousePointer2, ZapOff,
-  BrainCircuit, Rocket, Database, LayoutDashboard
+  BrainCircuit, Rocket, Database, LayoutDashboard,
+  Calendar, User, Clock, BookOpen
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
@@ -484,7 +485,7 @@ const Nav = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 md:h-32 flex items-center justify-between">
         <BrandLogo size="lg" />
         <div className="hidden lg:flex items-center gap-10 xl:gap-16">
-          {['Features', 'Benefits', 'Pricing'].map(link => (
+          {['Features', 'Benefits', 'Pricing', 'Blog'].map(link => (
             <a key={link} href={`#${link.toLowerCase()}`} className="group text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.4em] relative">
               {link}
               <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300" />
@@ -512,7 +513,7 @@ const Nav = () => {
             className="lg:hidden bg-white border-t border-slate-100 overflow-hidden shadow-2xl"
           >
              <div className="p-10 flex flex-col gap-8">
-                {['Features', 'Benefits', 'Pricing'].map(link => (
+                {['Features', 'Benefits', 'Pricing', 'Blog'].map(link => (
                   <a key={link} href={`#${link.toLowerCase()}`} onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">{link}</a>
                 ))}
                 <a href="/integrations" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">Integrations</a>
@@ -856,19 +857,127 @@ const FeatureCard = ({ icon: Icon, title, desc, color, emoji }) => {
   );
 };
 
+const BlogSection = ({ posts, onPostClick }) => {
+  if (!posts || posts.length === 0) return null;
+
+  return (
+    <section id="blog" className="py-20 md:py-28 bg-slate-50 relative overflow-hidden">
+      {/* Honeycomb background pattern */}
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='70' viewBox='0 0 40 70' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l20 11.55v23.1L20 46.2 0 34.65V11.55L20 0z' fill='%23f59e0b' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+        backgroundSize: '40px 70px'
+      }} />
+      
+      <div className="max-w-7xl mx-auto px-6 md:px-10 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-full text-amber-600 text-[10px] font-black uppercase tracking-widest mb-6">
+            <Sparkles className="w-3 h-3 text-amber-500" />
+            Bee News & Insights
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+            The Honeycomb <span className="text-amber-500">Chronicles.</span>
+          </h2>
+          <p className="text-slate-500 mt-3 text-sm font-semibold max-w-md mx-auto">
+            Stay up to date with the latest buzz, neural updates, and tips on building your chat empire.
+          </p>
+        </motion.div>
+
+        {/* Blog Post Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post, idx) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.5 }}
+              whileHover={{ y: -8 }}
+              className="bg-white rounded-[2.5rem] border-2 border-amber-50 hover:border-amber-200 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col overflow-hidden group cursor-pointer"
+              onClick={() => onPostClick(post)}
+            >
+              {/* Image Header */}
+              <div className="h-56 relative overflow-hidden bg-amber-50">
+                {post.image_url ? (
+                  <img 
+                    src={post.image_url} 
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-amber-400/20 to-amber-600/30 flex items-center justify-center relative">
+                    <Hexagon className="w-16 h-16 text-amber-500/40 animate-pulse stroke-[1]" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-3xl">🐝</span>
+                    </div>
+                  </div>
+                )}
+                {/* Honeycomb float decoration */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black text-amber-600 uppercase tracking-widest border border-amber-100 flex items-center gap-1 shadow-sm">
+                  <BookOpen className="w-3 h-3 text-amber-500" />
+                  Read Post
+                </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-8 flex flex-col flex-1">
+                <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-4">
+                  <span className="flex items-center gap-1">
+                    <User className="w-3 h-3 text-amber-500" />
+                    {post.author || 'Bee Chat Team'}
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-amber-500" />
+                    {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-amber-500 transition-colors duration-200 line-clamp-2 leading-snug mb-3">
+                  {post.title}
+                </h3>
+                
+                <p className="text-slate-500 text-sm font-semibold leading-relaxed line-clamp-3 mb-6">
+                  {post.summary}
+                </p>
+
+                {/* Card Footer */}
+                <div className="mt-auto pt-6 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest group-hover:text-amber-500 transition-colors flex items-center gap-2">
+                    Open Article
+                    <ChevronRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const LandingPage = () => {
   const [plans, setPlans] = useState([]);
   const [platformSettings, setPlatformSettings] = useState({});
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [activePost, setActivePost] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pRes, sRes] = await Promise.all([
+        const [pRes, sRes, bRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/superadmin.php?action=get_plans`),
-          axios.get(`${API_BASE_URL}/settings.php`)
+          axios.get(`${API_BASE_URL}/settings.php`),
+          axios.get(`${API_BASE_URL}/blog.php`)
         ]);
         if (pRes.data && Array.isArray(pRes.data)) setPlans(pRes.data);
         if (sRes.data) setPlatformSettings(sRes.data);
+        if (bRes.data && Array.isArray(bRes.data)) setBlogPosts(bRes.data);
       } catch (err) {
         console.error(err);
         setPlans([
@@ -876,10 +985,41 @@ const LandingPage = () => {
           { id: 2, name: 'Drone Hive', price: 29, max_websites: 5, ai_enabled: 1 },
           { id: 3, name: 'Royal Queen', price: 99, max_websites: 100, ai_enabled: 1 }
         ]);
+        setBlogPosts([]);
       }
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const postSlug = params.get('post');
+    if (postSlug) {
+      axios.get(`${API_BASE_URL}/blog.php?slug=${postSlug}`)
+        .then(res => {
+          if (res.data) {
+            setActivePost(res.data);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch deep-linked post:", err);
+        });
+    }
+  }, []);
+
+  const handleClosePost = () => {
+    setActivePost(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('post');
+    window.history.pushState({}, '', url.pathname + url.search);
+  };
+
+  const handleOpenPost = (post) => {
+    setActivePost(post);
+    const url = new URL(window.location.href);
+    url.searchParams.set('post', post.slug);
+    window.history.pushState({}, '', url.pathname + url.search);
+  };
 
   return (
     <div className="min-h-screen bg-white selection:bg-amber-100 selection:text-amber-600 relative overflow-hidden">
@@ -1039,6 +1179,9 @@ const LandingPage = () => {
         {/* === LIVE ANIMATED HONEYCOMB GRID === */}
         <AnimatedHoneycombGrid />
 
+        {/* === BLOG CHRONICLES SECTION === */}
+        <BlogSection posts={blogPosts} onPostClick={handleOpenPost} />
+
         <motion.section 
           id="pricing" 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -1144,6 +1287,100 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Blog Post Detail Overlay */}
+      <AnimatePresence>
+        {activePost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+            onClick={handleClosePost}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 30, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="w-full max-w-4xl max-h-[85vh] bg-white rounded-[2.5rem] shadow-2xl border border-amber-100 overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header/Image */}
+              <div className="relative h-64 md:h-80 w-full bg-amber-50 shrink-0 overflow-hidden">
+                {activePost.image_url ? (
+                  <img 
+                    src={activePost.image_url} 
+                    alt={activePost.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-amber-400/20 to-amber-600/30 flex items-center justify-center">
+                    <Hexagon className="w-24 h-24 text-amber-500/30 animate-pulse stroke-[1]" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-5xl">🐝</span>
+                    </div>
+                  </div>
+                )}
+                {/* Glassmorphic Dark Overlay for Close button */}
+                <button 
+                  onClick={handleClosePost}
+                  className="absolute top-6 right-6 p-3 bg-slate-900/90 text-white rounded-2xl hover:bg-amber-500 hover:scale-105 transition-all shadow-xl z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content Scrollable Area */}
+              <div className="p-8 md:p-12 overflow-y-auto flex-1 blog-content animate-fade-in">
+                {/* Metadata */}
+                <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">
+                  <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full text-amber-600 border border-amber-100/50">
+                    <User className="w-3 h-3 text-amber-500" />
+                    {activePost.author || 'Bee Chat Team'}
+                  </span>
+                  <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full text-amber-600 border border-amber-100/50">
+                    <Calendar className="w-3 h-3 text-amber-500" />
+                    {new Date(activePost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+
+                <h1 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight mb-6">
+                  {activePost.title}
+                </h1>
+
+                {/* Divider */}
+                <div className="h-1 w-20 bg-amber-500 rounded-full mb-8" />
+
+                {/* HTML Content */}
+                <div 
+                  className="prose prose-amber max-w-none text-slate-600 font-medium text-base leading-relaxed space-y-6"
+                  dangerouslySetInnerHTML={{ __html: activePost.content }}
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <TopBee size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-900 uppercase">BeeChat Colony Hub</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">The Hive Intelligence</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleClosePost}
+                  className="bg-slate-900 hover:bg-amber-500 text-white text-[10px] font-black px-8 py-3 rounded-xl uppercase tracking-widest transition-all shadow-md"
+                >
+                  Close Reader
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
