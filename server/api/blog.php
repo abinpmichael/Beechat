@@ -51,6 +51,42 @@ try {
         // 4. Seed the 5 scheduled blog posts if they do not exist
         $scheduledPosts = [
             [
+                'title' => 'Welcome to BeeChat: The Future of Customer Support',
+                'slug' => 'welcome-to-beechat-future-of-support',
+                'summary' => 'Discover how BeeChat is transforming customer interactions with ultra-fast AI-powered messaging and custom honey-sweet widget colonies.',
+                'content' => '<h1>Welcome to the Hive!</h1><p>Customer support has entered a new era. Today, businesses can no longer afford to keep customers waiting. With BeeChat, we have designed a customer communication platform that operates with the intelligence and speed of a tightly synchronized bee colony.</p><h3>Why BeeChat?</h3><p>Unlike generic widgets, BeeChat relies on dynamic, lightweight, glassmorphic designs and neural language models that learn your website content in seconds. It syncs with your documentation, FAQ sheets, and raw text files to provide helpful answers instantly, freeing up human agents for high-value client needs.</p><h3>Key Features of the Colony</h3><ul><li><strong>Honey-Fast AI:</strong> Average AI responses load in under 0.3 seconds.</li><li><strong>Hex Flow Dashboard:</strong> A modular dashboard built for support agent speed and oversight.</li><li><strong>Queen Oversight:</strong> Support admins can jump into any live chat dynamically with zero interruption.</li></ul><p>We are excited to help you scale your digital cells. Join the hive and watch your conversion rates fly!</p>',
+                'image_url' => 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&auto=format&fit=crop&q=60',
+                'status' => 'published',
+                'author' => 'Queen Bee',
+                'seo_title' => 'Welcome to BeeChat: The Future of Customer Support',
+                'seo_description' => 'Discover how BeeChat is transforming customer interactions with ultra-fast AI-powered messaging.',
+                'published_at' => '2026-05-21 11:00:00'
+            ],
+            [
+                'title' => 'How AI Chatbots Can Boost Your Sales Conversion',
+                'slug' => 'boost-sales-conversion-ai-chatbots',
+                'summary' => 'Learn the strategic insights behind deploying instant AI agents to qualify visitors, capture leads, and automate 24/7 engagement.',
+                'content' => '<h1>Boost Your Sales Conversion Rates</h1><p>Modern internet visitors have extremely short attention spans. If a visitor lands on your page and cannot find answers to their pricing or configuration questions within 10 seconds, they will leave for a competitor.</p><h3>24/7 Engagement</h3><p>An AI agent never goes to sleep. By qualifying leads automatically at 2:00 AM, capturing email addresses, and scheduling call-backs, you keep your customer pipeline full without keeping your staff awake.</p><h3>The Power of Instant Support</h3><p>According to recent industry studies, responding to a lead within 5 minutes increases the chance of qualification by over 400%. BeeChat helps you meet this standard automatically with custom AI flows and offline ticketing capabilities.</p>',
+                'image_url' => 'https://images.unsplash.com/photo-1531747118685-ca8fa6e08806?w=800&auto=format&fit=crop&q=60',
+                'status' => 'published',
+                'author' => 'Drone Commander',
+                'seo_title' => 'How AI Chatbots Can Boost Your Sales Conversion',
+                'seo_description' => 'Learn the strategic insights behind deploying instant AI agents to capture leads and qualify visitors.',
+                'published_at' => '2026-05-21 11:00:00'
+            ],
+            [
+                'title' => 'Tips for Configuring Your Customer Support Dashboard',
+                'slug' => 'tips-configuring-customer-support-dashboard',
+                'summary' => 'Streamline agent workflow, organize teams, and configure system rules to maximize your platform performance.',
+                'content' => '<h1>Configuring Your Hive for Maximum Performance</h1><p>An organized team is an efficient team. Here are our top three tips for configuring your BeeChat dashboard to ensure your agents resolve tickets in record time:</p><ol><li><strong>Define Clear AI Rule Overrides:</strong> Teach your AI bot what topics it should answer and when to handover to a live human agent.</li><li><strong>Custom Brand Your Widget:</strong> Set the hex color codes and bot avatars to match your brand identity perfectly.</li><li><strong>Set Up Notifications:</strong> Enable browser sounds and email push updates so you are notified immediately when a premium lead requests support.</li></ol>',
+                'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
+                'status' => 'published',
+                'author' => 'Hive Architect',
+                'seo_title' => 'Tips for Configuring Your Customer Support Dashboard',
+                'seo_description' => 'Streamline agent workflow, organize teams, and configure system rules to maximize your platform performance.',
+                'published_at' => '2026-05-21 11:00:00'
+            ],
+            [
                 'title' => 'Leveraging Live Chat for SaaS Growth: A Comprehensive Guide',
                 'slug' => 'leveraging-live-chat-saas-growth',
                 'summary' => 'Learn how modern SaaS platforms use live chat systems to capture leads, onboard users, and reduce customer churn through instant in-app support.',
