@@ -31,3 +31,6 @@ scratch/
 test_*.php
 list_*.php
 count_*.py
+
+# Vendor dependencies
+server/api/vendor/
