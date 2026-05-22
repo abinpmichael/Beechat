@@ -167,7 +167,7 @@ export default function SuperAdmin() {
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [postEditData, setPostEditData] = useState({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' });
+  const [postEditData, setPostEditData] = useState({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '', published_at: '' });
 
   const API_URL = `${API_BASE_URL}/superadmin.php`;
 
@@ -329,7 +329,7 @@ export default function SuperAdmin() {
         ...postEditData
       }, { headers });
       setIsCreatingPost(false);
-      setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' });
+      setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '', published_at: '' });
       fetchData();
       alert("Blog post created successfully!");
     } catch (err) {
@@ -907,7 +907,7 @@ export default function SuperAdmin() {
             </div>
             <button 
               onClick={() => { 
-                setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '' }); 
+                setPostEditData({ title: '', slug: '', summary: '', content: '', image_url: '', status: 'draft', author: 'Bee Chat Team', seo_title: '', seo_description: '', published_at: '' }); 
                 setIsCreatingPost(true); 
               }} 
               className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3 w-fit"
@@ -929,49 +929,74 @@ export default function SuperAdmin() {
                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Article</th>
                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Author</th>
                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Created At</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {blogPosts.map((post) => (
-                    <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={post.id} className="hover:bg-slate-50/50 transition-all group">
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          {post.image_url ? (
-                            <img src={post.image_url} alt="" className="w-16 h-10 object-cover rounded-xl border border-slate-100 shrink-0" />
-                          ) : (
-                            <div className="w-16 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 text-slate-400 font-black">B</div>
-                          )}
-                          <div>
-                            <h4 className="font-black text-slate-900 line-clamp-1 max-w-[280px]">{post.title}</h4>
-                            <p className="text-xs text-slate-400 font-medium">/{post.slug}</p>
+                  {blogPosts.map((post) => {
+                    const isScheduled = post.status === 'published' && post.published_at && new Date(post.published_at) > new Date();
+                    return (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={post.id} className="hover:bg-slate-50/50 transition-all group">
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-4">
+                            {post.image_url ? (
+                              <img src={post.image_url} alt="" className="w-16 h-10 object-cover rounded-xl border border-slate-100 shrink-0" />
+                            ) : (
+                              <div className="w-16 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 text-slate-400 font-black">B</div>
+                            )}
+                            <div>
+                              <h4 className="font-black text-slate-900 line-clamp-1 max-w-[280px]">{post.title}</h4>
+                              <p className="text-xs text-slate-400 font-medium">/{post.slug}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-sm font-bold text-slate-700">{post.author}</td>
-                      <td className="px-8 py-6">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${post.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {post.status}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-xs font-bold text-slate-500">{new Date(post.created_at).toLocaleDateString()}</td>
-                      <td className="px-8 py-6 text-right space-x-2">
-                        <button 
-                          onClick={() => { setSelectedPost(post); setPostEditData({ ...post }); }} 
-                          className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
-                        >
-                          <Shield className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeletePost(post.id)} 
-                          className="p-3 bg-slate-100 text-rose-600 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                        <td className="px-8 py-6 text-sm font-bold text-slate-700">{post.author}</td>
+                        <td className="px-8 py-6">
+                          {isScheduled ? (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight bg-blue-100 text-blue-700">
+                              Scheduled
+                            </span>
+                          ) : (
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${post.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                              {post.status}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-8 py-6 text-xs font-bold text-slate-500">
+                          <div className="flex flex-col gap-0.5">
+                            <span>Created: {new Date(post.created_at).toLocaleDateString()}</span>
+                            {post.published_at && (
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {new Date(post.published_at) > new Date() ? 'Scheduled: ' : 'Published: '}
+                                {new Date(post.published_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-right space-x-2">
+                          <button 
+                            onClick={() => { 
+                              setSelectedPost(post); 
+                              setPostEditData({ 
+                                ...post, 
+                                published_at: post.published_at ? post.published_at.replace(' ', 'T').substring(0, 16) : '' 
+                              }); 
+                            }} 
+                            className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                          >
+                            <Shield className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeletePost(post.id)} 
+                            className="p-3 bg-slate-100 text-rose-600 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -1137,7 +1162,7 @@ export default function SuperAdmin() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Author</label>
                   <input 
@@ -1167,6 +1192,15 @@ export default function SuperAdmin() {
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Published At / Schedule</label>
+                  <input 
+                    type="datetime-local" 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm" 
+                    value={postEditData.published_at || ''} 
+                    onChange={(e) => setPostEditData({...postEditData, published_at: e.target.value})} 
+                  />
                 </div>
               </div>
 

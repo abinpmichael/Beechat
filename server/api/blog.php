@@ -34,7 +34,7 @@ try {
         // Public Action: fetch single blog post by slug
         $slug = $_GET['slug'] ?? '';
         if (!empty($slug)) {
-            $stmt = $pdo->prepare("SELECT * FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1");
+            $stmt = $pdo->prepare("SELECT * FROM blog_posts WHERE slug = ? AND status = 'published' AND (published_at IS NULL OR published_at <= NOW()) LIMIT 1");
             $stmt->execute([$slug]);
             $post = $stmt->fetch();
             if ($post) {
@@ -47,7 +47,7 @@ try {
         }
 
         // Public Action: fetch all published blog posts
-        $stmt = $pdo->query("SELECT * FROM blog_posts WHERE status = 'published' ORDER BY created_at DESC");
+        $stmt = $pdo->query("SELECT * FROM blog_posts WHERE status = 'published' AND (published_at IS NULL OR published_at <= NOW()) ORDER BY COALESCE(published_at, created_at) DESC");
         echo json_encode($stmt->fetchAll());
         exit;
     }
@@ -86,8 +86,9 @@ try {
             $status = $data['status'] ?? 'draft';
             $seoTitle = $data['seo_title'] ?? null;
             $seoDescription = $data['seo_description'] ?? null;
+            $publishedAt = !empty($data['published_at']) ? str_replace('T', ' ', $data['published_at']) : date('Y-m-d H:i:s');
 
-            $stmt = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author, seo_title, seo_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author, seo_title, seo_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data['title'],
                 $data['slug'],
@@ -97,7 +98,8 @@ try {
                 $status,
                 $author,
                 $seoTitle,
-                $seoDescription
+                $seoDescription,
+                $publishedAt
             ]);
 
             echo json_encode(["message" => "Blog post created successfully", "id" => $pdo->lastInsertId()]);
@@ -125,8 +127,9 @@ try {
             $status = $data['status'] ?? 'draft';
             $seoTitle = $data['seo_title'] ?? null;
             $seoDescription = $data['seo_description'] ?? null;
+            $publishedAt = !empty($data['published_at']) ? str_replace('T', ' ', $data['published_at']) : date('Y-m-d H:i:s');
 
-            $stmt = $pdo->prepare("UPDATE blog_posts SET title = ?, slug = ?, summary = ?, content = ?, image_url = ?, status = ?, author = ?, seo_title = ?, seo_description = ? WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE blog_posts SET title = ?, slug = ?, summary = ?, content = ?, image_url = ?, status = ?, author = ?, seo_title = ?, seo_description = ?, published_at = ? WHERE id = ?");
             $stmt->execute([
                 $data['title'],
                 $data['slug'],
@@ -137,6 +140,7 @@ try {
                 $author,
                 $seoTitle,
                 $seoDescription,
+                $publishedAt,
                 $data['id']
             ]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -125,11 +125,24 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [isNotifOpen, setIsNotifOpen]     = useState(false);
   const [liveVisitors, setLiveVisitors]   = useState([]);
+  const maxNotifIdRef = useRef(0);
 
   const fetchNotifs = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/notifications.php`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setNotifications(res.data);
+      const newNotifs = res.data;
+      if (Array.isArray(newNotifs) && newNotifs.length > 0) {
+        const unreadNew = newNotifs.filter(n => !n.is_read && n.id > maxNotifIdRef.current);
+        const maxId = Math.max(...newNotifs.map(n => n.id));
+        if (maxNotifIdRef.current > 0 && unreadNew.length > 0) {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          audio.play().catch(() => {});
+        }
+        if (maxId > maxNotifIdRef.current) {
+          maxNotifIdRef.current = maxId;
+        }
+      }
+      setNotifications(newNotifs);
     } catch (e) { }
   };
 

@@ -128,6 +128,7 @@ export default function Leads() {
   const [liveEnabled,  setLiveEnabled]  = useState(true);
   const scrollRef = useRef();
   const audioRef  = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+  const activeChatStateRef = useRef({ leadId: null, length: 0 });
   const user = parseUser();
 
   /* ─── helpers ──────────────────────────────────────────── */
@@ -149,7 +150,23 @@ export default function Leads() {
     if (!lead) return;
     try {
       const r = await axios.get(`${CONV}?leadId=${lead.id}`);
-      setMessages(Array.isArray(r.data) ? r.data : []);
+      const newMsgs = Array.isArray(r.data) ? r.data : [];
+      
+      if (activeChatStateRef.current.leadId !== lead.id) {
+        activeChatStateRef.current = { leadId: lead.id, length: newMsgs.length };
+      } else {
+        const prevLength = activeChatStateRef.current.length;
+        if (newMsgs.length > prevLength) {
+          const newSlice = newMsgs.slice(prevLength);
+          const hasVisitorMsg = newSlice.some(m => m.sender_type !== 'agent');
+          if (hasVisitorMsg) {
+            audioRef.current.play().catch(() => {});
+          }
+        }
+        activeChatStateRef.current.length = newMsgs.length;
+      }
+      
+      setMessages(newMsgs);
     } catch { /* silent */ }
   };
 
@@ -179,6 +196,12 @@ export default function Leads() {
     fetchMessages(selected);
     const t = setInterval(() => fetchMessages(selected), 2000);
     return () => clearInterval(t);
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (!selected) {
+      activeChatStateRef.current = { leadId: null, length: 0 };
+    }
   }, [selected?.id]);
 
   useEffect(() => {
