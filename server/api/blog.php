@@ -48,124 +48,183 @@ try {
             $pdo->exec("ALTER TABLE blog_posts ADD COLUMN seo_description VARCHAR(500) DEFAULT NULL;");
         }
 
-        // 4. Seed the 5 scheduled blog posts if they do not exist
-        $scheduledPosts = [
-            [
-                'title' => 'Welcome to BeeChat: The Future of Customer Support',
-                'slug' => 'welcome-to-beechat-future-of-support',
-                'summary' => 'Discover how BeeChat is transforming customer interactions with ultra-fast AI-powered messaging and custom honey-sweet widget colonies.',
-                'content' => '<h1>Welcome to the Hive!</h1><p>Customer support has entered a new era. Today, businesses can no longer afford to keep customers waiting. With BeeChat, we have designed a customer communication platform that operates with the intelligence and speed of a tightly synchronized bee colony.</p><h3>Why BeeChat?</h3><p>Unlike generic widgets, BeeChat relies on dynamic, lightweight, glassmorphic designs and neural language models that learn your website content in seconds. It syncs with your documentation, FAQ sheets, and raw text files to provide helpful answers instantly, freeing up human agents for high-value client needs.</p><h3>Key Features of the Colony</h3><ul><li><strong>Honey-Fast AI:</strong> Average AI responses load in under 0.3 seconds.</li><li><strong>Hex Flow Dashboard:</strong> A modular dashboard built for support agent speed and oversight.</li><li><strong>Queen Oversight:</strong> Support admins can jump into any live chat dynamically with zero interruption.</li></ul><p>We are excited to help you scale your digital cells. Join the hive and watch your conversion rates fly!</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'Queen Bee',
-                'seo_title' => 'Welcome to BeeChat: The Future of Customer Support',
-                'seo_description' => 'Discover how BeeChat is transforming customer interactions with ultra-fast AI-powered messaging.',
-                'published_at' => '2026-05-21 11:00:00'
-            ],
-            [
-                'title' => 'How AI Chatbots Can Boost Your Sales Conversion',
-                'slug' => 'boost-sales-conversion-ai-chatbots',
-                'summary' => 'Learn the strategic insights behind deploying instant AI agents to qualify visitors, capture leads, and automate 24/7 engagement.',
-                'content' => '<h1>Boost Your Sales Conversion Rates</h1><p>Modern internet visitors have extremely short attention spans. If a visitor lands on your page and cannot find answers to their pricing or configuration questions within 10 seconds, they will leave for a competitor.</p><h3>24/7 Engagement</h3><p>An AI agent never goes to sleep. By qualifying leads automatically at 2:00 AM, capturing email addresses, and scheduling call-backs, you keep your customer pipeline full without keeping your staff awake.</p><h3>The Power of Instant Support</h3><p>According to recent industry studies, responding to a lead within 5 minutes increases the chance of qualification by over 400%. BeeChat helps you meet this standard automatically with custom AI flows and offline ticketing capabilities.</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1531747118685-ca8fa6e08806?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'Drone Commander',
-                'seo_title' => 'How AI Chatbots Can Boost Your Sales Conversion',
-                'seo_description' => 'Learn the strategic insights behind deploying instant AI agents to capture leads and qualify visitors.',
-                'published_at' => '2026-05-21 11:00:00'
-            ],
-            [
-                'title' => 'Tips for Configuring Your Customer Support Dashboard',
-                'slug' => 'tips-configuring-customer-support-dashboard',
-                'summary' => 'Streamline agent workflow, organize teams, and configure system rules to maximize your platform performance.',
-                'content' => '<h1>Configuring Your Hive for Maximum Performance</h1><p>An organized team is an efficient team. Here are our top three tips for configuring your BeeChat dashboard to ensure your agents resolve tickets in record time:</p><ol><li><strong>Define Clear AI Rule Overrides:</strong> Teach your AI bot what topics it should answer and when to handover to a live human agent.</li><li><strong>Custom Brand Your Widget:</strong> Set the hex color codes and bot avatars to match your brand identity perfectly.</li><li><strong>Set Up Notifications:</strong> Enable browser sounds and email push updates so you are notified immediately when a premium lead requests support.</li></ol>',
-                'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'Hive Architect',
-                'seo_title' => 'Tips for Configuring Your Customer Support Dashboard',
-                'seo_description' => 'Streamline agent workflow, organize teams, and configure system rules to maximize your platform performance.',
-                'published_at' => '2026-05-21 11:00:00'
-            ],
-            [
-                'title' => 'Leveraging Live Chat for SaaS Growth: A Comprehensive Guide',
-                'slug' => 'leveraging-live-chat-saas-growth',
-                'summary' => 'Learn how modern SaaS platforms use live chat systems to capture leads, onboard users, and reduce customer churn through instant in-app support.',
-                'content' => '<h1>Leveraging Live Chat for SaaS Growth</h1><p>For modern software-as-a-service (SaaS) companies, customer acquisition is only half the battle. To build a sustainable, recurring revenue model, you must onboard users smoothly and minimize churn. Live chat has emerged as a cornerstone of growth, serving as a direct line of communication during crucial user moments.</p><h3>1. Capturing High-Intent Leads</h3><p>When a prospect is browsing your pricing page, they are demonstrating high intent. If they have a question about security certifications, custom plans, or integrations, any delay in answering can cost you the sale. Live chat allows you to engage these prospects in real-time, handling objections instantly and guiding them to sign up.</p><h3>2. Streamlining User Onboarding</h3><p>The first 24 hours of a trial are critical. If a user gets stuck setting up your tool, they will likely abandon it. By placing a chat widget inside your product dashboard, you give users immediate access to support. In-app chat helps you walk users through the configuration, ensuring they experience the "Aha!" moment quickly.</p><h3>3. Reducing Customer Churn</h3><p>Customer churn is the silent killer of SaaS businesses. Often, users churn because they feel ignored or encounter technical friction they cannot easily resolve. An proactive live chat system helps you identify frustrated users, resolve their issues immediately, and turn a negative experience into a loyalty-building moment.</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'SaaS Growth Advisor',
-                'seo_title' => 'Live Chat for SaaS: Increase Growth & Onboarding Rates',
-                'seo_description' => 'Discover how SaaS companies leverage live chat to improve user onboarding, boost conversions, and prevent customer churn. Read the ultimate SaaS chat guide.',
-                'published_at' => '2026-06-15 09:00:00'
-            ],
-            [
-                'title' => 'The Rise of AI Chatbots in Customer Support: Balancing Automation and Human Touch',
-                'slug' => 'ai-chatbots-customer-support-balance-automation',
-                'summary' => 'Find the sweet spot between automated instant responses and empathetic human agents in your customer service pipeline.',
-                'content' => '<h1>AI Chatbots in Customer Support: The Perfect Balance</h1><p>Artificial Intelligence is transforming customer service at an unprecedented rate. AI chatbots can handle thousands of concurrent conversations, reply in milliseconds, and operate 24/7. However, technology cannot fully replace the empathy and complex problem-solving abilities of human support professionals.</p><h3>The Power of AI Automation</h3><p>AI bots excel at answering routine, repetitive queries. Whether it is tracking a shipment, resetting a password, or explaining a basic pricing tier, AI can resolve these questions instantly. This self-service automation keeps your support queue clear, letting your human agents focus on complex, high-value customer inquiries.</p><h3>When the Human Touch is Essential</h3><p>For sensitive issues, billing disputes, or highly frustrated customers, empathy is paramount. A human agent can read between the lines, express genuine concern, and devise creative solutions that a chatbot cannot. A successful support strategy does not replace humans with AI; it uses AI to empower humans.</p><h3>Building a Hybrid Colony Flow</h3><ul><li><strong>Instant Handover:</strong> Build clear rules that allow the AI to immediately transfer a chat to a human agent when requested.</li><li><strong>Agent Co-Pilot:</strong> Use AI to suggest drafts and search your internal knowledge base for agents while they chat with clients.</li><li><strong>Sentiment Detection:</strong> Train your AI to recognize frustration or urgency and automatically flag those chats for immediate human intervention.</li></ul>',
-                'image_url' => 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'AI Integration Lead',
-                'seo_title' => 'AI Chatbots vs Human Support: Finding the Perfect Balance',
-                'seo_description' => 'How can businesses balance AI automation with human empathy? Explore strategies to build hybrid customer support systems using AI chat agents.',
-                'published_at' => '2026-07-15 09:00:00'
-            ],
-            [
-                'title' => 'Maximizing SEO Value with an Integrated Business Blog',
-                'slug' => 'maximizing-seo-value-integrated-business-blog',
-                'summary' => 'Learn how publishing content directly on your product site drives organic search traffic, boosts authority, and generates quality inbound sales leads.',
-                'content' => '<h1>Maximizing SEO Value with an Integrated Business Blog</h1><p>Search Engine Optimization (SEO) is one of the most cost-effective strategies for long-term business growth. While paid advertising stops generating leads the moment you stop paying, high-quality blog content continues to attract organic search traffic for months or even years after publication.</p><h3>1. Targeting Long-Tail Keywords</h3><p>Most customers do not search for brand names; they search for solutions to their problems. An integrated business blog allows you to create dedicated articles targeting specific questions, long-tail keywords, and industry topics. By providing the best answers to these queries, you position your brand as the leading authority in your space.</p><h3>2. Building Domain Authority</h3><p>Search engines rank websites based on authority and relevance. When you regularly publish informative, well-structured articles, other websites are more likely to reference and link back to your content. These backlinks signal to search engines that your site is trustworthy, boosting the search rankings of your entire domain, including your product pages.</p><h3>3. Driving Inbound Lead Conversions</h3><p>Every blog post is an opportunity to convert readers into leads. By placing subtle call-to-actions (CTAs) within your articles—such as signing up for a newsletter, downloading a free guide, or starting a free trial of your software—you capitalize on the high-quality traffic entering your site.</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'SEO Strategist',
-                'seo_title' => 'How a Business Blog Boosts SEO & Leads | BeeChat Guide',
-                'seo_description' => 'Read how an integrated business blog can drive targeted traffic to your product, build search relevance, and turn readers into customers.',
-                'published_at' => '2026-08-15 09:00:00'
-            ],
-            [
-                'title' => 'Designing the Perfect Customer Support Widget for Mobile Users',
-                'slug' => 'designing-perfect-customer-support-widget-mobile',
-                'summary' => 'With over 50% of web traffic coming from mobile, check out the top UX design principles for building lightweight, responsive, mobile-first support widgets.',
-                'content' => '<h1>Designing the Perfect Chat Widget for Mobile Users</h1><p>Mobile web traffic now accounts for more than half of all global internet usage. Yet, many customer support widgets are designed primarily for desktop viewports, leading to frustrating mobile experiences. A poorly designed mobile chat widget can block content, slow down pages, or be impossible to close.</p><h3>1. Screen Real Estate and Placement</h3><p>On desktop, a chat widget takes up a tiny corner of the screen. On mobile, space is at a premium. Your widget launcher should be small enough not to block important call-to-action buttons. When clicked, the chat window should expand to a full-screen or slide-up overlay that is easy to navigate and simple to minimize.</p><h3>2. Tactile Touch Targets</h3><p>Fingers are less precise than mouse cursors. Ensure that all interactive elements—especially close buttons, send buttons, and attachment icons—have a touch target of at least 48x48 pixels. Spacing out elements prevents accidental clicks and reduces user frustration.</p><h3>3. Speed and Performance Optimization</h3><p>Mobile users are frequently on slower cellular networks. A heavy chat widget script can delay page load times, negatively impacting your site\'s bounce rate and SEO. Optimize your widget by lazy loading scripts, compressing assets, and minimizing DOM complexity to keep page speeds lightning-fast.</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'Mobile UX Designer',
-                'seo_title' => 'Mobile-First Chat Widget Design: Best Practices for Mobile UX',
-                'seo_description' => 'Learn how to optimize your customer support widget for mobile users. Review mobile UX design tips, viewport adjustments, and speed optimization techniques.',
-                'published_at' => '2026-09-15 09:00:00'
-            ],
-            [
-                'title' => 'How to Build a High-Converting FAQ and Knowledge Base System',
-                'slug' => 'build-high-converting-faq-knowledge-base',
-                'summary' => 'Self-service support is a powerful tool. Learn how to structure your knowledge base to resolve customer queries before they contact your team.',
-                'content' => '<h1>How to Build a High-Converting Knowledge Base</h1><p>Most customers prefer to find answers on their own rather than wait for a support agent. A well-organized knowledge base and FAQ system not only improves customer satisfaction but also drastically reduces the load on your support team by diverting common tickets.</p><h3>1. Structure and Category Hierarchy</h3><p>Organize your articles in a logical, shallow hierarchy. Use broad categories like "Getting Started", "Billing", or "Integrations", and limit sub-categories to prevent users from getting lost. Ensure a robust search bar is prominently displayed at the top of your help center page.</p><h3>2. Write Clear, Action-Oriented Articles</h3><p>Keep your content concise, structured, and easy to read. Use step-by-step numbered lists, bold text for key interface elements, and include screenshots or short screen recordings to guide the user visually. Avoid jargon and write in a friendly, helpful tone.</p><h3>3. Turn Self-Service into Conversions</h3><p>A help center is also part of your sales funnel. If a visitor is reading about how your integrations work, they are evaluating your software. Add links to relevant blog posts or your main landing pages, and make it easy to start a live chat session directly from the help center if they need further assistance.</p>',
-                'image_url' => 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop&q=60',
-                'status' => 'published',
-                'author' => 'Help Desk Strategist',
-                'seo_title' => 'Knowledge Base Best Practices: Building a Help Desk FAQ',
-                'seo_description' => 'Discover how to build a high-converting knowledge base and FAQ section to enable customer self-service support and reduce support ticket load.',
-                'published_at' => '2026-10-15 09:00:00'
-            ]
-        ];
+        // 4. Programmatically generate and seed 52 blog posts (one for each week across ~12 months)
+        $totalCount = $pdo->query("SELECT COUNT(*) FROM blog_posts")->fetchColumn();
+        if ($totalCount < 50) {
+            $topics = [
+                ["title" => "10 Ways to Reduce Support Tickets with AI Chatbots", "category" => "AI & Automation", "slug" => "reduce-support-tickets-ai-chatbots", "image_index" => 0, "author" => "Queen Bee"],
+                ["title" => "Why Empathy Still Matters in the Age of Automated Support", "category" => "Customer Experience", "slug" => "empathy-matters-automated-support", "image_index" => 1, "author" => "Queen Bee"],
+                ["title" => "The Ultimate Guide to Live Chat Widget Customization", "category" => "Widget Customization", "slug" => "guide-live-chat-widget-customization", "image_index" => 2, "author" => "Hive Architect"],
+                ["title" => "How to Set Up Automated Lead Scoring Using Chat Interactions", "category" => "SaaS & Growth", "slug" => "automated-lead-scoring-chat-interactions", "image_index" => 3, "author" => "SaaS Growth Advisor"],
+                ["title" => "Unlocking SaaS Growth: The Power of In-App Messaging", "category" => "SaaS & Growth", "slug" => "unlocking-saas-growth-in-app-messaging", "image_index" => 4, "author" => "SaaS Growth Advisor"],
+                ["title" => "Best Practices for Training Your AI Chatbot with Custom Data", "category" => "AI & Automation", "slug" => "practices-training-ai-chatbot-custom-data", "image_index" => 5, "author" => "AI Integration Lead"],
+                ["title" => "How to Minimize Customer Churn Using Proactive Support", "category" => "Customer Experience", "slug" => "minimize-customer-churn-proactive-support", "image_index" => 6, "author" => "Queen Bee"],
+                ["title" => "A Guide to HIPAA and GDPR Compliance for Modern Live Chat", "category" => "Security & Technology", "slug" => "guide-hipaa-gdpr-compliance-live-chat", "image_index" => 7, "author" => "Hive Architect"],
+                ["title" => "Structuring Your Help Center for Maximum Customer Self-Service", "category" => "Tips & Best Practices", "slug" => "structuring-help-center-customer-self-service", "image_index" => 8, "author" => "Help Desk Strategist"],
+                ["title" => "The Role of Live Chat in E-commerce Checkout Optimization", "category" => "SaaS & Growth", "slug" => "role-live-chat-ecommerce-checkout-optimization", "image_index" => 9, "author" => "SaaS Growth Advisor"],
+                ["title" => "Setting Up Multi-Tenant Support Systems: A SaaS Playbook", "category" => "Security & Technology", "slug" => "setting-up-multi-tenant-support-systems", "image_index" => 0, "author" => "Hive Architect"],
+                ["title" => "How to Write the Perfect Chat Greeting to Boost Engagement", "category" => "Customer Experience", "slug" => "write-perfect-chat-greeting-boost-engagement", "image_index" => 1, "author" => "Queen Bee"],
+                ["title" => "Top Metrics Every Support Manager Needs to Track Daily", "category" => "Tips & Best Practices", "slug" => "top-metrics-support-manager-track-daily", "image_index" => 2, "author" => "Help Desk Strategist"],
+                ["title" => "Balancing AI Co-Pilots and Human Support Agents", "category" => "AI & Automation", "slug" => "balancing-ai-copilots-human-support-agents", "image_index" => 3, "author" => "AI Integration Lead"],
+                ["title" => "Designing Beautiful, Glassmorphic Chat Widgets for Modern Sites", "category" => "Widget Customization", "slug" => "designing-glassmorphic-chat-widgets-modern-sites", "image_index" => 4, "author" => "Mobile UX Designer"],
+                ["title" => "How BeeChat Fast AI Achieves Sub-300ms Response Times", "category" => "Security & Technology", "slug" => "beechat-fast-ai-achieves-sub-300ms-response", "image_index" => 5, "author" => "AI Integration Lead"],
+                ["title" => "The Psychology of Color in Customer Support Chat Widgets", "category" => "Widget Customization", "slug" => "psychology-color-customer-support-chat-widgets", "image_index" => 6, "author" => "Mobile UX Designer"],
+                ["title" => "Drafting the Perfect Auto-Responder for Out-of-Office Hours", "category" => "Tips & Best Practices", "slug" => "drafting-auto-responder-out-of-office-hours", "image_index" => 7, "author" => "Help Desk Strategist"],
+                ["title" => "How Real-Time Visitor Tracking Transforms Sales Pipeline Speed", "category" => "SaaS & Growth", "slug" => "real-time-visitor-tracking-sales-pipeline-speed", "image_index" => 8, "author" => "SaaS Growth Advisor"],
+                ["title" => "A Deep Dive into Socket.IO: Scaling Live Chat Connections", "category" => "Security & Technology", "slug" => "deep-dive-socketio-scaling-live-chat", "image_index" => 9, "author" => "Hive Architect"],
+                ["title" => "Building a Seamless Omni-Channel Support Queue for Support Teams", "category" => "Tips & Best Practices", "slug" => "building-seamless-omnichannel-support-queue", "image_index" => 0, "author" => "Help Desk Strategist"],
+                ["title" => "Why Mobile-First Chat Widgets Are Essential for Modern SaaS", "category" => "Widget Customization", "slug" => "why-mobile-first-chat-widgets-essential-saas", "image_index" => 1, "author" => "Mobile UX Designer"],
+                ["title" => "How to Deal with Frustrated Customers Over Live Chat", "category" => "Customer Experience", "slug" => "deal-with-frustrated-customers-live-chat", "image_index" => 2, "author" => "Queen Bee"],
+                ["title" => "Creating a Customer-Centric Culture in Remote Support Teams", "category" => "Tips & Best Practices", "slug" => "creating-customer-centric-culture-remote-support", "image_index" => 3, "author" => "Help Desk Strategist"],
+                ["title" => "Using Live Chat to Onboard New SaaS Users and Improve Retention", "category" => "SaaS & Growth", "slug" => "live-chat-onboard-new-saas-users-retention", "image_index" => 4, "author" => "SaaS Growth Advisor"],
+                ["title" => "The Benefits of Canned Responses and How to Use Them Wisely", "category" => "Tips & Best Practices", "slug" => "benefits-canned-responses-how-to-use-wisely", "image_index" => 5, "author" => "Help Desk Strategist"],
+                ["title" => "An Introduction to Chatbot NLP and Understanding Intent", "category" => "AI & Automation", "slug" => "introduction-chatbot-nlp-understanding-intent", "image_index" => 6, "author" => "AI Integration Lead"],
+                ["title" => "How to Integrate Live Chat with Your CRM for Seamless Sales Leads", "category" => "SaaS & Growth", "slug" => "integrate-live-chat-crm-seamless-sales-leads", "image_index" => 7, "author" => "SaaS Growth Advisor"],
+                ["title" => "Securing Customer Data: Best Practices for Live Chat Platforms", "category" => "Security & Technology", "slug" => "securing-customer-data-live-chat-platforms", "image_index" => 8, "author" => "Hive Architect"],
+                ["title" => "How Custom Bot Avatars Build Trust and Brand Identity", "category" => "Widget Customization", "slug" => "how-custom-bot-avatars-build-trust-brand", "image_index" => 9, "author" => "Mobile UX Designer"],
+                ["title" => "The Impact of Fast Support on Customer Lifetime Value (LTV)", "category" => "Customer Experience", "slug" => "impact-fast-support-customer-lifetime-value", "image_index" => 0, "author" => "Queen Bee"],
+                ["title" => "Strategies for Running a 24/7 Support Desk on a Budget", "category" => "Tips & Best Practices", "slug" => "strategies-running-247-support-desk-budget", "image_index" => 1, "author" => "Help Desk Strategist"],
+                ["title" => "Converting Anonymous Web Traffic into Premium Qualified Leads", "category" => "SaaS & Growth", "slug" => "converting-anonymous-web-traffic-premium-leads", "image_index" => 2, "author" => "SaaS Growth Advisor"],
+                ["title" => "Creating Interactive Feedback Surveys Post-Chat Session", "category" => "Customer Experience", "slug" => "creating-interactive-feedback-surveys-post-chat", "image_index" => 3, "author" => "Queen Bee"],
+                ["title" => "How to Maximize Organic SEO Traffic with an Integrated Blog", "category" => "SaaS & Growth", "slug" => "maximize-organic-seo-traffic-integrated-blog", "image_index" => 4, "author" => "SEO Strategist"],
+                ["title" => "Handling Support Peak Hours: Tips for Hive Managers", "category" => "Tips & Best Practices", "slug" => "handling-support-peak-hours-hive-managers", "image_index" => 5, "author" => "Help Desk Strategist"],
+                ["title" => "Why Real-Time Chat is Replacing Traditional Email Helpdesks", "category" => "Customer Experience", "slug" => "why-realtime-chat-replacing-traditional-email", "image_index" => 6, "author" => "Queen Bee"],
+                ["title" => "A Guide to Setting Up Escalation Rules for Support Tickets", "category" => "Tips & Best Practices", "slug" => "guide-setting-up-escalation-rules-support", "image_index" => 7, "author" => "Help Desk Strategist"],
+                ["title" => "Building an Internal Knowledge Base for Support Agent Training", "category" => "Tips & Best Practices", "slug" => "building-internal-knowledge-base-agent-training", "image_index" => 8, "author" => "Help Desk Strategist"],
+                ["title" => "How Localizing Chat Widgets Boosts Global Customer Satisfaction", "category" => "Widget Customization", "slug" => "how-localizing-chat-widgets-boosts-satisfaction", "image_index" => 9, "author" => "Mobile UX Designer"],
+                ["title" => "Why Fast Live Chat Response Times are Crucial for E-commerce", "category" => "Customer Experience", "slug" => "why-fast-live-chat-response-crucial-ecommerce", "image_index" => 0, "author" => "Queen Bee"],
+                ["title" => "Using AI to Automatically Classify and Route Incoming Chat Sessions", "category" => "AI & Automation", "slug" => "using-ai-classify-route-incoming-chat-sessions", "image_index" => 1, "author" => "AI Integration Lead"],
+                ["title" => "How BeeChat Widget Colonies Segment Customer Queries Instantly", "category" => "Widget Customization", "slug" => "beechat-widget-colonies-segment-queries-instantly", "image_index" => 2, "author" => "Hive Architect"],
+                ["title" => "Understanding the Customer Journey via Chat Analytics", "category" => "SaaS & Growth", "slug" => "understanding-customer-journey-chat-analytics", "image_index" => 3, "author" => "SaaS Growth Advisor"],
+                ["title" => "The Future of AI Agents: What to Expect in the Next 5 Years", "category" => "AI & Automation", "slug" => "future-ai-agents-expect-next-5-years", "image_index" => 4, "author" => "AI Integration Lead"],
+                ["title" => "How to Write Engaging Follow-Up Emails After a Chat Session", "category" => "Customer Experience", "slug" => "write-engaging-followup-emails-after-chat", "image_index" => 5, "author" => "Queen Bee"],
+                ["title" => "Preventing Spam and Abuse in Public Live Chat Widgets", "category" => "Security & Technology", "slug" => "preventing-spam-abuse-public-live-chat-widgets", "image_index" => 6, "author" => "Hive Architect"],
+                ["title" => "A Checklist for Migrating to a Modern Live Chat Platform", "category" => "Tips & Best Practices", "slug" => "checklist-migrating-modern-live-chat-platform", "image_index" => 7, "author" => "Help Desk Strategist"],
+                ["title" => "How to Train Agents on Active Listening in Written Chat", "category" => "Tips & Best Practices", "slug" => "train-agents-active-listening-written-chat", "image_index" => 8, "author" => "Help Desk Strategist"],
+                ["title" => "The Importance of SLA Management in Enterprise Support", "category" => "Tips & Best Practices", "slug" => "importance-sla-management-enterprise-support", "image_index" => 9, "author" => "Help Desk Strategist"],
+                ["title" => "How to Use Co-Browsing to Solve Complex Technical Tickets", "category" => "Security & Technology", "slug" => "use-cobrowsing-solve-complex-technical-tickets", "image_index" => 0, "author" => "Hive Architect"],
+                ["title" => "Unifying Live Chat and Knowledge Base for Smart Self-Service", "category" => "AI & Automation", "slug" => "unifying-live-chat-knowledge-base-self-service", "image_index" => 1, "author" => "AI Integration Lead"]
+            ];
 
-        $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM blog_posts WHERE slug = ?");
-        $stmtInsert = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author, seo_title, seo_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $unsplashImages = [
+                "https://images.unsplash.com/photo-1531747118685-ca8fa6e08806?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=60",
+                "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&auto=format&fit=crop&q=60"
+            ];
 
-        foreach ($scheduledPosts as $post) {
-            $stmtCheck->execute([$post['slug']]);
-            if ($stmtCheck->fetchColumn() == 0) {
-                $stmtInsert->execute([
-                    $post['title'],
-                    $post['slug'],
-                    $post['summary'],
-                    $post['content'],
-                    $post['image_url'],
-                    $post['status'],
-                    $post['author'],
-                    $post['seo_title'],
-                    $post['seo_description'],
-                    $post['published_at']
-                ]);
+            $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM blog_posts WHERE slug = ?");
+            $stmtInsert = $pdo->prepare("INSERT INTO blog_posts (title, slug, summary, content, image_url, status, author, seo_title, seo_description, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            for ($i = 0; $i < count($topics); $i++) {
+                $t = $topics[$i];
+                $title = $t['title'];
+                $category = $t['category'];
+                $slug = $t['slug'];
+                $author = $t['author'];
+                $image_url = $unsplashImages[$t['image_index']];
+                
+                // Distribute date exactly 1 week (7 days) apart relative to current date (May 22, 2026)
+                // 26 in the past, 26 in the future
+                if ($i < 26) {
+                    $weeksAgo = 26 - $i;
+                    $published_at = date('Y-m-d H:i:s', strtotime("-" . $weeksAgo . " weeks - " . ($i % 24) . " hours - " . ($i * 7 % 60) . " minutes"));
+                } else {
+                    $weeksAhead = $i - 26;
+                    $published_at = date('Y-m-d H:i:s', strtotime("+" . $weeksAhead . " weeks + 2 days + " . ($i % 24) . " hours + " . ($i * 7 % 60) . " minutes"));
+                }
+                
+                $summary = "Explore standard practices for '{$title}' in this expert guide. Learn how to optimize your {$category} workflows to grow your platform and drive more organic business value with BeeChat.";
+                
+                $seo_title = $title . " | BeeChat Blog";
+                $seo_description = substr("Read our definitive guide on {$title}. Learn strategies, UX frameworks, and integration tips from the BeeChat team to boost performance.", 0, 155);
+                
+                $content = "<h1>{$title}</h1>";
+                $content .= "<p>In modern web applications and SaaS business models, customer interaction plays a vital role. When we discuss <strong>{$title}</strong>, we are addressing a critical component of customer acquisition and satisfaction. Leveraging modern live chat systems allows businesses to bridge the gap between their services and customer expectations.</p>";
+                
+                if ($category === "AI & Automation") {
+                    $content .= "<h3>Why AI and Automation are Transforming Support</h3>";
+                    $content .= "<p>Deploying smart artificial intelligence allows your business to scale operations without exponentially increasing human overhead. A system that trains on FAQ documentation can resolve user concerns in milliseconds.</p>";
+                    $content .= "<ul>";
+                    $content .= "<li><strong>Instant Answers:</strong> Average bot response times are sub-0.5 seconds, satisfying immediate user expectations.</li>";
+                    $content .= "<li><strong>24/7 Support Coverage:</strong> Capture leads and qualify prospects at 2:00 AM without keeping your staff awake.</li>";
+                    $content .= "<li><strong>Intelligent Query Classification:</strong> Automatically route technical bugs to developers and billing issues to accounting.</li>";
+                    $content .= "</ul>";
+                    $content .= "<h3>Finding the Sweet Spot</h3>";
+                    $content .= "<p>While automation handles the high volume of repetitive questions, human empathy remains irreplaceable for complex, high-value negotiations or billing disputes. Maintaining a seamless handover process is key.</p>";
+                } else if ($category === "Customer Experience") {
+                    $content .= "<h3>Designing for User Experience & Delight</h3>";
+                    $content .= "<p>Customer experience is the sum of every touchpoint a user has with your brand. Implementing live chat gives users immediate access to support exactly when they need it, creating a positive emotional association with your platform.</p>";
+                    $content .= "<ol>";
+                    $content .= "<li><strong>Acknowledge Instantly:</strong> Send a quick welcome message to assure the customer their query was received.</li>";
+                    $content .= "<li><strong>Use Empathy-Driven Copy:</strong> Adopt a friendly, helpful, and concise tone in all interactions.</li>";
+                    $content .= "<li><strong>Collect Post-Chat Feedback:</strong> Allow users to rate their experience so you can continuously iterate and improve.</li>";
+                    $content .= "</ol>";
+                    $content .= "<h3>Setting Up Notification Alerts</h3>";
+                    $content .= "<p>Never let a message sit unreplied. Configuring clear desktop audio notifications and email fallbacks ensures that agents are ready to engage the moment a visitor strikes up a conversation.</p>";
+                } else if ($category === "SaaS & Growth") {
+                    $content .= "<h3>Driving SaaS Conversions and Retention</h3>";
+                    $content .= "<p>For software-as-a-service (SaaS) applications, user growth relies on smooth onboarding, high-intent lead qualification, and low customer churn. Live chat serves as a powerful funnel tool across all stages of the customer journey.</p>";
+                    $content .= "<h3>1. Pricing Page Lead Capture</h3>";
+                    $content .= "<p>When visitors land on your pricing page, they are demonstrating high purchase intent. If they have custom integration questions, answering them live can instantly secure a subscription signup.</p>";
+                    $content .= "<h3>2. Dashboard User Onboarding</h3>";
+                    $content .= "<p>The first few hours after registering are critical. Help new users configure their dashboards, set up system settings, and experience their 'Aha!' moment in record time by offering contextual help right inside the app.</p>";
+                    $content .= "<h3>3. Retention & Reducing Churn</h3>";
+                    $content .= "<p>Proactively reaching out to users who experience errors or spend an unusually long time on configuration tasks can help you resolve friction before they decide to cancel.</p>";
+                } else if ($category === "Widget Customization") {
+                    $content .= "<h3>The Power of Widget Customization and Branding</h3>";
+                    $content .= "<p>A customer support widget shouldn't look like an afterthought. It should feel like an organic extension of your website. By matching color palettes, fonts, and brand avatars, you increase user trust and engagement rates.</p>";
+                    $content .= "<ul>";
+                    $content .= "<li><strong>Consistent Theme:</strong> Set widget brand colors to match your site's primary and secondary accent colors.</li>";
+                    $content .= "<li><strong>Avatars & Names:</strong> Personalize the chat interface with actual agent pictures or custom illustrations.</li>";
+                    $content .= "<li><strong>Glassmorphic Style:</strong> Apply modern CSS visual effects like backdrop-blur and subtle shadows for a premium, sleek look.</li>";
+                    $content .= "</ul>";
+                    $content .= "<h3>Optimizing for Mobile Devices</h3>";
+                    $content .= "<p>Ensure the widget launcher is small enough on mobile viewports so it doesn't block crucial CTA buttons or navigation menus. When active, it should expand to a clean, tactile overlay.</p>";
+                } else if ($category === "Security & Technology") {
+                    $content .= "<h3>Scaling Infrastructure and Data Security</h3>";
+                    $content .= "<p>Real-time communication demands robust technology. Modern chat frameworks rely on WebSockets and event-driven architectures to deliver messages under 100 milliseconds across the globe.</p>";
+                    $content .= "<h3>Ensuring Compliance & Privacy</h3>";
+                    $content .= "<p>Handling customer data comes with significant responsibility. Implement industry standards to protect user privacy and comply with global regulations:</p>";
+                    $content .= "<ul>";
+                    $content .= "<li><strong>Data Encryption:</strong> Encrypt all communications in transit using TLS/SSL and encrypt sensitive info at rest.</li>";
+                    $content .= "<li><strong>JWT Authentication:</strong> Secure admin routes and dashboard endpoints using JSON Web Tokens with strict expiration checks.</li>";
+                    $content .= "<li><strong>Sanitized Content:</strong> Sanitize all message payloads to prevent cross-site scripting (XSS) and SQL injection vectors.</li>";
+                    $content .= "</ul>";
+                } else { // Tips & Best Practices
+                    $content .= "<h3>Core Strategies for Support Excellence</h3>";
+                    $content .= "<p>Operational excellence is built on consistent habits, team organization, and clear performance targets. Adopt these rules of thumb to streamline your team's support workflows:</p>";
+                    $content .= "<ul>";
+                    $content .= "<li><strong>Develop Smart Canned Responses:</strong> Save answers to repetitive queries to respond in seconds, but customize them before sending.</li>";
+                    $content .= "<li><strong>Establish SLA Targets:</strong> Define targets for first-response times and resolution times to maintain quality standards.</li>";
+                    $content .= "</ul>";
+                    $content .= "<h3>Continuously Audit Documentation</h3>";
+                    $content .= "<p>Regularly review help center articles to ensure they reflect current product features. An accurate self-service library deflects tickets and improves agent productivity.</p>";
+                }
+                
+                $content .= "<h3>Conclusion</h3><p>Applying best practices to <strong>{$title}</strong> will transform your support operation into a growth driver. By combining smart technology like BeeChat with human-centric support design, you create experiences that turn visitors into loyal customers.</p>";
+
+                $stmtCheck->execute([$slug]);
+                if ($stmtCheck->fetchColumn() == 0) {
+                    $stmtInsert->execute([
+                        $title,
+                        $slug,
+                        $summary,
+                        $content,
+                        $image_url,
+                        'published',
+                        $author,
+                        $seo_title,
+                        $seo_description,
+                        $published_at
+                    ]);
+                }
             }
         }
     } catch (Exception $schemaEx) {

@@ -273,6 +273,7 @@ function App() {
               <Route path="/ticket/:trackingId" element={<TicketTracking />} />
               <Route path="/widget" element={<div className="h-screen overflow-hidden bg-transparent"><ChatWidget apiKey={new URLSearchParams(window.location.search).get('apiKey')} /></div>} />
               <Route path="/integrations" element={<Integrations />} />
+              <Route path="/blog/:postSlug" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
             </Routes>
           </Router>

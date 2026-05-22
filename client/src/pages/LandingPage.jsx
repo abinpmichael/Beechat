@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import { 
   MessageSquare, Bot, Zap, Shield, Users, BarChart3, 
@@ -962,6 +963,8 @@ const BlogSection = ({ posts, onPostClick }) => {
 };
 
 const LandingPage = () => {
+  const { postSlug } = useParams();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [platformSettings, setPlatformSettings] = useState({});
   const [blogPosts, setBlogPosts] = useState([]);
@@ -992,20 +995,24 @@ const LandingPage = () => {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const postSlug = params.get('post');
-    if (postSlug) {
-      axios.get(`${API_BASE_URL}/blog.php?slug=${postSlug}`)
+    const slug = postSlug || new URLSearchParams(window.location.search).get('post');
+    if (slug) {
+      axios.get(`${API_BASE_URL}/blog.php?slug=${slug}`)
         .then(res => {
           if (res.data) {
             setActivePost(res.data);
+          } else {
+            setActivePost(null);
           }
         })
         .catch(err => {
           console.error("Failed to fetch deep-linked post:", err);
+          setActivePost(null);
         });
+    } else {
+      setActivePost(null);
     }
-  }, []);
+  }, [postSlug]);
 
   useEffect(() => {
     if (activePost) {
@@ -1040,16 +1047,12 @@ const LandingPage = () => {
 
   const handleClosePost = () => {
     setActivePost(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete('post');
-    window.history.pushState({}, '', url.pathname + url.search);
+    navigate('/');
   };
 
   const handleOpenPost = (post) => {
     setActivePost(post);
-    const url = new URL(window.location.href);
-    url.searchParams.set('post', post.slug);
-    window.history.pushState({}, '', url.pathname + url.search);
+    navigate(`/blog/${post.slug}`);
   };
 
   return (

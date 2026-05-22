@@ -26,5 +26,22 @@ foreach ($pages as $path => $priority) {
     echo "  </url>\n";
 }
 
+// Fetch published blog posts
+try {
+    $stmt = $pdo->query("SELECT slug, COALESCE(published_at, created_at) AS lastmod_val FROM blog_posts WHERE status = 'published' AND (published_at IS NULL OR published_at <= NOW()) ORDER BY COALESCE(published_at, created_at) DESC");
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($posts as $post) {
+        $lastmod = date('Y-m-d', strtotime($post['lastmod_val']));
+        echo "  <url>\n";
+        echo "    <loc>" . htmlspecialchars($domain . "/blog/" . $post['slug']) . "</loc>\n";
+        echo "    <lastmod>" . $lastmod . "</lastmod>\n";
+        echo "    <changefreq>weekly</changefreq>\n";
+        echo "    <priority>0.7</priority>\n";
+        echo "  </url>\n";
+    }
+} catch (Exception $e) {
+    // Ignore database errors during sitemap generation
+}
+
 echo "</urlset>\n";
 ?>
