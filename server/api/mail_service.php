@@ -84,7 +84,7 @@ class MailService {
             return false;
         }
  
-        require_once 'vendor/autoload.php';
+        require_once __DIR__ . '/vendor/autoload.php';
  
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
         $mail->Timeout = 10; // 10 seconds connection timeout to prevent hanging

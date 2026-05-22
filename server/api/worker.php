@@ -3,8 +3,13 @@
 // This script should be run by a cron job every minute
 // * * * * * php /path/to/server/api/worker.php
 
-require_once 'config.php';
-require_once 'mail_service.php';
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/mail_service.php';
 
 echo "[".date('Y-m-d H:i:s')."] Bee Worker Starting...\n";
 
