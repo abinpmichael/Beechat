@@ -43,15 +43,16 @@ class MailService {
      * This would ideally be called by a cron job every minute.
      */
     public function processQueue($limit = 10) {
-        $stmt = $this->pdo->prepare("SELECT * FROM email_queue WHERE status = 'pending' LIMIT ?");
-        $stmt->execute([$limit]);
+        $limit = (int)$limit;
+        $stmt = $this->pdo->prepare("SELECT * FROM email_queue WHERE status = 'pending' LIMIT $limit");
+        $stmt->execute();
         $emails = $stmt->fetchAll();
-
+ 
         foreach ($emails as $email) {
             $this->sendEmail($email);
         }
     }
-
+ 
     private function sendEmail($emailRecord) {
         $id = $emailRecord['id'];
         $to = $emailRecord['recipient'];
@@ -65,18 +66,19 @@ class MailService {
         while ($row = $stmt->fetch()) {
             $settings[$row['setting_key']] = $row['setting_value'];
         }
-
+ 
         $host = $settings['smtp_host'] ?? 'smtp.example.com';
         $port = (int)($settings['smtp_port'] ?? 587);
         $user = $settings['smtp_user'] ?? 'user';
         $pass = $settings['smtp_pass'] ?? 'pass';
         $fromEmail = $settings['smtp_from_email'] ?? 'noreply@beechat.pro';
         $fromName  = $settings['smtp_from_name']  ?? 'Bee Chat Support';
-
+ 
         require_once 'vendor/autoload.php';
-
+ 
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
+        $mail->Timeout = 10; // 10 seconds connection timeout to prevent hanging
+ 
         try {
             // Server settings
             $mail->isSMTP();
@@ -86,17 +88,17 @@ class MailService {
             $mail->Password   = $pass;
             $mail->SMTPSecure = ($port === 465) ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $port;
-
+ 
             // Recipients
             $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($to);
-
+ 
             // Content
             $mail->isHTML(true);
             $mail->Subject = $subject;
             $mail->Body    = nl2br($message);
             $mail->AltBody = strip_tags($message);
-
+ 
             $mail->send();
             
             $this->pdo->prepare("UPDATE email_queue SET status = 'sent', sent_at = NOW() WHERE id = ?")->execute([$id]);
