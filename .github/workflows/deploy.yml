@@ -30,6 +30,10 @@ jobs:
           cd client
           npm run build
 
+      - name: 🐘 Install PHP Dependencies
+        run: |
+          composer install --no-dev --working-dir=server/api
+
       - name: 📂 Prepare Deployment Folder
         run: |
           mkdir deploy_package
