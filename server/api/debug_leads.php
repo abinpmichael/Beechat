@@ -20,16 +20,20 @@ try {
     print_r($leads);
     echo "</pre>";
 
-    // Now let's try running the exact UPDATE statement to see if it works or fails/hangs
-    echo "Testing UPDATE query...<br>";
-    $rowsAffected = $pdo->exec("
-        UPDATE leads 
-        SET is_live = 0, chat_status = 'ended' 
-        WHERE is_live = 1 
-          AND chat_status = 'active'
-          AND last_seen_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-    ");
-    echo "UPDATE query completed. Rows affected: $rowsAffected<br>";
+    // Now let's try running a non-existent row UPDATE statement to see if the table is locked
+    echo "Testing UPDATE by non-existent ID...<br>";
+    $rowsAffected1 = $pdo->exec("UPDATE leads SET is_live = 0 WHERE id = 999999");
+    echo "UPDATE by ID completed. Rows affected: $rowsAffected1<br>";
+
+    // Now let's try updating where is_live = 1
+    echo "Testing UPDATE where is_live = 1...<br>";
+    $rowsAffected2 = $pdo->exec("UPDATE leads SET is_live = 0 WHERE is_live = 1");
+    echo "UPDATE is_live=1 completed. Rows affected: $rowsAffected2<br>";
+
+    // Now let's try updating chat_status
+    echo "Testing UPDATE chat_status...<br>";
+    $rowsAffected3 = $pdo->exec("UPDATE leads SET chat_status = 'ended' WHERE is_live = 1 AND chat_status = 'active'");
+    echo "UPDATE chat_status completed. Rows affected: $rowsAffected3<br>";
 
 } catch (Throwable $e) {
     echo "ERROR (Throwable): " . $e->getMessage() . "<br>";
