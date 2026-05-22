@@ -48,8 +48,12 @@ class MailService {
         $stmt->execute();
         $emails = $stmt->fetchAll();
  
+        echo "[".date('Y-m-d H:i:s')."] Found " . count($emails) . " pending emails in queue.\n";
+ 
         foreach ($emails as $email) {
+            echo "[".date('Y-m-d H:i:s')."] Processing email ID " . $email['id'] . " to " . $email['recipient'] . "...\n";
             $this->sendEmail($email);
+            echo "[".date('Y-m-d H:i:s')."] Finished email ID " . $email['id'] . ".\n";
         }
     }
  
@@ -73,6 +77,12 @@ class MailService {
         $pass = $settings['smtp_pass'] ?? 'pass';
         $fromEmail = $settings['smtp_from_email'] ?? 'noreply@beechat.pro';
         $fromName  = $settings['smtp_from_name']  ?? 'Bee Chat Support';
+ 
+        if (empty($host) || $host === 'smtp.example.com' || strpos($host, 'example.com') !== false || $user === 'user' || $pass === 'pass') {
+            $this->pdo->prepare("UPDATE email_queue SET status = 'failed', error_log = 'SMTP not configured' WHERE id = ?")->execute([$id]);
+            echo "[".date('Y-m-d H:i:s')."] SMTP not configured. Marked email ID " . $id . " as failed.\n";
+            return false;
+        }
  
         require_once 'vendor/autoload.php';
  
@@ -102,9 +112,11 @@ class MailService {
             $mail->send();
             
             $this->pdo->prepare("UPDATE email_queue SET status = 'sent', sent_at = NOW() WHERE id = ?")->execute([$id]);
+            echo "[".date('Y-m-d H:i:s')."] Email ID " . $id . " sent successfully.\n";
         } catch (Exception $e) {
             $this->pdo->prepare("UPDATE email_queue SET status = 'failed', attempts = attempts + 1, error_log = ? WHERE id = ?")
-                 ->execute([$mail->ErrorInfo, $id]);
+                 ->execute([$mail->ErrorInfo ?: $e->getMessage(), $id]);
+            echo "[".date('Y-m-d H:i:s')."] Email ID " . $id . " failed: " . ($mail->ErrorInfo ?: $e->getMessage()) . "\n";
         }
     }
 }
