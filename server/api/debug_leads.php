@@ -14,13 +14,24 @@ try {
     $liveCount = $stmt->fetchColumn();
     echo "Live leads: $liveCount<br>";
 
-    $stmt = $pdo->query("SELECT id, name, is_live, chat_status, last_seen_at FROM leads WHERE is_live = 1 LIMIT 5");
+    $stmt = $pdo->query("SELECT id, details, is_live, chat_status, last_seen_at FROM leads LIMIT 5");
     $leads = $stmt->fetchAll();
-    echo "Sample live leads:<br><pre>";
+    echo "Sample leads (with details JSON):<br><pre>";
     print_r($leads);
     echo "</pre>";
 
-} catch (Exception $e) {
-    echo "ERROR: " . $e->getMessage() . "<br>";
+    // Now let's try running the exact UPDATE statement to see if it works or fails/hangs
+    echo "Testing UPDATE query...<br>";
+    $rowsAffected = $pdo->exec("
+        UPDATE leads 
+        SET is_live = 0, chat_status = 'ended' 
+        WHERE is_live = 1 
+          AND chat_status = 'active'
+          AND last_seen_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+    ");
+    echo "UPDATE query completed. Rows affected: $rowsAffected<br>";
+
+} catch (Throwable $e) {
+    echo "ERROR (Throwable): " . $e->getMessage() . "<br>";
 }
 ?>
