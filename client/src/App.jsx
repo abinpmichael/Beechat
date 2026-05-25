@@ -216,6 +216,28 @@ function App() {
           }
         }
 
+        // Dynamic Google Analytics (gtag.js) injection if not already loaded by SSR
+        if (d.google_analytics_id && d.google_analytics_id !== 'G-XXXXXXXXXX') {
+          if (!document.querySelector(`script[src*="gtag/js?id=${d.google_analytics_id}"]`)) {
+            window.dataLayer = window.dataLayer || [];
+            if (typeof window.gtag !== 'function') {
+              window.gtag = function() { window.dataLayer.push(arguments); };
+              window.gtag('js', new Date());
+            }
+            window.gtag('config', d.google_analytics_id);
+
+            const f = document.getElementsByTagName('script')[0];
+            const j = document.createElement('script');
+            j.async = true;
+            j.src = `https://www.googletagmanager.com/gtag/js?id=${d.google_analytics_id}`;
+            if (f && f.parentNode) {
+              f.parentNode.insertBefore(j, f);
+            } else {
+              document.head.appendChild(j);
+            }
+          }
+        }
+
         // JSON-LD Structured Schema (Software & FAQ for Answer Boxes)
         let script = document.querySelector('script[type="application/ld+json"]');
         if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; document.head.appendChild(script); }

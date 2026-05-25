@@ -46,6 +46,7 @@ if ($method === 'GET' && !$auth) {
     if (!isset($settings['geo_position'])) $settings['geo_position'] = '37.7749;-122.4194';
     if (!isset($settings['geo_target_country'])) $settings['geo_target_country'] = 'Global';
     if (!isset($settings['gtm_id'])) $settings['gtm_id'] = '';
+    if (!isset($settings['google_analytics_id'])) $settings['google_analytics_id'] = '';
 
     echo json_encode($settings);
     exit;

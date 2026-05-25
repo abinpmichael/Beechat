@@ -11,7 +11,7 @@ if (file_exists($config_path)) {
         
         $stmt = $pdo->query("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key IN (
             'platform_name', 'seo_title', 'seo_description', 'seo_keywords', 'seo_canonical_url', 'seo_author', 'seo_robots',
-            'og_title', 'og_description', 'og_image', 'twitter_handle', 'geo_region', 'geo_placename', 'geo_position', 'aeo_faq_json', 'gtm_id'
+            'og_title', 'og_description', 'og_image', 'twitter_handle', 'geo_region', 'geo_placename', 'geo_position', 'aeo_faq_json', 'gtm_id', 'google_analytics_id'
         )");
         foreach ($stmt->fetchAll() as $row) {
             $settings[$row['setting_key']] = $row['setting_value'];
@@ -160,6 +160,19 @@ if (!empty($settings['geo_placename'])) {
 if (!empty($settings['geo_position'])) {
     $inject_head .= '    <meta name="geo.position" content="' . htmlspecialchars($settings['geo_position']) . "\" />\n";
     $inject_head .= '    <meta name="ICBM" content="' . htmlspecialchars($settings['geo_position']) . "\" />\n";
+}
+
+// Google Analytics (gtag.js) Injection
+$ga_id = $settings['google_analytics_id'] ?? '';
+if (!empty($ga_id) && $ga_id !== 'G-XXXXXXXXXX') {
+    $inject_head .= "\n    <!-- Google tag (gtag.js) -->\n";
+    $inject_head .= "    <script async src=\"https://www.googletagmanager.com/gtag/js?id=" . htmlspecialchars($ga_id) . "\"></script>\n";
+    $inject_head .= "    <script>\n";
+    $inject_head .= "      window.dataLayer = window.dataLayer || [];\n";
+    $inject_head .= "      function gtag(){dataLayer.push(arguments);}\n";
+    $inject_head .= "      gtag('js', new Date());\n";
+    $inject_head .= "      gtag('config', '" . htmlspecialchars($ga_id) . "');\n";
+    $inject_head .= "    </script>\n";
 }
 
 // Query plans table dynamically to construct AggregateOffer

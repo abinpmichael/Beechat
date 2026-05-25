@@ -806,6 +806,10 @@ export default function SuperAdmin() {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">GTM Container ID</label>
                 <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.gtm_id || ''} onChange={(e) => setPlatformSettings({...platformSettings, gtm_id: e.target.value})} placeholder="GTM-XXXXXXX" />
               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Google Analytics Measurement ID (gtag.js)</label>
+                <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={platformSettings.google_analytics_id || ''} onChange={(e) => setPlatformSettings({...platformSettings, google_analytics_id: e.target.value})} placeholder="G-XXXXXXXXXX" />
+              </div>
             </div>
 
             <div className="pt-6 border-t border-slate-100">
