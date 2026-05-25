@@ -939,6 +939,18 @@ export default function ChatWidget({ apiKey }) {
                 </button>
               </form>
             </div>
+
+            <div className="py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-1 pointer-events-auto">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Powered by</span>
+              <a 
+                href="https://www.beechat.online/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-[9px] font-black text-amber-500 hover:text-amber-600 transition-colors uppercase tracking-widest flex items-center gap-0.5"
+              >
+                Bee Chat <span className="text-amber-500">🐝</span>
+              </a>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
