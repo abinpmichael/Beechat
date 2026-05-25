@@ -178,10 +178,12 @@ function App() {
         updateTag('property="og:description"', 'content', d.og_description || d.seo_description);
         updateTag('property="og:image"', 'content', d.og_image);
         updateTag('property="og:type"', 'content', 'website');
+        updateTag('property="og:url"', 'content', d.seo_canonical_url || window.location.origin);
         updateTag('property="twitter:card"', 'content', 'summary_large_image');
         updateTag('property="twitter:title"', 'content', d.og_title || d.seo_title);
         updateTag('property="twitter:description"', 'content', d.og_description || d.seo_description);
         updateTag('property="twitter:image"', 'content', d.og_image);
+        updateTag('property="twitter:url"', 'content', d.seo_canonical_url || window.location.origin);
         if (d.twitter_handle) updateTag('name="twitter:site"', 'content', d.twitter_handle);
 
         // Canonical Link

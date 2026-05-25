@@ -3,4 +3,4 @@ Allow: /
 Disallow: /dashboard/
 Disallow: /server/
 
-Sitemap: https://beechat.com/sitemap.xml
+Sitemap: https://www.beechat.online/sitemap.xml
