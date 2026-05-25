@@ -10,6 +10,7 @@ import { API_BASE_URL } from '../config';
 import SupportChat from '../components/SupportChat';
 import { useAuth } from '../contexts/AuthContext';
 import TestingDashboard from './TestingDashboard';
+import VideoAdSimulator from './VideoAdSimulator';
 
 // --- ENHANCED TOP-VIEW BEE ---
 // --- ULTIMATE CUTE BEE (MEGA-KAWAII CHIBI EDITION) ---
@@ -439,7 +440,8 @@ export default function SuperAdmin() {
           { id: 'settings', name: 'Gateway & Settings' },
           { id: 'emails', name: 'Email Center' },
           { id: 'testing', name: 'Automated Testing' },
-          { id: 'support', name: 'Support Chats' }
+          { id: 'support', name: 'Support Chats' },
+          { id: 'video-ad', name: 'Video Ad Builder 🎬' }
         ].map(tab => (
           <button 
             key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -1064,6 +1066,12 @@ export default function SuperAdmin() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'video-ad' && (
+        <div className="bg-slate-900 border border-white/10 rounded-[3rem] p-8 shadow-xl">
+          <VideoAdSimulator embedded={true} />
         </div>
       )}
 

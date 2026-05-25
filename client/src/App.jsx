@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ChatWidget from './widget/ChatWidget';
 import TicketTracking from './pages/TicketTracking';
 import Integrations from './pages/Integrations';
+import VideoAdSimulator from './pages/VideoAdSimulator';
 import { API_BASE_URL } from './config';
 
 const queryClient = new QueryClient();
@@ -328,6 +329,7 @@ function App() {
               <Route path="/ticket/:trackingId" element={<TicketTracking />} />
               <Route path="/widget" element={<div className="h-screen overflow-hidden bg-transparent"><ChatWidget apiKey={new URLSearchParams(window.location.search).get('apiKey')} /></div>} />
               <Route path="/integrations" element={<Integrations />} />
+              <Route path="/video-ad" element={<VideoAdSimulator />} />
               <Route path="/blog/:postSlug" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
             </Routes>
