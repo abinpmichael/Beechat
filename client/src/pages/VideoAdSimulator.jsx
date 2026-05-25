@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, Pause, SkipForward, SkipBack, Volume2, Sliders, 
-  RotateCcw, Sparkles, Target, FileText, Copy, Check, Info, HelpCircle
+  RotateCcw, Sparkles, Target, FileText, Copy, Check, Info, HelpCircle, Download
 } from 'lucide-react';
 
 const DEFAULT_SCENES = [
@@ -776,6 +776,19 @@ export default function VideoAdSimulator({ embedded = false }) {
                         </pre>
                       </div>
                     ))}
+                    <div className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div>
+                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block mb-1">Storyboard Keyframe Graphic</span>
+                        <p className="text-[9px] text-slate-400 font-bold leading-normal uppercase">Download the high-resolution marketing thumbnail for YouTube & Google Ads</p>
+                      </div>
+                      <a 
+                        href="/video_ad_storyboard.png" 
+                        download="bee_chat_pro_ad_storyboard.png"
+                        className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-1.5 shrink-0"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download Storyboard
+                      </a>
+                    </div>
                   </div>
                 </div>
               </motion.div>
