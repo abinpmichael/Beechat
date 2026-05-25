@@ -4,7 +4,9 @@ if (php_sapi_name() !== 'cli') {
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Headers: *");
     header("Access-Control-Allow-Methods: *");
-    header("Content-Type: application/json");
+    if (!defined('HTML_RESPONSE')) {
+        header("Content-Type: application/json");
+    }
 
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(200);

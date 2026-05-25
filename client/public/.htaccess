@@ -2,6 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # Set default directory index
+  DirectoryIndex index.php index.html
+
   # Do not apply to server API directory
   RewriteCond %{REQUEST_URI} ^/server/ [NC]
   RewriteRule ^ - [L]
@@ -12,8 +15,12 @@
   RewriteRule ^robots\.txt$ /server/api/robots.php [L]
   RewriteRule ^sitemap\.xml$ /server/api/sitemap.php [L]
 
-  RewriteRule ^index\.html$ - [L]
+  # Route direct index.html requests to index.php
+  RewriteRule ^index\.html$ /index.php [L]
+  RewriteRule ^index\.php$ - [L]
+
+  # Route all non-file/directory requests to index.php
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  RewriteRule . /index.php [L]
 </IfModule>
