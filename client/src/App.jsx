@@ -212,7 +212,21 @@ function App() {
               "name": d.platform_name || "Bee Chat",
               "applicationCategory": "BusinessApplication",
               "operatingSystem": "All",
-              "description": d.seo_description
+              "description": d.seo_description,
+              "offers": {
+                "@type": "AggregateOffer",
+                "priceCurrency": d.platform_currency || "USD",
+                "lowPrice": "0.00",
+                "highPrice": "99.00",
+                "offerCount": "4"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "ratingCount": "185",
+                "bestRating": "5",
+                "worstRating": "1"
+              }
             },
             {
               "@type": "Organization",
