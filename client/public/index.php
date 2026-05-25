@@ -11,7 +11,7 @@ if (file_exists($config_path)) {
         
         $stmt = $pdo->query("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key IN (
             'platform_name', 'seo_title', 'seo_description', 'seo_keywords', 'seo_canonical_url', 'seo_author', 'seo_robots',
-            'og_title', 'og_description', 'og_image', 'twitter_handle', 'geo_region', 'geo_placename', 'geo_position', 'aeo_faq_json'
+            'og_title', 'og_description', 'og_image', 'twitter_handle', 'geo_region', 'geo_placename', 'geo_position', 'aeo_faq_json', 'gtm_id'
         )");
         foreach ($stmt->fetchAll() as $row) {
             $settings[$row['setting_key']] = $row['setting_value'];
@@ -124,6 +124,30 @@ $html = str_replace(
     '<meta property="twitter:image" content="' . htmlspecialchars($og_image) . '" />',
     $html
 );
+
+// Google Tag Manager replacement
+$gtm_id = $settings['gtm_id'] ?? '';
+if (!empty($gtm_id) && $gtm_id !== 'GTM-XXXXXXX') {
+    $gtm_script = "<!-- Google Tag Manager -->\n" .
+        "    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n" .
+        "    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n" .
+        "    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n" .
+        "    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n" .
+        "    })(window,document,'script','dataLayer','" . htmlspecialchars($gtm_id) . "');</script>\n" .
+        "    <!-- End Google Tag Manager -->";
+        
+    $gtm_noscript = "<!-- Google Tag Manager (noscript) -->\n" .
+        "    <noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id=" . htmlspecialchars($gtm_id) . "\"\n" .
+        "    height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>\n" .
+        "    <!-- End Google Tag Manager (noscript) -->";
+        
+    $html = str_replace('<!-- Google Tag Manager Injected Dynamically -->', $gtm_script, $html);
+    $html = str_replace('<!-- Google Tag Manager (noscript) Injected Dynamically -->', $gtm_noscript, $html);
+} else {
+    // Clean up comments if no GTM ID is set
+    $html = str_replace('<!-- Google Tag Manager Injected Dynamically -->', '', $html);
+    $html = str_replace('<!-- Google Tag Manager (noscript) Injected Dynamically -->', '', $html);
+}
 
 // ─── Inject GEO & JSON-LD Schema before </head> ────────────────────
 $inject_head = "\n    <!-- Server-Side SEO & Geotargeting (GEO) -->\n";

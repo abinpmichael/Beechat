@@ -199,6 +199,23 @@ function App() {
         updateTag('name="geo.position"', 'content', d.geo_position);
         updateTag('name="ICBM"', 'content', d.geo_position);
 
+        // Dynamic Google Tag Manager injection if not already loaded by SSR
+        if (d.gtm_id && d.gtm_id !== 'GTM-XXXXXXX') {
+          if (!window.dataLayer) {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+            const f = document.getElementsByTagName('script')[0];
+            const j = document.createElement('script');
+            j.async = true;
+            j.src = `https://www.googletagmanager.com/gtm.js?id=${d.gtm_id}`;
+            if (f && f.parentNode) {
+              f.parentNode.insertBefore(j, f);
+            } else {
+              document.head.appendChild(j);
+            }
+          }
+        }
+
         // JSON-LD Structured Schema (Software & FAQ for Answer Boxes)
         let script = document.querySelector('script[type="application/ld+json"]');
         if (!script) { script = document.createElement('script'); script.type = 'application/ld+json'; document.head.appendChild(script); }
