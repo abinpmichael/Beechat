@@ -58,6 +58,16 @@ export default function VideoAdSimulator({ embedded = false }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [activeSettingsTab, setActiveSettingsTab] = useState('editor');
 
+  const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
   const synthRef = useRef(window.speechSynthesis);
   const playTimeoutRef = useRef(null);
   const currentUtteranceRef = useRef(null);
@@ -116,8 +126,11 @@ export default function VideoAdSimulator({ embedded = false }) {
     const elapsed = now - startTimeRef.current + elapsedOffsetRef.current;
     
     if (elapsed >= totalDuration) {
-      // Loop or stop
-      handleReset();
+      if (isRecordingRef.current) {
+        stopRecording();
+      } else {
+        handleReset();
+      }
       return;
     }
 
@@ -170,6 +183,97 @@ export default function VideoAdSimulator({ embedded = false }) {
 
     currentUtteranceRef.current = utterance;
     synthRef.current.speak(utterance);
+  };
+
+  const handleRecordVideo = async () => {
+    try {
+      const userConfirmed = window.confirm(
+        "To record the video ad with audio:\n\n1. Select 'This Tab' (or 'Chrome Tab') in the system sharing window.\n2. Ensure the 'Share tab audio' (or 'Also share tab audio') checkbox is CHECKED.\n3. Click 'Share'.\n\nThis will record the full 30s ad and automatically download the WebM file."
+      );
+      if (!userConfirmed) return;
+
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+
+      streamRef.current = stream;
+      recordedChunksRef.current = [];
+
+      // Detect if recording stopped via browser banner
+      stream.getVideoTracks()[0].onended = () => {
+        if (isRecordingRef.current) {
+          stopRecording(true);
+        }
+      };
+
+      let options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp8,opus' };
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm' };
+      }
+
+      const recorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        if (recordedChunksRef.current.length > 0) {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'bee_chat_pro_video_ad.webm';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        setIsRecording(false);
+        handleReset();
+      };
+
+      handleReset();
+      setIsRecording(true);
+      recorder.start();
+      
+      setIsPlaying(true);
+      startTimeRef.current = Date.now();
+      speakVoice(scenes[0].script);
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start recording or permission denied.");
+    }
+  };
+
+  const stopRecording = (aborted = false) => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (aborted) {
+      setIsRecording(false);
+      handleReset();
+    }
   };
 
   const handlePlayPause = () => {
@@ -493,6 +597,13 @@ export default function VideoAdSimulator({ embedded = false }) {
             <div className="relative aspect-video w-full bg-black rounded-[2rem] overflow-hidden shadow-inner border border-white/5">
               {renderVisuals()}
               
+              {isRecording && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-red-600/90 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse border border-red-500 shadow-lg">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                  <span>Recording Ad... Do not close tab</span>
+                </div>
+              )}
+              
               {/* Scene on-screen text subtitle bar */}
               <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center pointer-events-none">
                 <span className="px-4 py-1.5 rounded-full bg-black/60 border border-white/10 text-[11px] font-black text-amber-500 tracking-wider uppercase backdrop-blur-md">
@@ -573,6 +684,15 @@ export default function VideoAdSimulator({ embedded = false }) {
                     className="p-3 bg-slate-850 hover:bg-slate-800 rounded-full border border-white/5 text-slate-400 hover:text-white transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >
                     <SkipForward className="w-4 h-4" />
+                  </button>
+
+                  <button 
+                    onClick={isRecording ? () => stopRecording(true) : handleRecordVideo}
+                    className={`ml-2 px-5 py-3 rounded-full text-xs font-black transition-all uppercase tracking-wider flex items-center gap-2 ${isRecording ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse' : 'bg-slate-850 border border-red-500/20 hover:border-red-500 text-red-400 hover:text-white'}`}
+                    title={isRecording ? "Abort Recording" : "Record video directly from browser"}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
+                    {isRecording ? 'Stop' : 'Record Ad'}
                   </button>
                 </div>
 
