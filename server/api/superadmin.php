@@ -56,7 +56,15 @@ try {
             $stmt = $pdo->prepare("
                 SELECT t.*, p.name as plan_name, 
                        (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
-                       (SELECT COUNT(*) FROM websites WHERE tenant_id = t.id) as site_count
+                       (SELECT COUNT(*) FROM websites WHERE tenant_id = t.id) as site_count,
+                       COALESCE(
+                           (SELECT name FROM users WHERE tenant_id = t.id AND role = 'admin' LIMIT 1),
+                           (SELECT name FROM users WHERE tenant_id = t.id LIMIT 1)
+                       ) as owner_name,
+                       COALESCE(
+                           (SELECT email FROM users WHERE tenant_id = t.id AND role = 'admin' LIMIT 1),
+                           (SELECT email FROM users WHERE tenant_id = t.id LIMIT 1)
+                       ) as owner_email
                 FROM tenants t
                 LEFT JOIN plans p ON t.plan_id = p.id
                 ORDER BY t.created_at DESC

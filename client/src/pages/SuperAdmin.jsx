@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Users, Crown, Calendar, Shield, Search, AlertTriangle, CheckCircle, 
   ChevronRight, Loader2, Filter, Globe, Trash2, Database, TrendingUp, 
-  CreditCard, Save, Plus, LayoutDashboard, MessageSquare
+  CreditCard, Save, Plus, LayoutDashboard, MessageSquare, ChevronDown
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 import SupportChat from '../components/SupportChat';
@@ -152,6 +152,7 @@ export default function SuperAdmin() {
   const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [] });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tenants');
+  const [expandedTenantId, setExpandedTenantId] = useState(null);
   const [emailTemplates, setEmailTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateEditData, setTemplateEditData] = useState({ subject: '', body: '' });
@@ -467,32 +468,115 @@ export default function SuperAdmin() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map((tenant) => (
-                <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={tenant.id} className="hover:bg-slate-50/50 transition-all group">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center font-black text-slate-400">{tenant.name[0]}</div>
-                      <div>
-                        <h4 className="font-black text-slate-900">{tenant.name}</h4>
-                        <p className="text-xs text-slate-400 font-medium">/{tenant.slug}</p>
+                <React.Fragment key={tenant.id}>
+                  <motion.tr 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className={`hover:bg-slate-50/50 transition-all group ${expandedTenantId === tenant.id ? 'bg-slate-50/50' : ''}`}
+                  >
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center font-black text-slate-400">{tenant.name[0]}</div>
+                        <div>
+                          <h4 className="font-black text-slate-900">{tenant.name}</h4>
+                          <p className="text-xs text-slate-400 font-medium">/{tenant.slug}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${tenant.plan_name === 'Enterprise' ? 'bg-amber-500 text-white shadow-lg shadow-amber-100' : 'bg-slate-100 text-slate-500'}`}>{tenant.plan_name}</span>
-                    {tenant.expires_at && <p className="text-[10px] text-slate-400 mt-2 font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> Expires: {new Date(tenant.expires_at).toLocaleDateString()}</p>}
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${tenant.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <span className="text-sm font-black text-slate-700">{tenant.is_active ? 'Active' : 'Suspended'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <button onClick={() => { setSelectedTenant(tenant); setEditData({ plan_id: tenant.plan_id || 1, expires_at: tenant.expires_at ? tenant.expires_at.split(' ')[0] : '', is_active: tenant.is_active }); }} className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm">
-                      <Shield className="w-5 h-5" />
-                    </button>
-                  </td>
-                </motion.tr>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${tenant.plan_name === 'Enterprise' ? 'bg-amber-500 text-white shadow-lg shadow-amber-100' : 'bg-slate-100 text-slate-500'}`}>{tenant.plan_name}</span>
+                      {tenant.expires_at && <p className="text-[10px] text-slate-400 mt-2 font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> Expires: {new Date(tenant.expires_at).toLocaleDateString()}</p>}
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${tenant.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        <span className="text-sm font-black text-slate-700">{tenant.is_active ? 'Active' : 'Suspended'}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => setExpandedTenantId(expandedTenantId === tenant.id ? null : tenant.id)}
+                          className={`p-3 rounded-2xl transition-all shadow-sm ${expandedTenantId === tenant.id ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                          title="View Tenant Details"
+                        >
+                          <ChevronDown className={`w-5 h-5 transition-transform ${expandedTenantId === tenant.id ? 'rotate-180' : ''}`} />
+                        </button>
+                        <button 
+                          onClick={() => { setSelectedTenant(tenant); setEditData({ plan_id: tenant.plan_id || 1, expires_at: tenant.expires_at ? tenant.expires_at.split(' ')[0] : '', is_active: tenant.is_active }); }} 
+                          className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                          title="Override Subscription Access"
+                        >
+                          <Shield className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                  {expandedTenantId === tenant.id && (
+                    <tr className="bg-slate-50/20">
+                      <td colSpan={4} className="px-8 py-6">
+                        <motion.div 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white rounded-3xl border border-slate-100 shadow-lg text-left"
+                        >
+                          {/* Owner Profile */}
+                          <div className="space-y-4">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 pb-2">Owner Profile</h5>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Name</p>
+                              <p className="text-sm font-black text-slate-800">{tenant.owner_name || 'N/A'}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Email Address</p>
+                              <p className="text-sm font-bold text-slate-700 break-all select-all">{tenant.owner_email || 'N/A'}</p>
+                            </div>
+                          </div>
+
+                          {/* Usage Metrics */}
+                          <div className="space-y-4">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 pb-2">Usage Metrics</h5>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Websites</p>
+                                <p className="text-2xl font-black text-slate-800 mt-1">{tenant.site_count || 0}</p>
+                              </div>
+                              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight">Team Members</p>
+                                <p className="text-2xl font-black text-slate-800 mt-1">{tenant.user_count || 0}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Subscription / Tech parameters */}
+                          <div className="space-y-4">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 pb-2">Subscription & Details</h5>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex justify-between font-bold text-slate-500">
+                                <span>Tenant ID:</span>
+                                <span className="text-slate-850 font-black">#{tenant.id}</span>
+                              </div>
+                              <div className="flex justify-between font-bold text-slate-500">
+                                <span>Created At:</span>
+                                <span className="text-slate-800">{new Date(tenant.created_at).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between font-bold text-slate-500">
+                                <span>Slug Path:</span>
+                                <span className="text-amber-600 font-black">/{tenant.slug}</span>
+                              </div>
+                              {tenant.stripe_customer_id && (
+                                <div className="flex justify-between font-bold text-slate-500">
+                                  <span>Stripe ID:</span>
+                                  <span className="text-slate-800 font-mono select-all text-[11px]">{tenant.stripe_customer_id}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
