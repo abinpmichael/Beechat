@@ -141,6 +141,58 @@ try {
         $data = json_decode(file_get_contents("php://input"), true);
         $action = $data['action'] ?? '';
 
+        if ($action === 'refund_transaction') {
+            $invoiceId = $data['invoice_id'] ?? null;
+            if (!$invoiceId) exit(json_encode(["error" => "Invoice ID required"]));
+
+            // Fetch Stripe secret key
+            $stmt = $pdo->prepare("SELECT setting_value FROM platform_settings WHERE setting_key = 'stripe_secret_key'");
+            $stmt->execute();
+            $stripeSecret = $stmt->fetchColumn() ?? '';
+
+            if (empty($stripeSecret)) {
+                exit(json_encode(["error" => "Stripe not configured on this platform"]));
+            }
+
+            // Get invoice info from local DB
+            $stmt = $pdo->prepare("SELECT * FROM invoices WHERE id = ?");
+            $stmt->execute([$invoiceId]);
+            $localInv = $stmt->fetch();
+            if (!$localInv) exit(json_encode(["error" => "Invoice record not found"]));
+
+            if ($localInv['status'] === 'refunded') {
+                exit(json_encode(["error" => "This transaction is already refunded"]));
+            }
+
+            $stripeInvoiceId = $localInv['stripe_invoice_id'];
+
+            require_once 'vendor/autoload.php';
+            \Stripe\Stripe::setApiKey($stripeSecret);
+
+            try {
+                // If it's a real Stripe invoice ID (starts with in_)
+                if (strpos($stripeInvoiceId, 'in_') === 0) {
+                    $invoice = \Stripe\Invoice::retrieve($stripeInvoiceId);
+                    $chargeId = $invoice->charge;
+                    if (!$chargeId) {
+                        exit(json_encode(["error" => "No charge associated with this invoice in Stripe"]));
+                    }
+                    \Stripe\Refund::create([
+                        'charge' => $chargeId
+                    ]);
+                }
+
+                // Update local status in DB
+                $stmt = $pdo->prepare("UPDATE invoices SET status = 'refunded' WHERE id = ?");
+                $stmt->execute([$invoiceId]);
+
+                echo json_encode(["success" => true, "message" => "Transaction refunded successfully"]);
+                exit;
+            } catch (Exception $e) {
+                exit(json_encode(["error" => "Refund failed: " . $e->getMessage()]));
+            }
+        }
+
         if ($action === 'update_plan') {
             $tenantId = $data['tenant_id'];
             $planId   = $data['plan_id'];

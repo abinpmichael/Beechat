@@ -149,7 +149,7 @@ export default function SuperAdmin() {
     smtp_from_email: '',
     smtp_from_name: ''
   });
-  const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [] });
+  const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [], transactions: [] });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tenants');
   const [expandedTenantId, setExpandedTenantId] = useState(null);
@@ -208,7 +208,8 @@ export default function SuperAdmin() {
       setAllKnowledge(Array.isArray(kRes.data) ? kRes.data : []);
       setRevenue({
         total_revenue: rRes.data?.total_revenue || 0,
-        monthly_stats: Array.isArray(rRes.data?.monthly_stats) ? rRes.data.monthly_stats : []
+        monthly_stats: Array.isArray(rRes.data?.monthly_stats) ? rRes.data.monthly_stats : [],
+        transactions: Array.isArray(rRes.data?.transactions) ? rRes.data.transactions : []
       });
       setEmailTemplates(Array.isArray(eRes.data) ? eRes.data : []);
       setBlogPosts(Array.isArray(bRes.data) ? bRes.data : []);
@@ -235,6 +236,23 @@ export default function SuperAdmin() {
       alert("Template updated successfully!");
     } catch (err) {
       alert("Error updating template");
+    }
+  };
+
+  const handleRefundTransaction = async (invoiceId) => {
+    if (!window.confirm("Are you sure you want to refund this transaction? This will issue a full refund via Stripe (if applicable) and mark the transaction as refunded in the platform database.")) return;
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const res = await axios.post(API_URL, {
+        action: 'refund_transaction',
+        invoice_id: invoiceId
+      }, { headers });
+      
+      if (res.data.error) throw new Error(res.data.error);
+      alert(res.data.message || "Refund processed successfully!");
+      fetchData();
+    } catch (err) {
+      alert("Failed to process refund: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -668,9 +686,70 @@ export default function SuperAdmin() {
                    </div>
                  ))}
               </div>
-           </div>
-        </div>
-      )}
+            </div>
+            
+            <div className="glass p-8 md:p-12 rounded-[3rem] mt-10">
+               <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-6 md:mb-8 text-center">Transaction & Payment History</h3>
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left text-sm font-medium">
+                   <thead>
+                     <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase tracking-widest">
+                       <th className="pb-4">Tenant</th>
+                       <th className="pb-4">Invoice ID</th>
+                       <th className="pb-4">Amount</th>
+                       <th className="pb-4">Date</th>
+                       <th className="pb-4">Status</th>
+                       <th className="pb-4 text-right">Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {(!revenue.transactions || revenue.transactions.length === 0) ? (
+                       <tr>
+                         <td colSpan="6" className="py-8 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">No transactions recorded yet</td>
+                       </tr>
+                     ) : (
+                       revenue.transactions.map((tx) => (
+                         <tr key={tx.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                           <td className="py-4 font-black text-slate-900">{tx.tenant_name || `Tenant #${tx.tenant_id}`}</td>
+                           <td className="py-4 font-mono text-xs text-slate-500">{tx.stripe_invoice_id}</td>
+                           <td className="py-4 font-black text-slate-900">${parseFloat(tx.amount).toFixed(2)}</td>
+                           <td className="py-4 text-slate-400 text-xs">{new Date(tx.created_at).toLocaleString()}</td>
+                           <td className="py-4">
+                             <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                               tx.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                             }`}>
+                               {tx.status}
+                             </span>
+                           </td>
+                           <td className="py-4 text-right space-x-2">
+                             {tx.pdf_url && (
+                               <a 
+                                 href={tx.pdf_url} 
+                                 target="_blank" 
+                                 rel="noreferrer" 
+                                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all inline-block"
+                               >
+                                 Invoice
+                               </a>
+                             )}
+                             {tx.status === 'paid' && (
+                               <button 
+                                 onClick={() => handleRefundTransaction(tx.id)}
+                                 className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                               >
+                                 Refund
+                               </button>
+                             )}
+                           </td>
+                         </tr>
+                       ))
+                     )}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+         </div>
+       )}
 
       {activeTab === 'plans' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
