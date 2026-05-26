@@ -70,7 +70,8 @@ export default function Tickets() {
 
   const fetchTicketDetails = async (trackingId) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/tickets.php?action=track&id=${trackingId}`);
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const res = await axios.get(`${API_BASE_URL}/tickets.php?action=track&id=${trackingId}`, { headers });
       setSelectedTicket(res.data);
     } catch (err) {
       console.error(err);
@@ -120,18 +121,18 @@ export default function Tickets() {
     }
   };
 
-  const handleInitiateVideo = async () => {
+  const handleInitiateVideo = async (type = 'instant') => {
     if (!selectedTicket || sending) return;
     setSending(true);
     try {
       const res = await axios.post(`${API_BASE_URL}/tickets.php?action=initiate_video`, {
         ticket_id: selectedTicket.id,
-        video_call_type: 'instant'
+        video_call_type: type
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.data.error) throw new Error(res.data.error);
-      setSelectedTicket(prev => prev ? { ...prev, video_call_type: 'instant', video_call_url: res.data.video_call_url } : null);
+      setSelectedTicket(prev => prev ? { ...prev, video_call_type: type, video_call_url: res.data.video_call_url } : null);
       fetchTicketDetails(selectedTicket.tracking_id);
     } catch (err) {
       alert("Failed to initiate video call: " + (err.response?.data?.error || err.message));
@@ -170,12 +171,15 @@ export default function Tickets() {
                   selectedTicket?.id === t.id ? 'bg-white border-amber-500 shadow-xl' : 'bg-white border-transparent hover:border-slate-100'
                 }`}
               >
-                <div className="flex items-center justify-between mb-3">
-                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.tracking_id}</span>
-                   <div className={`w-2 h-2 rounded-full ${t.status === 'open' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                </div>
-                <h4 className="font-black text-slate-900 text-sm mb-1 truncate">{t.subject}</h4>
-                <p className="text-[10px] font-bold text-slate-400 truncate">{t.last_message || 'No messages yet'}</p>
+                 <div className="flex items-center justify-between mb-3">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.tracking_id}</span>
+                    <div className="flex items-center gap-2">
+                       {t.email && <span className="text-[9px] font-bold text-amber-600 lowercase truncate max-w-[120px]">{t.email}</span>}
+                       <div className={`w-2 h-2 rounded-full ${t.status === 'open' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                    </div>
+                 </div>
+                 <h4 className="font-black text-slate-900 text-sm mb-1 truncate">{t.subject}</h4>
+                 <p className="text-[10px] font-bold text-slate-400 truncate">{t.last_message || 'No messages yet'}</p>
                 <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-all">
                    <ArrowUpRight className="w-4 h-4 text-amber-500" />
                 </div>
@@ -197,8 +201,14 @@ export default function Tickets() {
                   </div>
                   <div>
                      <h3 className="text-xl font-black text-slate-900 tracking-tight">{selectedTicket.subject}</h3>
-                     <div className="flex items-center gap-3 mt-1">
+                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead: {selectedTicket.visitor_uid}</span>
+                        {selectedTicket.email && (
+                          <>
+                            <div className="w-1 h-1 bg-slate-200 rounded-full" />
+                            <span className="text-[10px] font-bold text-amber-600 lowercase select-all">{selectedTicket.email}</span>
+                          </>
+                        )}
                         <div className="w-1 h-1 bg-slate-200 rounded-full" />
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{selectedTicket.status}</span>
                      </div>
@@ -210,16 +220,25 @@ export default function Tickets() {
                         onClick={() => setActiveVideoUrl(selectedTicket.video_call_url)}
                         className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                       >
-                         <Video className="w-4 h-4 animate-pulse" /> Join Video
+                         <Video className="w-4 h-4 animate-pulse" /> {selectedTicket.video_call_type === 'instant' ? 'Join Video' : 'View Schedule Link'}
                       </button>
                    ) : (
-                      <button 
-                        disabled={sending}
-                        onClick={handleInitiateVideo}
-                        className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
-                      >
-                         <Video className="w-4 h-4" /> Start Video
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          disabled={sending}
+                          onClick={() => handleInitiateVideo('instant')}
+                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
+                        >
+                           <Video className="w-4 h-4 text-emerald-500" /> Instant Call
+                        </button>
+                        <button 
+                          disabled={sending}
+                          onClick={() => handleInitiateVideo('scheduled')}
+                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
+                        >
+                           <Calendar className="w-4 h-4 text-amber-500" /> Schedule Call
+                        </button>
+                      </div>
                    )}
                    <button className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><MoreVertical className="w-5 h-5" /></button>
                    <button 

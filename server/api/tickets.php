@@ -59,8 +59,21 @@ try {
         $trackingId = $_GET['id'] ?? '';
         if (empty($trackingId)) exit(json_encode(["error" => "ID required"]));
 
+        // Optional authentication check for agent viewing private notes
+        $isAgent = false;
+        try {
+            $headers = getAuthHeaders();
+            $auth = decodeJwt($headers);
+            if ($auth && isset($auth['tenant_id'])) {
+                $isAgent = true;
+            }
+        } catch (Exception $e) {
+            // Ignore
+        }
+
         $stmt = $pdo->prepare("
-            SELECT t.*, l.visitor_uid, l.phone, w.domain, w.theme_color, w.bot_name
+            SELECT t.*, l.visitor_uid, l.phone, w.domain, w.theme_color, w.bot_name,
+                   JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email
             FROM tickets t
             JOIN leads l ON t.lead_id = l.id
             JOIN websites w ON l.website_id = w.id
@@ -71,14 +84,19 @@ try {
 
         if (!$ticket) exit(json_encode(["error" => "Ticket not found"]));
 
-        // Get replies
-        $stmt = $pdo->prepare("
+        // Get replies (include private notes only if requested by an authenticated agent)
+        $repliesQuery = "
             SELECT r.*, u.name as agent_name, u.avatar_url
             FROM ticket_replies r
             LEFT JOIN users u ON r.user_id = u.id
-            WHERE r.ticket_id = ? AND r.is_private = 0
-            ORDER BY r.created_at ASC
-        ");
+            WHERE r.ticket_id = ?
+        ";
+        if (!$isAgent) {
+            $repliesQuery .= " AND r.is_private = 0";
+        }
+        $repliesQuery .= " ORDER BY r.created_at ASC";
+
+        $stmt = $pdo->prepare($repliesQuery);
         $stmt->execute([$ticket['id']]);
         $ticket['replies'] = $stmt->fetchAll();
 
@@ -183,6 +201,7 @@ try {
     if ($action === 'list') {
         $stmt = $pdo->prepare("
             SELECT t.*, l.visitor_uid, l.chat_status,
+                   JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email,
                    (SELECT message FROM ticket_replies WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as last_message
             FROM tickets t
             JOIN leads l ON t.lead_id = l.id
@@ -463,14 +482,22 @@ try {
         if (!$ticket) exit(json_encode(["error" => "Ticket not found"]));
 
         $trackingId = $ticket['tracking_id'];
-        $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
+        
+        $videoCallUrl = null;
+        $sysMsg = "";
+        if ($videoCallType === 'instant') {
+            $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
+            $sysMsg = "🎥 Instant meeting initiated! Click to join video call: " . $videoCallUrl;
+        } else {
+            $videoCallUrl = "https://cal.com/beechat-demo/15min";
+            $sysMsg = "📅 Video call meeting scheduled! Book here: " . $videoCallUrl;
+        }
 
         // Update ticket
         $stmt = $pdo->prepare("UPDATE tickets SET video_call_type = ?, video_call_url = ? WHERE id = ?");
         $stmt->execute([$videoCallType, $videoCallUrl, $ticketId]);
 
         // Insert system reply to notify visitor in the replies feed
-        $sysMsg = "🎥 Meeting initiated! Click to join video call: " . $videoCallUrl;
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message, is_private) VALUES (?, ?, ?, 0)");
         $stmt->execute([$ticketId, $userId, $sysMsg]);
 
