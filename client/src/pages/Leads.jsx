@@ -696,15 +696,24 @@ export default function Leads() {
                         : isBot ? 'bg-slate-200 text-slate-700 rounded-bl-none'
                         : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'
                       }`}>
+                        {msg.image && (
+                          <div className="mb-2">
+                             <img 
+                               src={msg.image.startsWith('http') ? msg.image : `${API_BASE_URL}/${msg.image}`} 
+                               className="max-w-full rounded-2xl cursor-pointer hover:opacity-90" 
+                               onClick={() => window.open(msg.image.startsWith('http') ? msg.image : `${API_BASE_URL}/${msg.image}`, '_blank')} 
+                             />
+                          </div>
+                        )}
                         {msg.content.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
                           <img src={msg.content} alt="Upload" className="max-w-full rounded-lg cursor-pointer hover:opacity-90" onClick={() => window.open(msg.content)} />
                         ) : msg.content === '[FORM:DATA_REQUEST]' ? (
                           <div className="flex items-center gap-2 text-[10px] font-black uppercase">
                             <FileText className="w-4 h-4"/> Form Requested
                           </div>
-                        ) : (
+                        ) : (msg.content !== 'Sent an image' || !msg.image) ? (
                           msg.content
-                        )}
+                        ) : null}
                       </div>
                       <p className={`text-[10px] font-bold mt-0.5 ${isAgent ? 'text-indigo-400 text-right mr-1' : 'text-slate-400 ml-1'}`}>
                         {isAgent ? (isBot ? '🤖 Bot' : msg.agent_name||'Agent') : `👤 ${selected.visitor_uid||'Visitor'}`}
