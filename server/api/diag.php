@@ -1,3 +1,4 @@
+<?php
 // server/api/diag.php
 require_once 'config.php';
 
