@@ -866,7 +866,9 @@ export default function ChatWidget({ apiKey }) {
                   <div key={i} className={`flex flex-col ${right ? 'items-end' : 'items-start'} w-full`}>
                     {(msg.image || cleanText) && (
                       <div className={`max-w-[85%] px-5 py-4 rounded-[2rem] text-sm font-bold shadow-sm ${right ? 'text-white' : 'bg-white border-2 border-slate-50 text-slate-800'}`} style={right ? {backgroundColor: branding.color} : {}}>
-                        {msg.image ? <img src={msg.image} className="w-full rounded-xl mb-2" alt="upload" /> : cleanText}
+                        {msg.image || (typeof cleanText === 'string' && cleanText.match(/\.(jpeg|jpg|gif|png|webp)$/i)) ? (
+                          <img src={msg.image || cleanText} className="w-full rounded-xl mb-2" alt="upload" />
+                        ) : cleanText}
                       </div>
                     )}
                     {hasForm && (

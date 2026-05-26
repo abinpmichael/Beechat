@@ -195,11 +195,29 @@ export default function TicketTracking() {
                                {new Date(reply.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                          </div>
-                         <div className={`p-5 rounded-3xl text-sm font-medium leading-relaxed ${
-                           reply.user_id ? 'bg-slate-50 text-slate-700' : 'bg-amber-500 text-white'
-                         }`}>
-                           {reply.message}
-                         </div>
+                          <div className={`p-5 rounded-3xl text-sm font-medium leading-relaxed ${
+                            reply.user_id ? 'bg-slate-50 text-slate-700' : 'bg-amber-500 text-white'
+                          }`}>
+                            {reply.message.split('\n').map((line, idx) => {
+                              if (line.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                                 return <img key={idx} src={line} className="max-w-full rounded-2xl my-2 shadow-lg border-4 border-white/20 cursor-pointer" onClick={() => window.open(line)} />
+                              }
+                              if (line.match(/\.(pdf|docx|xlsx|txt|zip|csv)$/i)) {
+                                 return (
+                                   <a key={idx} href={line} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-black/5 rounded-2xl my-2 hover:bg-black/10 transition-all border border-black/5 group">
+                                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                         <Paperclip className="w-5 h-5 text-slate-400" />
+                                      </div>
+                                      <div className="text-left text-slate-700">
+                                         <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Attachment</p>
+                                         <p className="text-xs font-bold truncate max-w-[200px]">{line.split('/').pop()}</p>
+                                      </div>
+                                   </a>
+                                 )
+                              }
+                              return <p key={idx}>{line}</p>
+                            })}
+                          </div>
                       </div>
                    </div>
                  ))}
