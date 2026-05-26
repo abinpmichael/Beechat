@@ -113,6 +113,7 @@ try {
         $phone   = $data['phone'] ?? '';
         $sessionId = $data['sessionId'] ?? '';
         $videoCallType = $data['videoCallType'] ?? 'none';
+        $inviteEmails = $data['inviteEmails'] ?? null; // optional CSV or JSON array
 
         if (empty($apiKey) || empty($message)) exit(json_encode(["error" => "Missing data"]));
 
@@ -148,8 +149,8 @@ try {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?)");
-        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl]);
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url, invite_emails) VALUES (?, ?, ?, ?, 'open', ?, ?, ?)");
+        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl, $inviteEmails]);
         $ticketId = $pdo->lastInsertId();
 
         // 4. Save Initial Message as first reply
@@ -185,6 +186,7 @@ try {
             "success" => true,
             "tracking_id" => $trackingId,
             "video_call_url" => $videoCallUrl,
+            "invite_emails" => $inviteEmails,
             "message" => "Ticket created successfully. Check your email for the tracking link."
         ]);
         exit;
@@ -198,7 +200,47 @@ try {
     $userId = $auth['id'];
     $tenantId = $auth['tenant_id'];
 
-    if ($action === 'list') {
+    // -------------------------------------------------------------------------
+// Assign Agent to Ticket (admin only)
+// -------------------------------------------------------------------------
+if ($action === 'assign_agent') {
+    // Only admins can assign tickets
+    if ($auth['role'] !== 'admin') {
+        exit(json_encode(['error' => 'Insufficient permissions']));
+    }
+
+    $ticketId   = $data['ticket_id'] ?? null;
+    $assignedTo = $data['assigned_to'] ?? null;
+
+    if (!$ticketId) {
+        exit(json_encode(['error' => 'Ticket ID required']));
+    }
+
+    // Verify ticket belongs to the same tenant
+    $stmt = $pdo->prepare('SELECT id FROM tickets WHERE id = ? AND tenant_id = ?');
+    $stmt->execute([$ticketId, $tenantId]);
+    if (!$stmt->fetch()) {
+        exit(json_encode(['error' => 'Ticket not found or unauthorized']));
+    }
+
+    // If an agent ID is provided, verify the agent exists and belongs to the tenant
+    if ($assignedTo) {
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? AND tenant_id = ? AND role = ?');
+        $stmt->execute([$assignedTo, $tenantId, 'agent']);
+        if (!$stmt->fetch()) {
+            exit(json_encode(['error' => 'Invalid agent selected']));
+        }
+    }
+
+    // Update assignment (allow NULL for unassigned)
+    $stmt = $pdo->prepare('UPDATE tickets SET assigned_to = ? WHERE id = ?');
+    $stmt->execute([$assignedTo ?: null, $ticketId]);
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'list') {
         $stmt = $pdo->prepare("
             SELECT t.*, l.visitor_uid, l.chat_status,
                    JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email,

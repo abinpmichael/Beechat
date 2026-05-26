@@ -84,6 +84,8 @@ const TopBee = ({ size = 40, animated = true }) => {
 export default function TicketTracking() {
   const { trackingId } = useParams();
   const [ticket, setTicket] = useState(null);
+  const [agents, setAgents] = useState([]);
+  const [assigning, setAssigning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
@@ -91,6 +93,7 @@ export default function TicketTracking() {
 
   useEffect(() => {
     fetchTicket();
+    fetchAgents();
   }, [trackingId]);
 
   const fetchTicket = async () => {
@@ -105,14 +108,21 @@ export default function TicketTracking() {
     }
   };
 
+  const fetchAgents = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/agents.php?action=list`);
+      if (res.data && Array.isArray(res.data)) setAgents(res.data);
+    } catch (err) {
+      console.error('Failed to fetch agents', err);
+    }
+  };
+
   const handleReply = async (e) => {
     e.preventDefault();
     if (!reply.trim() || sending) return;
 
     setSending(true);
     try {
-      // In a real public tracking scenario, the "user" is the visitor.
-      // We'll use the same reply endpoint but the backend handles "user_id is NULL" for visitor.
       await axios.post(`${API_BASE_URL}/tickets.php?action=create_reply_public`, {
         tracking_id: trackingId,
         message: reply
@@ -160,12 +170,42 @@ export default function TicketTracking() {
                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{ticket.subject}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end gap-3">
              <div className={`px-5 py-2 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm ${
                ticket.status === 'open' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'
              }`}>
                {ticket.status}
              </div>
+             {user?.role === 'admin' && agents.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={ticket.assigned_to || ''}
+                      onChange={async (e) => {
+                        const agentId = e.target.value;
+                        setAssigning(true);
+                        try {
+                          await axios.post(`${API_BASE_URL}/tickets.php?action=assign_agent`, {
+                            ticket_id: ticket.id,
+                            assigned_to: agentId,
+                          });
+                          fetchTicket();
+                        } catch (err) {
+                          console.error('Assign failed', err);
+                        } finally {
+                          setAssigning(false);
+                        }
+                      }}
+                      className="px-3 py-2 border rounded text-xs"
+                      disabled={assigning}
+                    >
+                      <option value="">Unassigned</option>
+                      {agents.map(agent => (
+                        <option key={agent.id} value={agent.id}>{agent.name}</option>
+                      ))}
+                    </select>
+                    {assigning && <span className="text-xs text-amber-600">Updating...</span>}
+                  </div>
+                )}
              <div className="px-5 py-2 bg-white rounded-2xl border border-slate-200 font-black text-xs uppercase tracking-widest text-slate-400 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 {new Date(ticket.created_at).toLocaleDateString()}

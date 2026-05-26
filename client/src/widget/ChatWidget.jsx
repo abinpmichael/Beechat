@@ -204,7 +204,7 @@ export default function ChatWidget({ apiKey }) {
   const [notification, setNotification] = useState(null);
   const [lastSeenMsgId, setLastSeenMsgId] = useState(0);
   const [ticketFormVisible, setTicketFormVisible] = useState(false);
-  const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '', videoCallType: 'none' });
+  const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '', videoCallType: 'none', inviteEmails: '' });
   const [ticketLoading, setTicketLoading] = useState(false);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
@@ -764,7 +764,8 @@ export default function ChatWidget({ apiKey }) {
           message: ticketData.message,
           email: ticketData.email,
           phone: ticketData.phone,
-          videoCallType: ticketData.videoCallType || 'none'
+          videoCallType: ticketData.videoCallType || 'none',
+          inviteEmails: ticketData.inviteEmails
         })
       }).then(r => r.json());
 
@@ -777,7 +778,7 @@ export default function ChatWidget({ apiKey }) {
         }
         addMsg('bot', successMsg);
         setTicketFormVisible(false);
-        setTicketData({ subject: '', message: '', email: '', phone: '', videoCallType: 'none' });
+        setTicketData({ subject: '', message: '', email: '', phone: '', videoCallType: 'none', inviteEmails: '' });
       }
     } catch (err) {
       addMsg('bot', '❌ Failed to create ticket. Please try again later.');
@@ -914,6 +915,8 @@ export default function ChatWidget({ apiKey }) {
                        <Plus className="w-4 h-4 text-amber-500" /> Create Support Ticket
                     </h4>
                     <input required type="email" placeholder="YOUR EMAIL" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.email} onChange={e => setTicketData({...ticketData, email: e.target.value})} />
+                    <input type="tel" placeholder="PHONE" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.phone} onChange={e => setTicketData({...ticketData, phone: e.target.value})} />
+                    <input type="text" placeholder="INVITE EMAILS (COMMA-SEPARATED)" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.inviteEmails || ''} onChange={e => setTicketData({...ticketData, inviteEmails: e.target.value})} />
                     <textarea required placeholder="HOW CAN WE HELP?" rows="3" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.message} onChange={e => setTicketData({...ticketData, message: e.target.value})} />
                     
                     <div className="flex items-center gap-2">
