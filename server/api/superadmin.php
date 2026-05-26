@@ -90,6 +90,7 @@ try {
             // Defaults
             if (!isset($settings['is_testing_mode'])) $settings['is_testing_mode'] = 1;
             if (!isset($settings['platform_name'])) $settings['platform_name'] = 'Bee Chat';
+            if (!isset($settings['jitsi_domain'])) $settings['jitsi_domain'] = 'meet.jit.si';
             
             echo json_encode($settings);
             exit;

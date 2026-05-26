@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Users, Crown, Calendar, Shield, Search, AlertTriangle, CheckCircle, 
   ChevronRight, Loader2, Filter, Globe, Trash2, Database, TrendingUp, 
-  CreditCard, Save, Plus, LayoutDashboard, MessageSquare, ChevronDown
+  CreditCard, Save, Plus, LayoutDashboard, MessageSquare, ChevronDown, Video
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 import SupportChat from '../components/SupportChat';
@@ -856,6 +856,28 @@ export default function SuperAdmin() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="glass p-10 rounded-[3rem] border border-white shadow-xl space-y-8">
+            <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+              <Video className="w-6 h-6 text-amber-500" /> Video Call Configuration (Self-Hosted Jitsi)
+            </h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">
+              Define the Jitsi Meet server host domain for white-labeled video call rooms.
+            </p>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jitsi Server Domain</label>
+              <input 
+                type="text" 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-sm" 
+                value={platformSettings.jitsi_domain || ''} 
+                onChange={(e) => setPlatformSettings({...platformSettings, jitsi_domain: e.target.value})} 
+                placeholder="meet.jit.si" 
+              />
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mt-1">
+                Leave empty or set to "meet.jit.si" to use public Jitsi servers. Set to "meet.beechat.online" to use your self-hosted Jitsi instance.
+              </span>
             </div>
           </div>
 

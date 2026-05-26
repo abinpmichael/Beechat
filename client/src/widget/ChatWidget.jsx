@@ -771,7 +771,7 @@ export default function ChatWidget({ apiKey }) {
       if (res.success) {
         let successMsg = `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`;
         if (ticketData.videoCallType === 'instant') {
-          successMsg += `\n🎥 Instant meeting generated: https://meet.jit.si/BeeChat_Ticket_${res.tracking_id}`;
+          successMsg += `\n🎥 Instant meeting generated: ${res.video_call_url || `https://meet.jit.si/BeeChat_Ticket_${res.tracking_id}`}`;
         } else if (ticketData.videoCallType === 'scheduled') {
           successMsg += `\n📅 Video meeting scheduled: https://cal.com/beechat-demo/15min`;
         }

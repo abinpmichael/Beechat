@@ -13,9 +13,33 @@ function generateTrackingId() {
     return strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 10));
 }
 
+// HELPER: Generate Jitsi meeting URL dynamically based on platform settings
+function getJitsiMeetingUrl($pdo, $trackingId) {
+    $jitsiDomain = 'meet.jit.si';
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM platform_settings WHERE setting_key = 'jitsi_domain'");
+        $stmt->execute();
+        $customDomain = $stmt->fetchColumn();
+        if (!empty($customDomain)) {
+            $jitsiDomain = trim($customDomain);
+        }
+    } catch (Exception $e) {
+        // Fallback
+    }
+    return "https://" . $jitsiDomain . "/BeeChat_Ticket_" . $trackingId;
+}
+
 try {
     // Dynamic column check to ensure tickets schema matches video calling expectations
     try {
+        // Ensure jitsi_domain is seeded in platform_settings
+        try {
+            $stmt = $pdo->prepare("INSERT IGNORE INTO platform_settings (setting_key, setting_value) VALUES ('jitsi_domain', 'meet.jit.si')");
+            $stmt->execute();
+        } catch (Exception $settingsEx) {
+            // Ignore silently
+        }
+
         $colsToCheck = [
             'video_call_type' => "VARCHAR(50) DEFAULT 'none'",
             'video_call_url' => "TEXT NULL"
@@ -101,7 +125,7 @@ try {
         
         $videoCallUrl = null;
         if ($videoCallType === 'instant') {
-            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+            $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
         } elseif ($videoCallType === 'scheduled') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
@@ -142,6 +166,7 @@ try {
         echo json_encode([
             "success" => true,
             "tracking_id" => $trackingId,
+            "video_call_url" => $videoCallUrl,
             "message" => "Ticket created successfully. Check your email for the tracking link."
         ]);
         exit;
@@ -258,7 +283,7 @@ try {
         
         $videoCallUrl = null;
         if ($videoCallType === 'instant') {
-            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+            $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
         } elseif ($videoCallType === 'scheduled') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
@@ -326,7 +351,7 @@ try {
         
         $videoCallUrl = null;
         if ($videoCallType === 'instant') {
-            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+            $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
         } elseif ($videoCallType === 'scheduled') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
@@ -438,7 +463,7 @@ try {
         if (!$ticket) exit(json_encode(["error" => "Ticket not found"]));
 
         $trackingId = $ticket['tracking_id'];
-        $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+        $videoCallUrl = getJitsiMeetingUrl($pdo, $trackingId);
 
         // Update ticket
         $stmt = $pdo->prepare("UPDATE tickets SET video_call_type = ?, video_call_url = ? WHERE id = ?");
