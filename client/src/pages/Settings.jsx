@@ -48,6 +48,27 @@ export default function Settings() {
       }
     } catch { /* silent */ }
   };
+  const verifyCheckoutSession = async (sessionId) => {
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const res = await axios.post(`${API_BASE_URL}/billing.php`, {
+        action: 'verify_checkout',
+        sessionId: sessionId
+      }, { headers });
+      if (res.data.success) {
+        alert("🎉 Thank you! Your subscription has been successfully verified and activated!");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        fetchSettings();
+        fetchBillingInfo();
+        if (refreshUser) refreshUser();
+      } else {
+        alert("Verification info: " + res.data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error verifying checkout session. If you completed payment, it may take a few minutes for Stripe to sync. Please refresh the page.");
+    }
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -55,6 +76,12 @@ export default function Settings() {
     axios.get(`${API_BASE_URL}/settings.php`).then(res => {
       setSysSettings(res.data);
     });
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (sessionId) {
+      verifyCheckoutSession(sessionId);
+    }
   }, []);
 
   const fetchSettings = async () => {

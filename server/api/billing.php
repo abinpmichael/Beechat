@@ -131,6 +131,83 @@ try {
             echo json_encode(["status" => "success", "url" => $session->url]);
             exit;
         }
+        
+        if ($action === 'verify_checkout') {
+            $sessionId = $data['sessionId'] ?? '';
+            if (empty($sessionId)) {
+                http_response_code(400); echo json_encode(["error" => "Session ID required"]); exit;
+            }
+
+            if (empty($stripeSecret)) {
+                http_response_code(400); echo json_encode(["error" => "Stripe not configured"]); exit;
+            }
+
+            require_once 'vendor/autoload.php';
+            \Stripe\Stripe::setApiKey($stripeSecret);
+
+            try {
+                $session = \Stripe\Checkout\Session::retrieve($sessionId);
+                if ($session->payment_status === 'paid' || $session->status === 'complete') {
+                    $sessionTenantId = $session->metadata->tenant_id ?? null;
+                    $planId = $session->metadata->plan_id ?? null;
+                    $interval = $session->metadata->interval ?? 'monthly';
+                    $customerId = $session->customer;
+                    $subscriptionId = $session->subscription;
+
+                    if ($sessionTenantId && $planId) {
+                        // Ensure we only update if it is the current tenant
+                        if ((int)$sessionTenantId !== (int)$tenantId) {
+                            http_response_code(403); echo json_encode(["error" => "Unauthorized session verification"]); exit;
+                        }
+
+                        // 1. Update Tenant
+                        $pdo->prepare("UPDATE tenants SET stripe_customer_id = ?, plan_id = ?, is_active = 1 WHERE id = ?")
+                            ->execute([$customerId, $planId, $tenantId]);
+                        
+                        // 2. Add to subscriptions if it doesn't already exist
+                        $stmt = $pdo->prepare("SELECT id FROM subscriptions WHERE stripe_subscription_id = ?");
+                        $stmt->execute([$subscriptionId]);
+                        if (!$stmt->fetchColumn()) {
+                            $pdo->prepare("INSERT INTO subscriptions (tenant_id, plan_id, billing_interval, status, stripe_subscription_id) VALUES (?, ?, ?, 'active', ?)")
+                                ->execute([$tenantId, $planId, $interval, $subscriptionId]);
+                        }
+
+                        // 3. Add to invoices if not already exist
+                        $amount = $session->amount_total / 100;
+                        $pdfUrl = '';
+                        $invoiceId = 'inv_' . time();
+                        if ($subscriptionId) {
+                            try {
+                                $subObj = \Stripe\Subscription::retrieve($subscriptionId);
+                                $latestInvoiceId = $subObj->latest_invoice;
+                                if ($latestInvoiceId) {
+                                    $invoiceId = $latestInvoiceId;
+                                    $invObj = \Stripe\Invoice::retrieve($latestInvoiceId);
+                                    $pdfUrl = $invObj->hosted_invoice_url;
+                                    $amount = $invObj->amount_paid / 100;
+                                }
+                            } catch (Exception $subEx) {
+                                // Ignore
+                            }
+                        }
+
+                        $stmt = $pdo->prepare("SELECT id FROM invoices WHERE stripe_invoice_id = ?");
+                        $stmt->execute([$invoiceId]);
+                        if (!$stmt->fetchColumn()) {
+                            $pdo->prepare("INSERT INTO invoices (tenant_id, stripe_invoice_id, amount, status, pdf_url) VALUES (?, ?, ?, 'paid', ?)")
+                                ->execute([$tenantId, $invoiceId, $amount, $pdfUrl]);
+                        }
+
+                        echo json_encode(["success" => true, "message" => "Subscription verified and activated"]);
+                        exit;
+                    }
+                }
+                echo json_encode(["success" => false, "message" => "Checkout session is not paid"]);
+                exit;
+            } catch (Exception $e) {
+                http_response_code(500); echo json_encode(["error" => "Verification failed: " . $e->getMessage()]); exit;
+            }
+        }
 
         if ($action === 'portal') {
             // Stripe Customer Portal

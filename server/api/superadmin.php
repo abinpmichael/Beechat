@@ -113,8 +113,8 @@ try {
         }
 
         if ($action === 'get_revenue_stats') {
-            // Total Revenue
-            $total = $pdo->query("SELECT SUM(amount) FROM subscriptions_ledger")->fetchColumn() ?? 0;
+            // Total Revenue from invoices
+            $total = $pdo->query("SELECT SUM(amount) FROM invoices WHERE status = 'paid'")->fetchColumn() ?? 0;
             
             // Monthly Breakdown
             $monthly = $pdo->query("
@@ -122,7 +122,8 @@ try {
                     YEAR(created_at) as year, 
                     MONTH(created_at) as month, 
                     SUM(amount) as total 
-                FROM subscriptions_ledger 
+                FROM invoices 
+                WHERE status = 'paid'
                 GROUP BY YEAR(created_at), MONTH(created_at) 
                 ORDER BY year DESC, month DESC
             ")->fetchAll();
