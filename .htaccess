@@ -1,0 +1,12 @@
+# .htaccess for Bee project
+
+RewriteEngine On
+
+# Exempt the API directory from SPA fallback
+RewriteCond %{REQUEST_URI} ^/server/api/ [NC]
+RewriteRule ^ - [L]
+
+# SPA fallback: serve index.html for any other request that doesn't map to a real file
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
