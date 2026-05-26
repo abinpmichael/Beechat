@@ -12,6 +12,7 @@ if (!isset($_FILES['file'])) {
     http_response_code(400); echo json_encode(["error" => "No file uploaded"]); exit;
 }
 
+$file = $_FILES['file'];
 $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'docx', 'xlsx', 'txt', 'zip', 'csv'];
 
@@ -28,7 +29,7 @@ $target  = $uploadDir . $newName;
 
 if (move_uploaded_file($file['tmp_name'], $target)) {
     // Return the relative URL from the server root
-    $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/Bee/server/uploads/";
+    $baseUrl = getServerBaseUrl() . '/uploads/';
     echo json_encode(["url" => $baseUrl . $newName]);
 } else {
     http_response_code(500); echo json_encode(["error" => "Upload failed"]);

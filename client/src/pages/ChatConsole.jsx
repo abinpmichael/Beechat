@@ -322,7 +322,11 @@ export default function ChatConsole() {
                         }`}>
                           {msg.image && (
                             <div className="mb-2">
-                               <img src={`${API_BASE_URL}/${msg.image}`} className="max-w-full rounded-2xl cursor-pointer hover:opacity-90" onClick={() => window.open(`${API_BASE_URL}/${msg.image}`, '_blank')} />
+                               <img 
+                                 src={msg.image.startsWith('http') ? msg.image : `${API_BASE_URL}/${msg.image}`} 
+                                 className="max-w-full rounded-2xl cursor-pointer hover:opacity-90" 
+                                 onClick={() => window.open(msg.image.startsWith('http') ? msg.image : `${API_BASE_URL}/${msg.image}`, '_blank')} 
+                               />
                             </div>
                           )}
                           <p className="text-sm font-medium leading-relaxed">{msg.content}</p>

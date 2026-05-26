@@ -103,7 +103,7 @@ try {
                 $path = $dir . $name;
                 
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $path)) {
-                    $url = 'api/uploads/' . $name;
+                    $url = getServerBaseUrl() . '/uploads/' . $name;
                     $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, image) VALUES (?, ?, ?, ?)");
                     $stmt->execute([$leadId, $sender, 'Sent an image', $url]);
                     $msgId = $pdo->lastInsertId();

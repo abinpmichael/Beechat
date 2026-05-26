@@ -5,7 +5,7 @@ import {
   Inbox, Send, Clock, CheckCircle2, AlertCircle, 
   User, MessageSquare, Shield, Filter, Search,
   ChevronRight, MoreVertical, Paperclip, Lock,
-  Plus, ArrowUpRight
+  Plus, ArrowUpRight, Video, Calendar
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
@@ -19,7 +19,8 @@ export default function Tickets() {
   const [search, setSearch] = useState('');
 
   const [isCreating, setIsCreating] = useState(false);
-  const [newTicket, setNewTicket] = useState({ subject: '', email: '', message: '' });
+  const [newTicket, setNewTicket] = useState({ subject: '', email: '', message: '', videoCallType: 'none' });
+  const [activeVideoUrl, setActiveVideoUrl] = useState(null);
 
   useEffect(() => {
     fetchTickets();
@@ -38,7 +39,7 @@ export default function Tickets() {
       });
       if (res.data.error) throw new Error(res.data.error);
       setIsCreating(false);
-      setNewTicket({ subject: '', email: '', message: '' });
+      setNewTicket({ subject: '', email: '', message: '', videoCallType: 'none' });
       fetchTickets();
       if (res.data.tracking_id) fetchTicketDetails(res.data.tracking_id);
     } catch (err) {
@@ -119,6 +120,26 @@ export default function Tickets() {
     }
   };
 
+  const handleInitiateVideo = async () => {
+    if (!selectedTicket || sending) return;
+    setSending(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/tickets.php?action=initiate_video`, {
+        ticket_id: selectedTicket.id,
+        video_call_type: 'instant'
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.error) throw new Error(res.data.error);
+      setSelectedTicket(prev => prev ? { ...prev, video_call_type: 'instant', video_call_url: res.data.video_call_url } : null);
+      fetchTicketDetails(selectedTicket.tracking_id);
+    } catch (err) {
+      alert("Failed to initiate video call: " + (err.response?.data?.error || err.message));
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-140px)] flex gap-8">
       {/* Sidebar List */}
@@ -183,20 +204,36 @@ export default function Tickets() {
                      </div>
                   </div>
                </div>
-               <div className="flex items-center gap-3">
-                  <button className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><MoreVertical className="w-5 h-5" /></button>
-                  <button 
-                    disabled={sending}
-                    onClick={() => handleUpdateStatus(selectedTicket.status === 'open' ? 'closed' : 'open')}
-                    className={`px-6 py-2.5 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all ${
-                      selectedTicket.status === 'open' 
-                        ? 'bg-slate-900 hover:bg-amber-500' 
-                        : 'bg-emerald-500 hover:bg-emerald-600'
-                    }`}
-                  >
-                    {selectedTicket.status === 'open' ? 'Close Ticket' : 'Reopen Ticket'}
-                  </button>
-               </div>
+                <div className="flex items-center gap-3">
+                   {selectedTicket.video_call_type && selectedTicket.video_call_type !== 'none' ? (
+                      <button 
+                        onClick={() => setActiveVideoUrl(selectedTicket.video_call_url)}
+                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                      >
+                         <Video className="w-4 h-4 animate-pulse" /> Join Video
+                      </button>
+                   ) : (
+                      <button 
+                        disabled={sending}
+                        onClick={handleInitiateVideo}
+                        className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
+                      >
+                         <Video className="w-4 h-4" /> Start Video
+                      </button>
+                   )}
+                   <button className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><MoreVertical className="w-5 h-5" /></button>
+                   <button 
+                     disabled={sending}
+                     onClick={() => handleUpdateStatus(selectedTicket.status === 'open' ? 'closed' : 'open')}
+                     className={`px-6 py-2.5 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all ${
+                       selectedTicket.status === 'open' 
+                         ? 'bg-slate-900 hover:bg-amber-500' 
+                         : 'bg-emerald-500 hover:bg-emerald-600'
+                     }`}
+                   >
+                     {selectedTicket.status === 'open' ? 'Close Ticket' : 'Reopen Ticket'}
+                   </button>
+                </div>
             </div>
 
             {/* Messages Feed */}
@@ -326,10 +363,56 @@ export default function Tickets() {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Initial Message</label>
                   <textarea rows="4" className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] font-bold text-sm outline-none focus:border-amber-500 transition-all" value={newTicket.message} onChange={(e) => setNewTicket({...newTicket, message: e.target.value})} placeholder="Describe the issue..." required />
                 </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Video Support Option</label>
+                  <select 
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-amber-500 text-slate-500 text-xs transition-all cursor-pointer"
+                    value={newTicket.videoCallType || 'none'}
+                    onChange={(e) => setNewTicket({...newTicket, videoCallType: e.target.value})}
+                  >
+                    <option value="none">NO VIDEO SUPPORT (EMAIL/CHAT ONLY)</option>
+                    <option value="instant">ENABLE INSTANT VIDEO ROOM 🎥</option>
+                    <option value="scheduled">ENABLE SCHEDULE MEETING LINK 📅</option>
+                  </select>
+                </div>
                 <button disabled={sending} type="submit" className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
                   {sending ? 'Creating...' : <><Plus className="w-4 h-4" /> Create Ticket</>}
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeVideoUrl && (
+          <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.95 }} 
+              className="relative w-full max-w-5xl h-[85vh] bg-slate-900 rounded-[3.5rem] overflow-hidden border-4 border-slate-800 shadow-2xl flex flex-col"
+            >
+              <div className="p-6 bg-slate-800/80 text-white flex justify-between items-center border-b border-slate-700/50">
+                 <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                       <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" /> Live Video Support Room (Agent)
+                    </h3>
+                    <p className="text-[10px] font-mono text-slate-400 uppercase mt-0.5">Ticket ID: {selectedTicket?.tracking_id}</p>
+                 </div>
+                 <button 
+                   onClick={() => setActiveVideoUrl(null)} 
+                   className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md"
+                 >
+                   Leave Meeting
+                 </button>
+              </div>
+              <iframe 
+                src={activeVideoUrl}
+                allow="camera; microphone; fullscreen; display-capture; autoplay" 
+                className="flex-1 w-full border-none bg-slate-950"
+                title="BeeChat Agent Video Support Room"
+              />
             </motion.div>
           </div>
         )}

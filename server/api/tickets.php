@@ -14,6 +14,22 @@ function generateTrackingId() {
 }
 
 try {
+    // Dynamic column check to ensure tickets schema matches video calling expectations
+    try {
+        $colsToCheck = [
+            'video_call_type' => "VARCHAR(50) DEFAULT 'none'",
+            'video_call_url' => "TEXT NULL"
+        ];
+        foreach ($colsToCheck as $colName => $colDef) {
+            $cols = $pdo->query("SHOW COLUMNS FROM tickets LIKE '$colName'")->fetchAll();
+            if (empty($cols)) {
+                $pdo->exec("ALTER TABLE tickets ADD COLUMN $colName $colDef");
+            }
+        }
+    } catch (Exception $schemaEx) {
+        error_log("Tickets schema check failed: " . $schemaEx->getMessage());
+    }
+
     /* ── PUBLIC TRACKING ACCESS ────────────────────────────────── */
     if ($action === 'track') {
         $trackingId = $_GET['id'] ?? '';
@@ -54,6 +70,7 @@ try {
         $email   = $data['email'] ?? '';
         $phone   = $data['phone'] ?? '';
         $sessionId = $data['sessionId'] ?? '';
+        $videoCallType = $data['videoCallType'] ?? 'none';
 
         if (empty($apiKey) || empty($message)) exit(json_encode(["error" => "Missing data"]));
 
@@ -81,13 +98,30 @@ try {
 
         // 3. Create Ticket
         $trackingId = generateTrackingId();
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status) VALUES (?, ?, ?, ?, 'open')");
-        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject]);
+        
+        $videoCallUrl = null;
+        if ($videoCallType === 'instant') {
+            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+        } elseif ($videoCallType === 'scheduled') {
+            $videoCallUrl = "https://cal.com/beechat-demo/15min";
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?)");
+        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl]);
         $ticketId = $pdo->lastInsertId();
 
         // 4. Save Initial Message as first reply
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, message) VALUES (?, ?)");
         $stmt->execute([$ticketId, $message]);
+
+        // If video call is requested, insert system reply to notify visitor in the replies feed
+        if ($videoCallType !== 'none') {
+            $sysMsg = $videoCallType === 'instant' 
+                ? "🎥 Instant video call requested! Join here: " . $videoCallUrl 
+                : "📅 Video call meeting scheduled! Book here: " . $videoCallUrl;
+            $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, message) VALUES (?, ?)");
+            $stmt->execute([$ticketId, $sysMsg]);
+        }
 
         // Trigger Notification
         triggerNotification($site['tenant_id'], 'new_ticket', 'New Ticket Raised', "Ticket #$trackingId: $subject", "/dashboard/tickets");
@@ -212,6 +246,7 @@ try {
         $priority   = $data['priority'] ?? 'medium';
         $department = $data['department'] ?? 'Support';
         $email      = $data['email'] ?? '';
+        $videoCallType = $data['videoCallType'] ?? 'none';
 
         // 1. Verify lead exists and belongs to tenant
         $stmt = $pdo->prepare("SELECT id FROM leads WHERE id = ? AND tenant_id = ?");
@@ -220,13 +255,30 @@ try {
 
         // 2. Create Ticket
         $trackingId = generateTrackingId();
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department) VALUES (?, ?, ?, ?, 'open', ?, ?)");
-        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department]);
+        
+        $videoCallUrl = null;
+        if ($videoCallType === 'instant') {
+            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+        } elseif ($videoCallType === 'scheduled') {
+            $videoCallUrl = "https://cal.com/beechat-demo/15min";
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)");
+        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl]);
         $ticketId = $pdo->lastInsertId();
 
         // 3. Add Initial Message
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)");
         $stmt->execute([$ticketId, $userId, $message]);
+
+        // If video call is requested, insert system reply to notify visitor in the replies feed
+        if ($videoCallType !== 'none') {
+            $sysMsg = $videoCallType === 'instant' 
+                ? "🎥 Instant video call requested! Join here: " . $videoCallUrl 
+                : "📅 Video call meeting scheduled! Book here: " . $videoCallUrl;
+            $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)");
+            $stmt->execute([$ticketId, $userId, $sysMsg]);
+        }
 
         // 4. Update lead status
         $pdo->prepare("UPDATE leads SET chat_status = 'ticket' WHERE id = ?")->execute([$leadId]);
@@ -254,6 +306,7 @@ try {
         $subject = $data['subject'] ?? 'Internal Support Ticket';
         $message = $data['message'] ?? '';
         $visitorEmail = $data['email'] ?? 'unknown@example.com';
+        $videoCallType = $data['videoCallType'] ?? 'none';
         
         // Find or create website (fallback)
         $stmt = $pdo->prepare("SELECT id FROM websites WHERE tenant_id = ? LIMIT 1");
@@ -270,13 +323,30 @@ try {
 
         // Create Ticket
         $trackingId = generateTrackingId();
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status) VALUES (?, ?, ?, ?, 'open')");
-        $stmt->execute([$tenantId, $leadId, $trackingId, $subject]);
+        
+        $videoCallUrl = null;
+        if ($videoCallType === 'instant') {
+            $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+        } elseif ($videoCallType === 'scheduled') {
+            $videoCallUrl = "https://cal.com/beechat-demo/15min";
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?)");
+        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl]);
         $ticketId = $pdo->lastInsertId();
 
         // Add Initial Message
         $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)");
         $stmt->execute([$ticketId, $userId, $message]);
+
+        // If video call is requested, insert system reply to notify visitor in the replies feed
+        if ($videoCallType !== 'none') {
+            $sysMsg = $videoCallType === 'instant' 
+                ? "🎥 Instant video call requested! Join here: " . $videoCallUrl 
+                : "📅 Video call meeting scheduled! Book here: " . $videoCallUrl;
+            $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)");
+            $stmt->execute([$ticketId, $userId, $sysMsg]);
+        }
 
         // Trigger Notification
         triggerNotification($tenantId, 'new_ticket', 'New Internal Ticket Raised', "Ticket #$trackingId: $subject", "/dashboard/tickets");
@@ -352,6 +422,58 @@ try {
         }
 
         echo json_encode(["success" => true, "status" => $status]);
+        exit;
+    }
+
+    if ($action === 'initiate_video') {
+        $ticketId = $data['ticket_id'] ?? null;
+        $videoCallType = $data['video_call_type'] ?? 'instant';
+        
+        if (!$ticketId) exit(json_encode(["error" => "Ticket ID required"]));
+
+        // Verify ownership and get ticket details
+        $stmt = $pdo->prepare("SELECT tracking_id, subject FROM tickets WHERE id = ? AND tenant_id = ?");
+        $stmt->execute([$ticketId, $tenantId]);
+        $ticket = $stmt->fetch();
+        if (!$ticket) exit(json_encode(["error" => "Ticket not found"]));
+
+        $trackingId = $ticket['tracking_id'];
+        $videoCallUrl = "https://meet.jit.si/BeeChat_Ticket_" . $trackingId;
+
+        // Update ticket
+        $stmt = $pdo->prepare("UPDATE tickets SET video_call_type = ?, video_call_url = ? WHERE id = ?");
+        $stmt->execute([$videoCallType, $videoCallUrl, $ticketId]);
+
+        // Insert system reply to notify visitor in the replies feed
+        $sysMsg = "🎥 Meeting initiated! Click to join video call: " . $videoCallUrl;
+        $stmt = $pdo->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message, is_private) VALUES (?, ?, ?, 0)");
+        $stmt->execute([$ticketId, $userId, $sysMsg]);
+
+        // Notify visitor via Socket.IO if online
+        $stmt = $pdo->prepare("SELECT l.session_id FROM tickets t JOIN leads l ON t.lead_id = l.id WHERE t.id = ?");
+        $stmt->execute([$ticketId]);
+        $tLead = $stmt->fetch();
+        if ($tLead) {
+            $payload = json_encode([
+                'sessionId' => $tLead['session_id'],
+                'type' => 'ticket_reply',
+                'data' => [
+                    'ticketId' => $ticketId,
+                    'trackingId' => $trackingId,
+                    'message' => $sysMsg
+                ]
+            ]);
+            $ch = curl_init("http://localhost:3000/notify-visitor");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+            curl_exec($ch);
+            curl_close($ch);
+        }
+
+        echo json_encode(["success" => true, "video_call_url" => $videoCallUrl]);
         exit;
     }
 

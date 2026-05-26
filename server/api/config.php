@@ -116,6 +116,22 @@ if (!function_exists('getFrontendBaseUrl')) {
     }
 }
 
+if (!function_exists('getServerBaseUrl')) {
+    function getServerBaseUrl() {
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $apiDir = dirname($scriptName);
+        $serverDir = dirname($apiDir);
+        // Normalize backslashes (Windows) to forward slashes
+        $serverDir = str_replace('\\', '/', $serverDir);
+        $serverDir = rtrim($serverDir, '/');
+        
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' || 
+                     (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) ? "https" : "http";
+        
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $protocol . "://" . $host . $serverDir;
+    }
+}
 
 if (!function_exists('triggerNotification')) {
     function triggerNotification($tenantId, $type, $title, $message, $link = '') {

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Clock, Shield, CheckCircle, AlertCircle, 
-  Send, Paperclip, ChevronRight, Loader2, Globe
+  Send, Paperclip, ChevronRight, Loader2, Globe, Video, Calendar
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
@@ -87,6 +87,7 @@ export default function TicketTracking() {
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [activeVideoUrl, setActiveVideoUrl] = useState(null);
 
   useEffect(() => {
     fetchTicket();
@@ -233,6 +234,27 @@ export default function TicketTracking() {
 
           {/* Sidebar Info */}
           <div className="space-y-6">
+             {ticket.video_call_type && ticket.video_call_type !== 'none' && (
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden group border border-amber-400">
+                   <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-150 transition-all duration-700" />
+                   <h3 className="text-lg font-black mb-4 flex items-center gap-3">
+                      {ticket.video_call_type === 'instant' ? <Video className="w-6 h-6 animate-pulse" /> : <Calendar className="w-6 h-6" />}
+                      {ticket.video_call_type === 'instant' ? 'Instant Video Call' : 'Scheduled Video Call'}
+                   </h3>
+                   <p className="text-xs font-medium text-amber-50/80 leading-relaxed mb-6">
+                      {ticket.video_call_type === 'instant' 
+                        ? 'An agent is ready to speak with you! Join the meeting directly via the button below.' 
+                        : 'A face-to-face video consultation slot is waiting. Reserve your time using the calendar link.'}
+                   </p>
+                   <button 
+                     onClick={() => setActiveVideoUrl(ticket.video_call_url)}
+                     className="w-full py-4 bg-white text-amber-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2"
+                   >
+                      {ticket.video_call_type === 'instant' ? 'Join Video Room 🎥' : 'Book Appointment 📅'}
+                   </button>
+                </div>
+             )}
+
              <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-white">
                 <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-3">
                    <Shield className="w-5 h-5 text-amber-500" /> Security Info
@@ -272,6 +294,40 @@ export default function TicketTracking() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {activeVideoUrl && (
+          <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.95 }} 
+              className="relative w-full max-w-5xl h-[85vh] bg-slate-900 rounded-[3.5rem] overflow-hidden border-4 border-slate-800 shadow-2xl flex flex-col"
+            >
+              <div className="p-6 bg-slate-800/80 text-white flex justify-between items-center border-b border-slate-700/50">
+                 <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                       <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" /> Live Video Support Room
+                    </h3>
+                    <p className="text-[10px] font-mono text-slate-400 uppercase mt-0.5">Ticket ID: {trackingId}</p>
+                 </div>
+                 <button 
+                   onClick={() => setActiveVideoUrl(null)} 
+                   className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md"
+                 >
+                   Leave Support
+                 </button>
+              </div>
+              <iframe 
+                src={activeVideoUrl}
+                allow="camera; microphone; fullscreen; display-capture; autoplay" 
+                className="flex-1 w-full border-none bg-slate-950"
+                title="BeeChat Video Support Room"
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

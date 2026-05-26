@@ -204,7 +204,7 @@ export default function ChatWidget({ apiKey }) {
   const [notification, setNotification] = useState(null);
   const [lastSeenMsgId, setLastSeenMsgId] = useState(0);
   const [ticketFormVisible, setTicketFormVisible] = useState(false);
-  const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '' });
+  const [ticketData, setTicketData] = useState({ subject: '', message: '', email: '', phone: '', videoCallType: 'none' });
   const [ticketLoading, setTicketLoading] = useState(false);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
@@ -758,14 +758,21 @@ export default function ChatWidget({ apiKey }) {
           subject: ticketData.subject || 'Offline Support Request',
           message: ticketData.message,
           email: ticketData.email,
-          phone: ticketData.phone
+          phone: ticketData.phone,
+          videoCallType: ticketData.videoCallType || 'none'
         })
       }).then(r => r.json());
 
       if (res.success) {
-        addMsg('bot', `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`);
+        let successMsg = `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`;
+        if (ticketData.videoCallType === 'instant') {
+          successMsg += `\n🎥 Instant meeting generated: https://meet.jit.si/BeeChat_Ticket_${res.tracking_id}`;
+        } else if (ticketData.videoCallType === 'scheduled') {
+          successMsg += `\n📅 Video meeting scheduled: https://cal.com/beechat-demo/15min`;
+        }
+        addMsg('bot', successMsg);
         setTicketFormVisible(false);
-        setTicketData({ subject: '', message: '', email: '', phone: '' });
+        setTicketData({ subject: '', message: '', email: '', phone: '', videoCallType: 'none' });
       }
     } catch (err) {
       addMsg('bot', '❌ Failed to create ticket. Please try again later.');
@@ -895,17 +902,31 @@ export default function ChatWidget({ apiKey }) {
               )}
 
               {ticketFormVisible ? (
-                <motion.form initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} onSubmit={handleTicketSubmit} className="space-y-4 p-6 bg-white border-2 border-slate-50 rounded-[2.5rem] shadow-xl">
-                   <h4 className="font-black text-slate-900 uppercase tracking-tighter text-sm flex items-center gap-2">
-                      <Plus className="w-4 h-4 text-amber-500" /> Create Support Ticket
-                   </h4>
-                   <input required type="email" placeholder="YOUR EMAIL" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.email} onChange={e => setTicketData({...ticketData, email: e.target.value})} />
-                   <textarea required placeholder="HOW CAN WE HELP?" rows="3" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.message} onChange={e => setTicketData({...ticketData, message: e.target.value})} />
-                   <button disabled={ticketLoading} type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-amber-500 transition-all">
-                      {ticketLoading ? 'Sending...' : 'Raise Ticket'}
-                   </button>
-                   <button type="button" onClick={() => setTicketFormVisible(false)} className="w-full text-center text-slate-400 font-black text-[9px] uppercase tracking-widest">Back to Chat</button>
-                </motion.form>
+                 <motion.form initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} onSubmit={handleTicketSubmit} className="space-y-4 p-6 bg-white border-2 border-slate-50 rounded-[2.5rem] shadow-xl">
+                    <h4 className="font-black text-slate-900 uppercase tracking-tighter text-sm flex items-center gap-2">
+                       <Plus className="w-4 h-4 text-amber-500" /> Create Support Ticket
+                    </h4>
+                    <input required type="email" placeholder="YOUR EMAIL" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.email} onChange={e => setTicketData({...ticketData, email: e.target.value})} />
+                    <textarea required placeholder="HOW CAN WE HELP?" rows="3" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.message} onChange={e => setTicketData({...ticketData, message: e.target.value})} />
+                    
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Support Option</label>
+                      <select 
+                        className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold text-slate-500 outline-none cursor-pointer"
+                        value={ticketData.videoCallType || 'none'}
+                        onChange={e => setTicketData({...ticketData, videoCallType: e.target.value})}
+                      >
+                        <option value="none">NO VIDEO CALL (CHAT ONLY)</option>
+                        <option value="instant">REQUEST INSTANT VIDEO CALL 🎥</option>
+                        <option value="scheduled">SCHEDULE VIDEO MEETING 📅</option>
+                      </select>
+                    </div>
+
+                    <button disabled={ticketLoading} type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-amber-500 transition-all">
+                       {ticketLoading ? 'Sending...' : 'Raise Ticket'}
+                    </button>
+                    <button type="button" onClick={() => setTicketFormVisible(false)} className="w-full text-center text-slate-400 font-black text-[9px] uppercase tracking-widest">Back to Chat</button>
+                 </motion.form>
               ) : !branding.is_open && (
                 <div className="p-6 bg-amber-50/50 border border-amber-100 rounded-[2.5rem] text-center">
                    <p className="text-xs font-bold text-amber-900/60 leading-relaxed mb-4">
