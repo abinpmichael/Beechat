@@ -94,6 +94,30 @@ try {
         if ($action === 'upload') {
             $sender  = $_POST['sender']  ?? 'agent';
             
+            // Resolve leadId if it's 0 (e.g. from visitor widget before first chat message)
+            if ($leadId === 0 && $sender === 'visitor') {
+                $sessionId = $_POST['sessionId'] ?? $_GET['sessionId'] ?? '';
+                $apiKey    = $_POST['apiKey']    ?? $_GET['apiKey']    ?? '';
+                if ($sessionId && $apiKey) {
+                    $stmt = $pdo->prepare("SELECT id, tenant_id FROM websites WHERE api_key = ?");
+                    $stmt->execute([$apiKey]);
+                    $website = $stmt->fetch();
+                    if ($website) {
+                        $stmt = $pdo->prepare("SELECT id FROM leads WHERE session_id = ? AND website_id = ?");
+                        $stmt->execute([$sessionId, $website['id']]);
+                        $lead = $stmt->fetch();
+                        if ($lead) {
+                            $leadId = (int)$lead['id'];
+                        } else {
+                            $uid = "V-" . strtoupper(substr(md5($sessionId), 0, 5));
+                            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id, website_id, session_id, visitor_uid, chat_status) VALUES (?, ?, ?, ?, 'lead')");
+                            $stmt->execute([$website['tenant_id'], $website['id'], $sessionId, $uid]);
+                            $leadId = (int)$pdo->lastInsertId();
+                        }
+                    }
+                }
+            }
+            
             if (isset($_FILES['image'])) {
                 $dir = '../uploads/';
                 if (!is_dir($dir)) mkdir($dir, 0777, true);
@@ -107,7 +131,7 @@ try {
                     $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, image) VALUES (?, ?, ?, ?)");
                     $stmt->execute([$leadId, $sender, 'Sent an image', $url]);
                     $msgId = $pdo->lastInsertId();
-
+                    
                     // Fetch lead details
                     $stmt = $pdo->prepare("SELECT tenant_id, session_id, visitor_uid FROM leads WHERE id = ?");
                     $stmt->execute([$leadId]);
@@ -161,7 +185,7 @@ try {
                         }
                     }
 
-                    echo json_encode(["status" => "success", "url" => $url]);
+                    echo json_encode(["status" => "success", "url" => $url, "lead_id" => $leadId]);
                     exit;
                 }
             }

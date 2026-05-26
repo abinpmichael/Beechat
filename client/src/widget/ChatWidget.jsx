@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles } from 'lucide-react';
+import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL, SOCKET_URL } from '../config';
 import { io } from 'socket.io-client';
@@ -687,6 +687,10 @@ export default function ChatWidget({ apiKey }) {
         if (res.url) {
            addMsg('visitor', 'Sent an image', res.url);
            recordActivity();
+           if (res.lead_id) {
+              setLeadId(res.lead_id);
+              leadIdRef.current = res.lead_id;
+           }
         }
      } catch (err) { } finally { setIsUploading(false); }
   };
@@ -911,6 +915,30 @@ export default function ChatWidget({ apiKey }) {
                     </h4>
                     <input required type="email" placeholder="YOUR EMAIL" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.email} onChange={e => setTicketData({...ticketData, email: e.target.value})} />
                     <textarea required placeholder="HOW CAN WE HELP?" rows="3" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none" value={ticketData.message} onChange={e => setTicketData({...ticketData, message: e.target.value})} />
+                    
+                    <div className="flex items-center gap-2">
+                      <label className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-all cursor-pointer shadow-sm border border-slate-100 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                         <Paperclip className="w-4 h-4 text-amber-500" />
+                         <span>{isUploading ? 'Uploading...' : 'Attach Image/File'}</span>
+                         <input type="file" className="hidden" onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            setIsUploading(true);
+                            const fd = new FormData();
+                            fd.append('file', file);
+                            try {
+                               const res = await fetch(`${API}/upload.php`, { method: 'POST', body: fd }).then(r => r.json());
+                               if (res.url) {
+                                  setTicketData(prev => ({
+                                     ...prev,
+                                     message: prev.message + (prev.message ? "\n" : "") + res.url
+                                  }));
+                               }
+                            } catch (err) { alert("Upload failed"); }
+                            finally { setIsUploading(false); }
+                         }} disabled={isUploading} />
+                      </label>
+                    </div>
                     
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Support Option</label>

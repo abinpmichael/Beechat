@@ -362,6 +362,30 @@ export default function Tickets() {
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Initial Message</label>
                   <textarea rows="4" className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] font-bold text-sm outline-none focus:border-amber-500 transition-all" value={newTicket.message} onChange={(e) => setNewTicket({...newTicket, message: e.target.value})} placeholder="Describe the issue..." required />
+                  
+                  <div className="mt-3">
+                     <label className="p-3.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-all cursor-pointer shadow-sm border border-slate-100 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest w-fit">
+                        <Paperclip className="w-4 h-4 text-amber-500" />
+                        <span>{sending ? 'Uploading...' : 'Attach Image/File'}</span>
+                        <input type="file" className="hidden" onChange={async (e) => {
+                           const file = e.target.files[0];
+                           if (!file) return;
+                           const formData = new FormData();
+                           formData.append('file', file);
+                           try {
+                              setSending(true);
+                              const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
+                              if (res.data.url) {
+                                 setNewTicket(prev => ({
+                                    ...prev,
+                                    message: prev.message + (prev.message ? "\n" : "") + res.data.url
+                                 }));
+                              }
+                           } catch (err) { alert("Upload failed"); }
+                           finally { setSending(false); }
+                        }} disabled={sending} />
+                     </label>
+                  </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Video Support Option</label>
