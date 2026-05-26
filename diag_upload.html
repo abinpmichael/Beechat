@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Chat - Upload Diagnostics</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); max-w: 600px; margin: 0 auto 30px; border: 1px solid #e2e8f0; }
+        h1 { margin-top: 0; font-size: 24px; font-weight: 800; color: #0f172a; }
+        h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: #475569; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; tracking: 0.1em; color: #94a3b8; margin-bottom: 8px; }
+        input[type="file"], select, input[type="text"] { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; font-weight: bold; background: #f8fafc; box-sizing: border-box; }
+        button { background: #f59e0b; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s; width: 100%; text-transform: uppercase; font-size: 12px; letter-spacing: 0.1em; }
+        button:hover { background: #d97706; transform: translateY(-1px); }
+        .response { background: #0f172a; color: #38bdf8; padding: 20px; border-radius: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; margin-top: 20px; border: 1px solid #334155; display: none; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Bee Chat Upload Diagnostics</h1>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">Use this page to test file uploads to your endpoints and diagnose any errors.</p>
+        
+        <h2>Test Endpoint: upload.php</h2>
+        <form id="formUpload" onsubmit="testUpload(event)">
+            <label>Select File</label>
+            <input type="file" name="file" required>
+            <button type="submit">Upload via upload.php</button>
+        </form>
+        <div id="respUpload" class="response"></div>
+    </div>
+
+    <div class="card">
+        <h2>Test Endpoint: conversations.php?action=upload</h2>
+        <form id="formConversations" onsubmit="testConversations(event)">
+            <label>Lead ID (mock)</label>
+            <input type="text" name="leadId" value="1">
+            <label>Select Image</label>
+            <input type="file" name="image" accept="image/*" required>
+            <button type="submit">Upload via conversations.php</button>
+        </form>
+        <div id="respConversations" class="response"></div>
+    </div>
+
+    <script>
+        async function testUpload(e) {
+            e.preventDefault();
+            const form = e.target;
+            const fileInput = form.querySelector('input[type="file"]');
+            const respDiv = document.getElementById('respUpload');
+            
+            if (!fileInput.files[0]) return;
+            
+            respDiv.style.display = 'block';
+            respDiv.innerHTML = 'Uploading...';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('server/api/upload.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const status = response.status;
+                const text = await response.text();
+                let parsed;
+                try { parsed = JSON.parse(text); } catch(err) { }
+                
+                respDiv.innerHTML = `<span class="label">Status Code:</span> ${status}\n\n`;
+                if (status >= 200 && status < 300) {
+                    respDiv.innerHTML += `<span class="success">SUCCESS:</span>\n` + JSON.stringify(parsed || text, null, 2);
+                } else {
+                    respDiv.innerHTML += `<span class="error">ERROR:</span>\n` + JSON.stringify(parsed || text, null, 2);
+                }
+            } catch (err) {
+                respDiv.innerHTML = `<span class="error">FETCH EXCEPTION:</span>\n` + err.message;
+            }
+        }
+
+        async function testConversations(e) {
+            e.preventDefault();
+            const form = e.target;
+            const fileInput = form.querySelector('input[type="file"]');
+            const leadId = form.querySelector('input[name="leadId"]').value;
+            const respDiv = document.getElementById('respConversations');
+            
+            if (!fileInput.files[0]) return;
+            
+            respDiv.style.display = 'block';
+            respDiv.innerHTML = 'Uploading...';
+            
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('leadId', leadId);
+            formData.append('sender', 'visitor');
+            
+            try {
+                const response = await fetch('server/api/conversations.php?action=upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const status = response.status;
+                const text = await response.text();
+                let parsed;
+                try { parsed = JSON.parse(text); } catch(err) { }
+                
+                respDiv.innerHTML = `<span class="label">Status Code:</span> ${status}\n\n`;
+                if (status >= 200 && status < 300) {
+                    respDiv.innerHTML += `<span class="success">SUCCESS:</span>\n` + JSON.stringify(parsed || text, null, 2);
+                } else {
+                    respDiv.innerHTML += `<span class="error">ERROR:</span>\n` + JSON.stringify(parsed || text, null, 2);
+                }
+            } catch (err) {
+                respDiv.innerHTML = `<span class="error">FETCH EXCEPTION:</span>\n` + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
