@@ -160,9 +160,10 @@ try {
         $aiAutoReply = isset($settings['ai_auto_reply']) ? (int)$settings['ai_auto_reply'] : 1;
         $shouldTriggerAI = ($globalAi == '1' && $aiAutoReply === 1 && isset($website['ai_enabled']) && (int)$website['ai_enabled'] === 1);
         
-        // Apply "Offline Only" rule: If agents are online and "offline only" is active, skip AI.
-        if ($shouldTriggerAI && $agentsOnline && ($settings['ai_offline_only'] ?? 1) == 1) {
-            $shouldTriggerAI = false;
+        // Enhanced offline‑only logic with force_ai override
+        $forceAI = $settings['force_ai'] ?? 0;
+        if ($shouldTriggerAI && $agentsOnline && ($settings['ai_offline_only'] ?? 1) == 1 && !$forceAI) {
+            $shouldTriggerAI = false; // suppress AI only if offline‑only is active and not forced
         }
 
         if ($shouldTriggerAI) {

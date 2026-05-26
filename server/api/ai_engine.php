@@ -76,12 +76,26 @@ class AIEngine {
         ]);
 
         $response = curl_exec($ch);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
+        if ($response === false || $curlError) {
+            // OpenAI request failed – fallback to first knowledge‑base result if available
+            if (!empty($results)) {
+                return $results[0]['content'];
+            }
+            return null;
+        }
+
         $json = json_decode($response, true);
-        
+
         if (isset($json['choices'][0]['message']['content'])) {
             return trim($json['choices'][0]['message']['content']);
+        }
+
+        // If OpenAI returned no content, fallback to knowledge base if we have data
+        if (!empty($results)) {
+            return $results[0]['content'];
         }
 
         return null;
