@@ -157,7 +157,8 @@ try {
         // Check GLOBAL AI toggle first
         $globalAi = $pdo->query("SELECT setting_value FROM platform_settings WHERE setting_key = 'enable_ai_bot'")->fetchColumn();
 
-        $shouldTriggerAI = ($globalAi == '1' && $settings && $settings['ai_auto_reply'] == 1);
+        $aiAutoReply = isset($settings['ai_auto_reply']) ? (int)$settings['ai_auto_reply'] : 1;
+        $shouldTriggerAI = ($globalAi == '1' && $aiAutoReply === 1 && isset($website['ai_enabled']) && (int)$website['ai_enabled'] === 1);
         
         // Apply "Offline Only" rule: If agents are online and "offline only" is active, skip AI.
         if ($shouldTriggerAI && $agentsOnline && ($settings['ai_offline_only'] ?? 1) == 1) {

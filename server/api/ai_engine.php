@@ -17,12 +17,14 @@ class AIEngine {
 
         // 2. Fetch Knowledge Base Context
         // We get top 3 articles matching the query to provide to GPT
-        $words = explode(' ', strtolower($userMessage));
+        // Strip punctuation to clean search keywords
+        $cleanMessage = preg_replace('/[^\w\s]/', '', $userMessage);
+        $words = explode(' ', strtolower($cleanMessage));
         $searchTerms = array_filter($words, function($w) { return strlen($w) > 2; });
         
         $context = "";
         if (!empty($searchTerms)) {
-            $query = "SELECT title, content FROM knowledge_base WHERE ((tenant_id = ? AND website_id = ?) OR (tenant_id = 0 AND website_id = 0)) AND (";
+            $query = "SELECT title, content FROM knowledge_base WHERE ((tenant_id = ? AND website_id = ?) OR (tenant_id = 0 AND website_id = 0) OR (tenant_id IS NULL AND website_id IS NULL)) AND (";
             $params = [$tenantId, $websiteId];
             
             $conditions = [];
