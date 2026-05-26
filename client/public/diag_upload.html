@@ -61,7 +61,7 @@
             formData.append('file', fileInput.files[0]);
             
             try {
-                const response = await fetch('server/api/upload.php', {
+                const response = await fetch('/server/api/upload.php', {
                     method: 'POST',
                     body: formData
                 });
@@ -100,7 +100,7 @@
             formData.append('sender', 'visitor');
             
             try {
-                const response = await fetch('server/api/conversations.php?action=upload', {
+                const response = await fetch('/server/api/conversations.php?action=upload', {
                     method: 'POST',
                     body: formData
                 });
