@@ -85,7 +85,7 @@ try {
 
     // ─── POST actions ─────────────────────────────────────────────────────────
     if ($method === 'POST') {
-        $action   = $data['action']    ?? $_POST['action'] ?? 'send';
+        $action   = $data['action']    ?? $_POST['action']    ?? $_GET['action'] ?? 'send';
         $leadId   = intval($data['leadId']    ?? $_POST['leadId'] ?? 0);
         $agentId  = $data['agentId']   ?? $_POST['agentId'] ?? null;
         $agentName= trim($data['agentName']  ?? $_POST['agentName'] ?? 'Agent');

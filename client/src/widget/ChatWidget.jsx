@@ -675,6 +675,7 @@ export default function ChatWidget({ apiKey }) {
      if (!file) return;
      setIsUploading(true);
      const formData = new FormData();
+     formData.append('action', 'upload');
      formData.append('image', file);
      formData.append('apiKey', apiKey);
      formData.append('leadId', leadIdRef.current || '');

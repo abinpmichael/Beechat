@@ -235,9 +235,21 @@ export default function TicketTracking() {
                   onChange={(e) => setReply(e.target.value)}
                 />
                 <div className="absolute bottom-6 right-6 flex items-center gap-3">
-                   <button type="button" className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">
+                   <label className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all cursor-pointer shadow-sm border border-slate-100">
                       <Paperclip className="w-5 h-5" />
-                   </button>
+                      <input type="file" className="hidden" onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                             setSending(true);
+                             const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
+                             if (res.data.url) setReply(p => p + (p ? "\n" : "") + res.data.url);
+                          } catch (err) { alert("Upload failed"); }
+                          finally { setSending(false); }
+                       }} />
+                   </label>
                    <button 
                      disabled={sending}
                      type="submit" 
