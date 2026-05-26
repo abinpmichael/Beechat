@@ -773,7 +773,7 @@ export default function ChatWidget({ apiKey }) {
         if (ticketData.videoCallType === 'instant') {
           successMsg += `\n🎥 Instant meeting generated: ${res.video_call_url || `https://meet.jit.si/BeeChat_Ticket_${res.tracking_id}`}`;
         } else if (ticketData.videoCallType === 'scheduled') {
-          successMsg += `\n📅 Video meeting scheduled: https://cal.com/beechat-demo/15min`;
+          successMsg += `\n📅 Video meeting scheduled: ${res.video_call_url || 'https://cal.com/beechat-demo/15min'}`;
         }
         addMsg('bot', successMsg);
         setTicketFormVisible(false);
