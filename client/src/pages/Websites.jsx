@@ -216,8 +216,18 @@ export default function Websites() {
     try {
       await axios.post(`${API_URL}?action=toggle_ai`, { id: siteId, enabled: !currentStatus }, { headers: authH() });
       fetchWebsites();
-    } catch (err) { }
+    } catch (err) {}
   };
+
+  // Toggle video call permission per website
+  const handleToggleVideoCall = async (siteId, currentAllowed) => {
+    // Assuming all users can toggle; adjust permission check if needed
+    try {
+      await axios.post(`${API_URL}?action=toggle_video_call`, { id: siteId, allowed: !currentAllowed }, { headers: authH() });
+      fetchWebsites();
+    } catch (err) {}
+  };
+
 
   const handleUpdateBranding = async (e) => {
     e.preventDefault();
@@ -351,6 +361,10 @@ export default function Websites() {
                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
                       </div>
                     </div>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={site.video_call_allowed} onChange={() => handleToggleVideoCall(site.id, site.video_call_allowed)} className="w-4 h-4" />
+                      <span className="text-xs font-black text-slate-600">Video Call</span>
+                    </label>
                     <button onClick={() => handleToggleAI(site.id, site.ai_enabled)}
                       className={`p-3 rounded-xl transition-all flex items-center gap-2 border-2 ${site.ai_enabled ? 'bg-amber-500 text-white border-amber-400 shadow-xl shadow-amber-100' : 'bg-white text-slate-400 border-slate-50'}`}
                     >

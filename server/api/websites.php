@@ -24,7 +24,9 @@ try {
             'form_config' => 'LONGTEXT',
             'header_bg_gradient' => 'VARCHAR(255)',
             'notification_sound' => 'TEXT',
-            'widget_icon' => 'TEXT'
+            'widget_icon' => 'TEXT',
+            // New column to enable/disable video call link per website
+            'video_call_allowed' => 'BOOLEAN DEFAULT 0'
         ];
         foreach ($colsToCheck as $colName => $colDef) {
             $cols = $pdo->query("SHOW COLUMNS FROM websites LIKE '$colName'")->fetchAll();
@@ -50,6 +52,15 @@ try {
             $stmt = $pdo->prepare("UPDATE websites SET ai_enabled = ? WHERE id = ? AND tenant_id = ?");
             $stmt->execute([$enabled, $id, $tenantId]);
             echo json_encode(["message" => "AI status updated"]);
+            exit;
+        }
+        // New endpoint to toggle video call permission per website
+        if (isset($_GET['action']) && $_GET['action'] === 'toggle_video_call') {
+            $id = $data['id'] ?? 0;
+            $allowed = $data['allowed'] ? 1 : 0;
+            $stmt = $pdo->prepare("UPDATE websites SET video_call_allowed = ? WHERE id = ? AND tenant_id = ?");
+            $stmt->execute([$allowed, $id, $tenantId]);
+            echo json_encode(["message" => "Video call permission updated"]);
             exit;
         }
 

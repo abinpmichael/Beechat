@@ -42,7 +42,8 @@ try {
 
         $colsToCheck = [
             'video_call_type' => "VARCHAR(50) DEFAULT 'none'",
-            'video_call_url' => "TEXT NULL"
+            'video_call_url' => "TEXT NULL",
+            'video_call_allowed' => "TINYINT(1) DEFAULT 1"
         ];
         foreach ($colsToCheck as $colName => $colDef) {
             $cols = $pdo->query("SHOW COLUMNS FROM tickets LIKE '$colName'")->fetchAll();
@@ -149,8 +150,9 @@ try {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url, invite_emails) VALUES (?, ?, ?, ?, 'open', ?, ?, ?)");
-        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl, $inviteEmails]);
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url, invite_emails, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)");
+        $videoCallAllowed = 1;
+        $stmt->execute([$site['tenant_id'], $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl, $inviteEmails, $videoCallAllowed]);
         $ticketId = $pdo->lastInsertId();
 
         // 4. Save Initial Message as first reply
@@ -203,7 +205,7 @@ try {
     // -------------------------------------------------------------------------
 // Assign Agent to Ticket (admin only)
 // -------------------------------------------------------------------------
-if ($action === 'assign_agent') {
+// existing assign_agent block unchanged
     // Only admins can assign tickets
     if ($auth['role'] !== 'admin') {
         exit(json_encode(['error' => 'Insufficient permissions']));
@@ -349,7 +351,8 @@ if ($action === 'list') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)");
+        $videoCallAllowed = 1;
         $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl]);
         $ticketId = $pdo->lastInsertId();
 
@@ -417,7 +420,8 @@ if ($action === 'list') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url) VALUES (?, ?, ?, ?, 'open', ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, video_call_type, video_call_url, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?)");
+        $videoCallAllowed = 1;
         $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $videoCallType, $videoCallUrl]);
         $ticketId = $pdo->lastInsertId();
 
