@@ -129,13 +129,19 @@ const DynamicForm = ({ formConfig, onSubmit, color, isSubmitted }) => {
       }
     }
     setLoading(true);
-    try {
-      await onSubmit(formData);
-    } catch (err) {
-      setError('Failed to submit. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+      try {
+        await onSubmit(formData);
+        // Create a readable summary of the submitted form data
+        const summary = Object.entries(formData)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join(', ');
+        // Add the summary as a system message in the chat history
+        setMessages(prev => [...prev, { role: 'system', text: `Form submitted: ${summary}` }]);
+      } catch (err) {
+        setError('Failed to submit. Please try again.');
+      } finally {
+        setLoading(false);
+      }
   };
 
   const handleChange = (name, value) => {
