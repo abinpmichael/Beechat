@@ -98,7 +98,15 @@ class AIEngine {
 
         // Log API errors for debugging
         if (isset($json['error'])) {
-            error_log("AI Engine OpenAI error (HTTP $httpCode): " . $json['error']['message']);
+            $errMsg = $json['error']['message'] ?? 'Unknown error';
+            $errType = $json['error']['type'] ?? '';
+            if ($httpCode === 401) {
+                error_log("AI Engine: Invalid OpenAI API key. Please update it in Super Admin → Settings. Error: $errMsg");
+            } elseif ($httpCode === 429) {
+                error_log("AI Engine: OpenAI rate limit or quota exceeded. Error: $errMsg");
+            } else {
+                error_log("AI Engine OpenAI error (HTTP $httpCode, type=$errType): $errMsg");
+            }
             if (!empty($results)) return $results[0]['content'];
             return null;
         }
