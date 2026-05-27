@@ -710,11 +710,21 @@ export default function ChatWidget({ apiKey }) {
     if (e) e.preventDefault(); const text = contentOverride || input.trim(); if (!text) return; if (!contentOverride) setInput(''); 
     addMsg('visitor', text);
     recordActivity();
-    if (isLive && leadIdRef.current) { fetch(`${API}/conversations.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'send', leadId: leadIdRef.current, sender:'visitor', content: text }) }); return; }
+    if (isLive && leadIdRef.current) { 
+      // Send to conversations for human agent to see
+      fetch(`${API}/conversations.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'send', leadId: leadIdRef.current, sender:'visitor', content: text }) });
+      // Also send to chat.php so AI can respond while waiting for human
+      setIsTyping(true);
+      fetch(`${API}/chat.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ apiKey, message: text, sessionId: sessionRef.current, isOffline: !branding.is_open }) })
+      .then(r => r.json()).then(d => { setIsTyping(false); if (d.content && d.ai_mode) addMsg('bot', d.content); if (d.lead_id) setLeadId(d.lead_id); })
+      .catch(() => setIsTyping(false));
+      return;
+    }
     const step = steps.find(s => s.id == stepId); if (step && step.type === 'text') { handleStep(text, step.next); return; }
     setIsTyping(true);
     fetch(`${API}/chat.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ apiKey, message: text, sessionId: sessionRef.current, isOffline: !branding.is_open }) })
-    .then(r => r.json()).then(d => { setIsTyping(false); if (d.content) addMsg('bot', d.content); if (d.lead_id) setLeadId(d.lead_id); });
+    .then(r => r.json()).then(d => { setIsTyping(false); if (d.content) addMsg('bot', d.content); if (d.lead_id) setLeadId(d.lead_id); })
+    .catch(() => setIsTyping(false));
   };
 
   const handleStep = useCallback((label, next) => {
