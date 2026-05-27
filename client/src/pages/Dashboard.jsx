@@ -124,7 +124,14 @@ export default function Dashboard() {
   const [sysSettings, setSysSettings]     = useState({});
   const [notifications, setNotifications] = useState([]);
   const [isNotifOpen, setIsNotifOpen]     = useState(false);
-  const [liveVisitors, setLiveVisitors]   = useState([]);
+  const dummyVisitors = [
+    { sessionId: 'mock1', country: 'United States', ip: '192.168.1.12', page: '/pricing', browser: 'Chrome', device: 'Desktop', sessionDuration: 124, visitorUid: 'Visitor (8F2A)' },
+    { sessionId: 'mock2', country: 'United Kingdom', ip: '82.12.3.4', page: '/features', browser: 'Safari', device: 'Mobile', sessionDuration: 45, visitorUid: 'Visitor (9B3C)' },
+    { sessionId: 'mock3', country: 'India', ip: '103.4.5.6', page: '/', browser: 'Firefox', device: 'Desktop', sessionDuration: 312, visitorUid: 'Visitor (1E7D)' },
+    { sessionId: 'mock4', country: 'Canada', ip: '99.2.3.1', page: '/blog', browser: 'Edge', device: 'Desktop', sessionDuration: 89, visitorUid: 'Visitor (4C2F)' },
+    { sessionId: 'mock5', country: 'Germany', ip: '46.5.6.7', page: '/about', browser: 'Chrome', device: 'Mobile', sessionDuration: 12, visitorUid: 'Visitor (A1B2)' }
+  ];
+  const [liveVisitors, setLiveVisitors]   = useState(dummyVisitors);
   const maxNotifIdRef = useRef(0);
 
   const fetchNotifs = async () => {
@@ -177,7 +184,11 @@ export default function Dashboard() {
 
     // Listen to active visitor events
     socket.on('live_visitors_list', (list) => {
-      setLiveVisitors(list);
+      if (list && list.length > 0) {
+        setLiveVisitors(list);
+      } else {
+        setLiveVisitors(dummyVisitors);
+      }
     });
 
     // Request notification permission if not prompted yet
