@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 // server/api/worker.php
 // This script should be run by a cron job every minute
