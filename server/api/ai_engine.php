@@ -15,41 +15,24 @@ class AIEngine {
         $stmt->execute();
         $openAiKey = $stmt->fetchColumn();
 
-        // 2. Fetch Knowledge Base Context (top 5 matching articles)
-        $cleanMessage = preg_replace('/[^\w\s]/', '', $userMessage);
-        $words = explode(' ', strtolower($cleanMessage));
-        $searchTerms = array_filter($words, function($w) { return strlen($w) > 2; });
+        // 2. Fetch Knowledge Base Context
+        // We fetch up to 20 knowledge items directly to give the AI full context
+        // instead of relying on a flawed keyword match that misses information.
+        $stmt = $this->pdo->prepare("SELECT title, content FROM knowledge_base WHERE (
+            (tenant_id = ? AND website_id = ?) OR 
+            (tenant_id IS NULL AND website_id IS NULL)
+        ) LIMIT 20");
+        $stmt->execute([$tenantId, $websiteId]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $context = "";
-        $results = [];
-        if (!empty($searchTerms)) {
-            $query = "SELECT title, content FROM knowledge_base WHERE (
-                (tenant_id = ? AND website_id = ?) OR 
-                (tenant_id IS NULL AND website_id IS NULL)
-            ) AND (";
-            $params = [$tenantId, $websiteId];
-            
-            $conditions = [];
-            foreach ($searchTerms as $term) {
-                $conditions[] = "(title LIKE ? OR content LIKE ?)";
-                $params[] = "%$term%";
-                $params[] = "%$term%";
-            }
-            $query .= implode(' OR ', $conditions) . ") LIMIT 5";
-
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute($params);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            foreach ($results as $res) {
-                $context .= "Q: " . $res['title'] . "\nA: " . $res['content'] . "\n\n";
-            }
+        foreach ($results as $res) {
+            $context .= "Topic: " . $res['title'] . "\nDetails: " . $res['content'] . "\n\n";
         }
 
-        // 3. If no OpenAI key, return first KB match or smart fallback
+        // 3. If no OpenAI key, return smart fallback
         if (empty($openAiKey)) {
             error_log("AI Engine: No OpenAI API key configured in platform_settings.");
-            if (!empty($results)) return $results[0]['content'];
             return $this->smartFallback($userMessage);
         }
 
