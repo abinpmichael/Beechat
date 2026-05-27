@@ -603,12 +603,6 @@ const Hero = () => (
             <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
         </div>
-
-        <div className="relative group">
-          <a href="/video-ad" className="group relative w-full sm:w-auto bg-white text-slate-800 border-2 border-slate-250 px-10 md:px-16 py-5 md:py-8 rounded-[2rem] md:rounded-[3rem] font-black text-xl md:text-3xl shadow-lg hover:border-amber-500 hover:text-amber-600 transition-all duration-500 flex items-center justify-center gap-4 md:gap-6 uppercase tracking-tighter overflow-hidden">
-            <span className="relative z-10">Watch Ad 🎬</span>
-          </a>
-        </div>
       </motion.div>
 
       <div className="pt-16 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
