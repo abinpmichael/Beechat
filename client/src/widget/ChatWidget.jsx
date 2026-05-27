@@ -744,7 +744,22 @@ export default function ChatWidget({ apiKey }) {
        localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
        setStepId(null); 
        setIsTyping(true); 
-       setTimeout(() => { addMsg('bot', branding.success); setIsTyping(false); }, 700); 
+       
+       // Send the visitor's final survey answer to the AI so it can generate an automatic reply!
+       fetch(`${API}/chat.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ apiKey, message: label, sessionId: sessionRef.current, isOffline: !branding.is_open }) })
+       .then(r => r.json()).then(d => { 
+           setIsTyping(false); 
+           if (d.content) {
+               addMsg('bot', d.content); 
+           } else {
+               addMsg('bot', branding.success); 
+           }
+           if (d.lead_id) setLeadId(d.lead_id); 
+       })
+       .catch(() => {
+           setIsTyping(false);
+           addMsg('bot', branding.success);
+       });
        return; 
     }
     const nxt = steps.find(s => s.id == next); 
