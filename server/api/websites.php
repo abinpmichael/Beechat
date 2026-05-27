@@ -124,7 +124,7 @@ try {
         // -------------------------
 
         $apiKey = bin2hex(random_bytes(16));
-        $stmt = $pdo->prepare("INSERT INTO websites (tenant_id, domain, api_key, settings) VALUES (?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO websites (tenant_id, domain, api_key, ai_enabled, settings) VALUES (?, ?, ?, 1, ?)");
         $stmt->execute([$tenantId, $domain, $apiKey, json_encode(['theme' => 'default'])]);
         
         echo json_encode([

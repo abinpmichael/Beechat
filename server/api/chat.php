@@ -144,26 +144,38 @@ try {
         $pdo->prepare("INSERT INTO messages (lead_id,sender_type,content) VALUES (?,?,?)")
             ->execute([$leadId, 'visitor', $message]);
         
-        // --- AI & AUTOMATION INTEGRATION (CognitioIT Rules) ---
-        $stmt = $pdo->prepare("SELECT ai_auto_reply, ai_offline_only FROM tenant_settings WHERE tenant_id = ?");
+        // --- AI & AUTOMATION INTEGRATION ---
+        $stmt = $pdo->prepare("SELECT ai_auto_reply, ai_offline_only, force_ai FROM tenant_settings WHERE tenant_id = ?");
         $stmt->execute([$website['tenant_id']]);
         $settings = $stmt->fetch();
 
-        // Check if ANY agent is online (last_seen_at < 60s ago)
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE tenant_id = ? AND last_seen_at > (NOW() - INTERVAL 1 MINUTE)");
-        $stmt->execute([$website['tenant_id']]);
-        $agentsOnline = $stmt->fetchColumn() > 0;
-
-        // Check GLOBAL AI toggle first
+        // Check GLOBAL AI toggle
         $globalAi = $pdo->query("SELECT setting_value FROM platform_settings WHERE setting_key = 'enable_ai_bot'")->fetchColumn();
-
-        $aiAutoReply = isset($settings['ai_auto_reply']) ? (int)$settings['ai_auto_reply'] : 1;
-        $shouldTriggerAI = ($globalAi == '1' && $aiAutoReply === 1 && isset($website['ai_enabled']) && (int)$website['ai_enabled'] === 1);
         
-        // Enhanced offline‑only logic with force_ai override
-        $forceAI = $settings['force_ai'] ?? 0;
-        if ($shouldTriggerAI && $agentsOnline && ($settings['ai_offline_only'] ?? 1) == 1 && !$forceAI) {
-            $shouldTriggerAI = false; // suppress AI only if offline‑only is active and not forced
+        // website-level AI must be enabled
+        $websiteAiOn = isset($website['ai_enabled']) && (int)$website['ai_enabled'] === 1;
+        
+        // tenant ai_auto_reply defaults to 1 (enabled)
+        $aiAutoReply = isset($settings['ai_auto_reply']) ? (int)$settings['ai_auto_reply'] : 1;
+
+        // Build trigger decision — globalAi must be 1, website must have AI on, tenant must have auto-reply on
+        $shouldTriggerAI = ($globalAi == '1' && $websiteAiOn && $aiAutoReply === 1);
+
+        // Offline-only suppression: only suppress if tenant explicitly set ai_offline_only=1
+        // Default is 0 (AI always replies) to avoid silently blocking AI
+        if ($shouldTriggerAI) {
+            $aiOfflineOnly = isset($settings['ai_offline_only']) ? (int)$settings['ai_offline_only'] : 0;
+            $forceAI = isset($settings['force_ai']) ? (int)$settings['force_ai'] : 0;
+            
+            if ($aiOfflineOnly === 1 && !$forceAI) {
+                // Check if ANY agent is online (active in last 2 minutes)
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE tenant_id = ? AND last_seen_at > (NOW() - INTERVAL 2 MINUTE)");
+                $stmt->execute([$website['tenant_id']]);
+                $agentsOnline = (int)$stmt->fetchColumn();
+                if ($agentsOnline > 0) {
+                    $shouldTriggerAI = false;
+                }
+            }
         }
 
         if ($shouldTriggerAI) {
@@ -172,8 +184,8 @@ try {
             $aiResponse = $ai->getResponse($website['tenant_id'], $website['id'], $message);
 
             if ($aiResponse) {
-                $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_name) VALUES (?, 'agent', ?, 'AI')")
-                    ->execute([$leadId, "[AI]: " . $aiResponse]);
+                $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_name) VALUES (?, 'agent', ?, 'AI Bot')")
+                    ->execute([$leadId, $aiResponse]);
                 
                 echo json_encode([
                     "sender_type" => "bot", 

@@ -10,21 +10,23 @@ class AIEngine {
     }
 
     public function getResponse($tenantId, $websiteId, $userMessage) {
-        // 1. Check if OpenAI is configured
+        // 1. Get OpenAI API key from platform_settings
         $stmt = $this->pdo->prepare("SELECT setting_value FROM platform_settings WHERE setting_key = 'openai_api_key'");
         $stmt->execute();
         $openAiKey = $stmt->fetchColumn();
 
-        // 2. Fetch Knowledge Base Context
-        // We get top 3 articles matching the query to provide to GPT
-        // Strip punctuation to clean search keywords
+        // 2. Fetch Knowledge Base Context (top 5 matching articles)
         $cleanMessage = preg_replace('/[^\w\s]/', '', $userMessage);
         $words = explode(' ', strtolower($cleanMessage));
         $searchTerms = array_filter($words, function($w) { return strlen($w) > 2; });
         
         $context = "";
+        $results = [];
         if (!empty($searchTerms)) {
-            $query = "SELECT title, content FROM knowledge_base WHERE ((tenant_id = ? AND website_id = ?) OR (tenant_id = 0 AND website_id = 0) OR (tenant_id IS NULL AND website_id IS NULL)) AND (";
+            $query = "SELECT title, content FROM knowledge_base WHERE (
+                (tenant_id = ? AND website_id = ?) OR 
+                (tenant_id IS NULL AND website_id IS NULL)
+            ) AND (";
             $params = [$tenantId, $websiteId];
             
             $conditions = [];
@@ -44,25 +46,30 @@ class AIEngine {
             }
         }
 
-        // 3. GPT Fallback if context is found but key is missing
+        // 3. If no OpenAI key, return first KB match or null
         if (empty($openAiKey)) {
-            if (!empty($context)) {
-                // Return exact match
+            error_log("AI Engine: No OpenAI API key configured in platform_settings.");
+            if (!empty($results)) {
                 return $results[0]['content'];
             }
             return null;
         }
 
-        // 4. OpenAI GPT Generation
-        $systemPrompt = "You are a helpful customer support agent. Use the following context from the company's knowledge base to answer the user's question. If the answer is not in the context, do not make up an answer, simply state that you don't know and a human agent will assist them shortly.\n\nContext:\n$context";
+        // 4. Build system prompt
+        if (!empty($context)) {
+            $systemPrompt = "You are a helpful customer support assistant. Use the following knowledge base to answer the user's question accurately and concisely. If the answer is not in the knowledge base, give a helpful general response and let them know a human agent will assist shortly.\n\nKnowledge Base:\n" . $context;
+        } else {
+            $systemPrompt = "You are a helpful customer support assistant. Answer the user's question as helpfully as possible. If you cannot fully answer, let them know a human agent will be with them shortly.";
+        }
 
+        // 5. Call OpenAI API
         $data = [
             "model" => "gpt-3.5-turbo",
             "messages" => [
                 ["role" => "system", "content" => $systemPrompt],
                 ["role" => "user", "content" => $userMessage]
             ],
-            "max_tokens" => 150,
+            "max_tokens" => 300,
             "temperature" => 0.5
         ];
 
@@ -74,26 +81,33 @@ class AIEngine {
             'Content-Type: application/json',
             'Authorization: Bearer ' . $openAiKey
         ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
         $response = curl_exec($ch);
         $curlError = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($response === false || $curlError) {
-            // OpenAI request failed – fallback to first knowledge‑base result if available
-            if (!empty($results)) {
-                return $results[0]['content'];
-            }
+            error_log("AI Engine cURL error: " . $curlError);
+            if (!empty($results)) return $results[0]['content'];
             return null;
         }
 
         $json = json_decode($response, true);
 
+        // Log API errors for debugging
+        if (isset($json['error'])) {
+            error_log("AI Engine OpenAI error (HTTP $httpCode): " . $json['error']['message']);
+            if (!empty($results)) return $results[0]['content'];
+            return null;
+        }
+
         if (isset($json['choices'][0]['message']['content'])) {
             return trim($json['choices'][0]['message']['content']);
         }
 
-        // If OpenAI returned no content, fallback to knowledge base if we have data
+        // Fallback to KB if OpenAI returned nothing useful
         if (!empty($results)) {
             return $results[0]['content'];
         }
