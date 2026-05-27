@@ -984,9 +984,10 @@ const LandingPage = () => {
       } catch (err) {
         console.error(err);
         setPlans([
-          { id: 1, name: 'Worker Cell', price: 0, max_websites: 1, ai_enabled: 0 },
-          { id: 2, name: 'Drone Hive', price: 29, max_websites: 5, ai_enabled: 1 },
-          { id: 3, name: 'Royal Queen', price: 99, max_websites: 100, ai_enabled: 1 }
+          { id: 1, name: 'Free', price: 0, max_websites: 1, ai_enabled: 0 },
+          { id: 2, name: 'Starter', price: 19, max_websites: 3, ai_enabled: 1 },
+          { id: 3, name: 'Pro', price: 49, max_websites: 10, ai_enabled: 1 },
+          { id: 4, name: 'Enterprise', price: 99, max_websites: 9999, ai_enabled: 1 }
         ]);
         setBlogPosts([]);
       }
@@ -1253,7 +1254,7 @@ const LandingPage = () => {
               <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">Choose Your <span className="text-slate-900">Cell.</span></h2>
               <p className="text-amber-100/80 font-semibold text-sm md:text-base">Scale your hive with precision — one cell at a time.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 text-left">
               {plans.map((plan, idx) => (
                 <motion.div key={plan.id}
                   whileHover={{ y: -8, scale: 1.02 }}
@@ -1270,7 +1271,7 @@ const LandingPage = () => {
                     <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">{plan.name}</h4>
                   </div>
                   <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl font-black text-slate-900">${plan.price}</span>
+                    <span className="text-4xl font-black text-slate-900">${Number(plan.price).toFixed(2)}</span>
                     <span className="text-slate-400 font-bold text-sm">/mo</span>
                   </div>
                   <div className="space-y-3 mb-8 flex-1 text-sm font-medium text-slate-500">
