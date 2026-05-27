@@ -835,13 +835,13 @@ export default function SuperAdmin() {
               <Globe className="w-6 h-6 text-amber-500" /> OpenAI GPT Integration
             </h3>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">OpenAI API Key</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">OpenAI API Key (Leave blank to keep existing)</label>
               <input 
                 type="password" 
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs" 
-                value={platformSettings.openai_api_key || ''} 
-                onChange={(e) => setPlatformSettings({...platformSettings, openai_api_key: e.target.value})}
-                placeholder="sk-..."
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-amber-500 outline-none" 
+                value={platformSettings.new_openai_api_key || ''} 
+                onChange={(e) => setPlatformSettings({...platformSettings, new_openai_api_key: e.target.value})}
+                placeholder="sk-... (Hidden for security, leave blank to keep current key)"
               />
             </div>
 

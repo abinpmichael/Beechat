@@ -256,6 +256,18 @@ try {
         if ($action === 'update_platform_settings') {
             $pdo->beginTransaction();
             foreach ($data['settings'] as $key => $value) {
+                // Skip the old key to prevent accidental overwrites from stale browser cache
+                if ($key === 'openai_api_key') continue;
+                
+                // Handle new key specifically
+                if ($key === 'new_openai_api_key') {
+                    if (!empty($value)) {
+                        $key = 'openai_api_key';
+                    } else {
+                        continue;
+                    }
+                }
+
                 // Ensure value is string for DB storage
                 $strVal = is_array($value) ? json_encode($value) : (string)$value;
                 $stmt = $pdo->prepare("INSERT INTO platform_settings (setting_key, setting_value) 
