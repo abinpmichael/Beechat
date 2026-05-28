@@ -133,7 +133,7 @@ try {
         } else {
             // Create a lead automatically so it shows up in dashboard immediately
             $uid = "V-" . strtoupper(substr(md5($sessionId), 0, 5));
-            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id, website_id, session_id, visitor_uid, chat_status) VALUES (?, ?, ?, ?, 'lead')");
+            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id, website_id, session_id, visitor_uid, chat_status, is_live, last_seen_at) VALUES (?, ?, ?, ?, 'lead', 1, NOW())");
             $stmt->execute([$website['tenant_id'], $website['id'], $sessionId, $uid]);
             $leadId = $pdo->lastInsertId();
         }

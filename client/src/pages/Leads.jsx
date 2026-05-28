@@ -133,7 +133,7 @@ export default function Leads() {
 
   /* ─── helpers ──────────────────────────────────────────── */
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 5000); };
-  const isWaiting = (l) => l.is_live == 1 && (!l.assigned_to || l.chat_status === 'waiting');
+  const isWaiting = (l) => l.is_live == 1 && l.chat_status === 'waiting';
   const isActive  = (l) => l.is_live == 1 && l.assigned_to && l.chat_status === 'active';
 
   /* ─── fetch leads ───────────────────────────────────────── */
@@ -475,7 +475,7 @@ export default function Leads() {
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center">
                 {tab === 'live'
-                  ? <><Users className="w-10 h-10 mx-auto mb-3 text-slate-200"/><p className="text-slate-400 text-sm font-bold">No live visitors</p><p className="text-slate-300 text-xs mt-1">Visitors appear when they request a human agent</p></>
+                  ? <><Users className="w-10 h-10 mx-auto mb-3 text-slate-200"/><p className="text-slate-400 text-sm font-bold">No live visitors</p><p className="text-slate-300 text-xs mt-1">Visitors appear when they load the chat widget</p></>
                   : <><History className="w-10 h-10 mx-auto mb-3 text-slate-200"/><p className="text-slate-400 text-sm font-bold">No chat history</p></>
                 }
               </div>
@@ -554,7 +554,7 @@ export default function Leads() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {tab==='live' && isWaiting(selected) && (
+                {tab==='live' && !selected.assigned_to && (
                   <button onClick={() => claim(selected)}
                     className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
                     <UserPlus className="w-3.5 h-3.5"/> Claim Chat
@@ -755,7 +755,7 @@ export default function Leads() {
                 <div className="text-center py-2 text-slate-400 text-xs font-bold flex items-center justify-center gap-2">
                   <CheckCircle className="w-4 h-4 text-slate-300"/> This chat has ended — read-only transcript
                 </div>
-              ) : isWaiting(selected) ? (
+              ) : !selected.assigned_to ? (
                 <div className="text-center py-2">
                   <p className="text-slate-400 text-xs font-bold">Claim this chat to start messaging</p>
                   <button onClick={() => claim(selected)} className="mt-2 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-black hover:bg-indigo-700 transition-all">

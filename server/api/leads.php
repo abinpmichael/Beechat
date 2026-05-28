@@ -56,9 +56,12 @@ if ($method === 'POST') {
         $stmt->execute([$sessionId, $site['id']]);
         $existing = $stmt->fetch();
 
+        $isLive = 1;
+        $status = 'lead';
+
         if ($existing) {
             // Fetch existing details first
-            $stmt = $pdo->prepare("SELECT details, phone FROM leads WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT details, phone, chat_status, is_live FROM leads WHERE id = ?");
             $stmt->execute([$existing['id']]);
             $existingLead = $stmt->fetch();
             $existingDetails = [];
@@ -78,6 +81,15 @@ if ($method === 'POST') {
                 $phoneToUpdate = $existingLead['phone'];
             }
 
+            if ($existingLead) {
+                if (in_array($existingLead['chat_status'], ['active', 'waiting'])) {
+                    $status = $existingLead['chat_status'];
+                }
+            }
+            if (isset($details['status']) && $details['status'] === 'human_requested') {
+                $status = 'waiting';
+            }
+
             // Update existing instead of creating new
             $stmt = $pdo->prepare("UPDATE leads SET is_live = ?, chat_status = ?, last_seen_at = NOW(), country = ?, browser = ?, device = ?, details = ?, phone = ? WHERE id = ?");
             $stmt->execute([$isLive, $status, $country, $browser, $device, json_encode($mergedDetails), $phoneToUpdate, $existing['id']]);
@@ -87,8 +99,11 @@ if ($method === 'POST') {
         } else {
             // Generate a human-friendly visitor UID
             $uid = 'BEE-' . strtoupper(substr(md5($sessionId . microtime()), 0, 6));
+            if (isset($details['status']) && $details['status'] === 'human_requested') {
+                $status = 'waiting';
+            }
 
-            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id,website_id,session_id,phone,details,is_live,chat_status,visitor_uid,country,browser,device) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt = $pdo->prepare("INSERT INTO leads (tenant_id,website_id,session_id,phone,details,is_live,chat_status,visitor_uid,country,browser,device,last_seen_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())");
             $stmt->execute([$site['tenant_id'], $site['id'], $sessionId, $phone, json_encode($details), $isLive, $status, $uid, $country, $browser, $device]);
             $leadId = $pdo->lastInsertId();
             $msg    = "Lead captured";
@@ -139,6 +154,58 @@ if ($method === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_se
         ");
         $stmt->execute([$sessionId, $apiKey]);
         $lead = $stmt->fetch();
+
+        if (!$lead) {
+            $stmt = $pdo->prepare("SELECT id, tenant_id FROM websites WHERE api_key = ?");
+            $stmt->execute([$apiKey]);
+            $site = $stmt->fetch();
+
+            if ($site) {
+                $uid = 'BEE-' . strtoupper(substr(md5($sessionId . microtime()), 0, 6));
+
+                // Parse user agent
+                $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+                $browser = 'Chrome';
+                if (strpos($userAgent, 'Firefox') !== false) $browser = 'Firefox';
+                else if (strpos($userAgent, 'Safari') !== false && strpos($userAgent, 'Chrome') === false) $browser = 'Safari';
+                else if (strpos($userAgent, 'Edge') !== false) $browser = 'Edge';
+
+                $device = 'Desktop';
+                if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i', $userAgent)) {
+                    $device = 'Tablet';
+                } else if (preg_match('/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Opera Mini/i', $userAgent)) {
+                    $device = 'Mobile';
+                }
+
+                // Look up IP and country
+                $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                if ($ip === '::1' || $ip === '127.0.0.1') {
+                    $ip = '104.244.42.1';
+                }
+                $country = 'United States';
+                $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+                $geoJson = @file_get_contents("http://ip-api.com/json/" . $ip, false, $ctx);
+                if ($geoJson) {
+                    $geoData = json_decode($geoJson, true);
+                    if (isset($geoData['country']) && !empty($geoData['country'])) {
+                        $country = $geoData['country'];
+                    }
+                }
+
+                $stmt = $pdo->prepare("INSERT INTO leads (tenant_id, website_id, session_id, visitor_uid, chat_status, is_live, last_seen_at, country, browser, device) VALUES (?, ?, ?, ?, 'lead', 1, NOW(), ?, ?, ?)");
+                $stmt->execute([$site['tenant_id'], $site['id'], $sessionId, $uid, $country, $browser, $device]);
+                $newLeadId = $pdo->lastInsertId();
+
+                $stmt = $pdo->prepare("
+                    SELECT l.id, l.is_live, l.chat_status, l.assigned_to, l.details, l.phone, u.name AS agent_name
+                    FROM leads l
+                    LEFT JOIN users u ON l.assigned_to = u.id
+                    WHERE l.id = ?
+                ");
+                $stmt->execute([$newLeadId]);
+                $lead = $stmt->fetch();
+            }
+        }
         echo json_encode($lead ?: (object)[]);
     } catch (Exception $e) {
         http_response_code(500); echo json_encode(["error"=>$e->getMessage()]);
@@ -179,8 +246,7 @@ try {
     $pdo->prepare("
         UPDATE leads
         SET is_live = 0, chat_status = 'ended'
-        WHERE is_live = 1
-          AND chat_status NOT IN ('ended','transferred')
+        WHERE chat_status NOT IN ('ended','transferred')
           AND last_seen_at IS NOT NULL
           AND last_seen_at < DATE_SUB(NOW(), INTERVAL 60 SECOND)
     ")->execute();
