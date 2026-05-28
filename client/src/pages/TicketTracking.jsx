@@ -81,7 +81,19 @@ const TopBee = ({ size = 40, animated = true }) => {
   );
 };
 
+function parseUser() {
+  try {
+    const token = localStorage.getItem('bee_token');
+    if (!token) return null;
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function TicketTracking() {
+  const user = parseUser();
   const { trackingId } = useParams();
   const [ticket, setTicket] = useState(null);
   const [agents, setAgents] = useState([]);
