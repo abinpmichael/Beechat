@@ -603,7 +603,8 @@ export default function Websites() {
                                                       updated[idx].options[oIdx].next = e.target.value;
                                                       setEditData({...editData, survey_config: updated});
                                                    }}>
-                                                      <option value="finish">Finish</option>
+                                                      <option value="finish">Finish & Create Ticket</option>
+                                                      <option value="finish_no_ticket">Finish (No Ticket)</option>
                                                       <option value="human">Transfer</option>
                                                       {editData.survey_config.map((s, i) => s.id !== step.id && <option key={s.id} value={s.id}>Step {i + 1}</option>)}
                                                    </select>
@@ -626,7 +627,8 @@ export default function Websites() {
                                             updated[idx].next = e.target.value;
                                             setEditData({...editData, survey_config: updated});
                                           }}>
-                                             <option value="finish">Finish & Save</option>
+                                             <option value="finish">Finish & Create Ticket</option>
+                                             <option value="finish_no_ticket">Finish (No Ticket)</option>
                                              <option value="human">Transfer to Agent</option>
                                              {editData.survey_config.map((s, i) => s.id !== step.id && <option key={s.id} value={s.id}>Step {i + 1}</option>)}
                                           </select>

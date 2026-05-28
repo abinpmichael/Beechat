@@ -359,7 +359,7 @@ export default function ChatWidget({ apiKey }) {
                   // If we already have contact info, skip any initial 'form' steps
                   while (startIdx < parsed.length && parsed[startIdx].type === 'form' && hasContactInfo) {
                     const nextId = parsed[startIdx].next;
-                    if (!nextId || nextId === 'finish') {
+                    if (!nextId || nextId === 'finish' || nextId === 'finish_no_ticket') {
                       startIdx = parsed.length;
                     } else if (nextId === 'human') {
                       startIdx = parsed.length;
@@ -818,56 +818,60 @@ export default function ChatWidget({ apiKey }) {
        submitLead({ ...surveyDataRef.current, status:'human_requested' }, true); 
        return; 
     }
-    if (!next || next === 'finish') { 
-       if (!contact.email || !contact.phone) {
-          setTicketFormVisible(true);
-          const summary = Object.entries(surveyDataRef.current)
-            .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
-            .join("\n");
-          setTicketData(prev => ({
-            ...prev,
-            email: contact.email || prev.email || '',
-            phone: contact.phone || prev.phone || '',
-            message: "Survey Results:\n" + summary
-          }));
-          return;
-       }
-
-       // Auto-raise ticket
-       setIsTyping(true);
-       fetch(`${API}/tickets.php?action=create`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({
-           apiKey,
-           sessionId: sessionRef.current,
-           subject: 'Automated Ticket from Survey Flow',
-           message: "Survey Results:\n" + Object.entries(surveyDataRef.current)
+    if (!next || next === 'finish' || next === 'finish_no_ticket') { 
+        if (next !== 'finish_no_ticket' && (!contact.email || !contact.phone)) {
+           setTicketFormVisible(true);
+           const summary = Object.entries(surveyDataRef.current)
              .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
-             .join("\n"),
-           email: contact.email,
-           phone: contact.phone,
-           videoCallType: 'none',
-           originDomain: window.location.hostname
-         })
-       }).then(r => r.json()).then(res => {
-         setIsTyping(false);
-         if (res.success) {
-           addMsg('bot', `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`);
-         } else {
-           addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
-         }
-       }).catch(() => {
-         setIsTyping(false);
-         addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
-       });
+             .join("\n");
+           setTicketData(prev => ({
+             ...prev,
+             email: contact.email || prev.email || '',
+             phone: contact.phone || prev.phone || '',
+             message: "Survey Results:\n" + summary
+           }));
+           return;
+        }
 
-       submitLead({ ...surveyDataRef.current }); 
-       setSurveyDone(true); 
-       localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
-       setStepId(null); 
-       return; 
-    }
+        if (next !== 'finish_no_ticket') {
+           // Auto-raise ticket
+           setIsTyping(true);
+           fetch(`${API}/tickets.php?action=create`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               apiKey,
+               sessionId: sessionRef.current,
+               subject: 'Automated Ticket from Survey Flow',
+               message: "Survey Results:\n" + Object.entries(surveyDataRef.current)
+                 .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+                 .join("\n"),
+               email: contact.email,
+               phone: contact.phone,
+               videoCallType: 'none',
+               originDomain: window.location.hostname
+             })
+           }).then(r => r.json()).then(res => {
+             setIsTyping(false);
+             if (res.success) {
+               addMsg('bot', `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`);
+             } else {
+               addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
+             }
+           }).catch(() => {
+             setIsTyping(false);
+             addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
+           });
+        } else {
+           addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
+        }
+
+        submitLead({ ...surveyDataRef.current }); 
+        setSurveyDone(true); 
+        localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
+        setStepId(null); 
+        return; 
+     }
     const nxt = steps.find(s => s.id == next); 
     if (nxt) { 
        setStepId(next); 
