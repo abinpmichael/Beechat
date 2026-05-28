@@ -76,8 +76,8 @@ try {
             SELECT t.*, l.visitor_uid, l.phone, w.domain, w.theme_color, w.bot_name,
                    JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email
             FROM tickets t
-            JOIN leads l ON t.lead_id = l.id
-            JOIN websites w ON l.website_id = w.id
+            LEFT JOIN leads l ON t.lead_id = l.id
+            LEFT JOIN websites w ON l.website_id = w.id
             WHERE t.tracking_id = ?
         ");
         $stmt->execute([$trackingId]);
@@ -248,7 +248,7 @@ if ($action === 'list') {
                    JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email,
                    (SELECT message FROM ticket_replies WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as last_message
             FROM tickets t
-            JOIN leads l ON t.lead_id = l.id
+            LEFT JOIN leads l ON t.lead_id = l.id
             WHERE t.tenant_id = ?
             ORDER BY t.created_at DESC
         ");
