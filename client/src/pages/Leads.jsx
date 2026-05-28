@@ -392,6 +392,16 @@ export default function Leads() {
                  </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Visitor Email</label>
+                       <input required type="email" className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" placeholder="customer@example.com" value={ticketForm.email} onChange={e => setTicketForm({...ticketForm, email: e.target.value})} />
+                    </div>
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Invite Internal Members (Emails)</label>
+                       <input className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" placeholder="team1@site.com, team2@site.com" value={ticketForm.inviteEmails || ''} onChange={e => setTicketForm({...ticketForm, inviteEmails: e.target.value})} />
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block ml-1">Priority</label>
                        <select className="w-full p-4 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-indigo-100" value={ticketForm.priority} onChange={e => setTicketForm({...ticketForm, priority: e.target.value})}>
                           <option value="low">LOW</option>
@@ -555,7 +565,18 @@ export default function Leads() {
                   <Share2 className="w-4 h-4"/>
                 </button>
                 {tab==='live' && isActive(selected) && (<>
-                  <button onClick={() => setShowTicketModal(true)}
+                  <button onClick={() => {
+                    const visitorEmail = selected.details ? (typeof selected.details === 'string' ? JSON.parse(selected.details).email : selected.details.email) : '';
+                    setTicketForm({
+                      subject: '',
+                      priority: 'medium',
+                      department: 'Support',
+                      message: '',
+                      email: visitorEmail || '',
+                      inviteEmails: ''
+                    });
+                    setShowTicketModal(true);
+                  }}
                     className="flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-xl text-xs font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                     <Inbox className="w-3.5 h-3.5"/> Escalate
                   </button>

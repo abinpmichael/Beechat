@@ -43,7 +43,8 @@ try {
         $colsToCheck = [
             'video_call_type' => "VARCHAR(50) DEFAULT 'none'",
             'video_call_url' => "TEXT NULL",
-            'video_call_allowed' => "TINYINT(1) DEFAULT 1"
+            'video_call_allowed' => "TINYINT(1) DEFAULT 1",
+            'invite_emails' => "TEXT NULL"
         ];
         foreach ($colsToCheck as $colName => $colDef) {
             $cols = $pdo->query("SHOW COLUMNS FROM tickets LIKE '$colName'")->fetchAll();
@@ -227,6 +228,33 @@ try {
             ]);
         }
 
+        // Invited Internal Members Notification Emails
+        if (!empty($inviteEmails)) {
+            $invites = array_map('trim', explode(',', $inviteEmails));
+            foreach ($invites as $invEmail) {
+                if (filter_var($invEmail, FILTER_VALIDATE_EMAIL)) {
+                    // Auto-seed template if missing
+                    $tplStmt = $pdo->prepare("SELECT id FROM email_templates WHERE name = ?");
+                    $tplStmt->execute(['support_ticket_created_notification']);
+                    if (!$tplStmt->fetch()) {
+                        $insertTpl = $pdo->prepare("INSERT IGNORE INTO email_templates (name, subject, body) VALUES (?, ?, ?)");
+                        $insertTpl->execute([
+                            'support_ticket_created_notification',
+                            'New Support Ticket Raised: {subject}',
+                            "Hello Support Team,\n\nA new support ticket has been created:\n\nSubject: {subject}\nTicket ID: {tracking_id}\nVisitor Email: {visitor_email}\nMessage: {message}\n\nYou can view and manage this ticket in the dashboard at:\n\n{tracking_link}\n\nThank you,\nBee Chat Notification"
+                        ]);
+                    }
+                    $mail->queue($invEmail, 'support_ticket_created_notification', [
+                        'subject' => $subject,
+                        'tracking_id' => $trackingId,
+                        'visitor_email' => $email ?: 'N/A',
+                        'message' => $message,
+                        'tracking_link' => getFrontendBaseUrl() . "/dashboard/tickets"
+                    ]);
+                }
+            }
+        }
+
         echo json_encode([
             "success" => true,
             "tracking_id" => $trackingId,
@@ -379,6 +407,7 @@ if ($action === 'list') {
         $department = $data['department'] ?? 'Support';
         $email      = $data['email'] ?? '';
         $videoCallType = $data['videoCallType'] ?? 'none';
+        $inviteEmails = $data['inviteEmails'] ?? null;
 
         // 1. Verify lead exists and belongs to tenant
         $stmt = $pdo->prepare("
@@ -409,9 +438,9 @@ if ($action === 'list') {
             $videoCallUrl = "https://cal.com/beechat-demo/15min";
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url, invite_emails, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?, ?)");
         $videoCallAllowed = 1;
-        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl, $videoCallAllowed]);
+        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl, $inviteEmails, $videoCallAllowed]);
         $ticketId = $pdo->lastInsertId();
 
         // 3. Add Initial Message
@@ -473,6 +502,33 @@ if ($action === 'list') {
                 'message' => $message,
                 'tracking_link' => getFrontendBaseUrl() . "/dashboard/tickets"
             ]);
+        }
+
+        // Invited Internal Members Notification Emails
+        if (!empty($inviteEmails)) {
+            $invites = array_map('trim', explode(',', $inviteEmails));
+            foreach ($invites as $invEmail) {
+                if (filter_var($invEmail, FILTER_VALIDATE_EMAIL)) {
+                    // Auto-seed template if missing
+                    $tplStmt = $pdo->prepare("SELECT id FROM email_templates WHERE name = ?");
+                    $tplStmt->execute(['support_ticket_created_notification']);
+                    if (!$tplStmt->fetch()) {
+                        $insertTpl = $pdo->prepare("INSERT IGNORE INTO email_templates (name, subject, body) VALUES (?, ?, ?)");
+                        $insertTpl->execute([
+                            'support_ticket_created_notification',
+                            'New Support Ticket Raised: {subject}',
+                            "Hello Support Team,\n\nA new support ticket has been created:\n\nSubject: {subject}\nTicket ID: {tracking_id}\nVisitor Email: {visitor_email}\nMessage: {message}\n\nYou can view and manage this ticket in the dashboard at:\n\n{tracking_link}\n\nThank you,\nBee Chat Notification"
+                        ]);
+                    }
+                    $mail->queue($invEmail, 'support_ticket_created_notification', [
+                        'subject' => $subject,
+                        'tracking_id' => $trackingId,
+                        'visitor_email' => $email ?: 'N/A',
+                        'message' => $message,
+                        'tracking_link' => getFrontendBaseUrl() . "/dashboard/tickets"
+                    ]);
+                }
+            }
         }
 
         echo json_encode(["success" => true, "tracking_id" => $trackingId]);
