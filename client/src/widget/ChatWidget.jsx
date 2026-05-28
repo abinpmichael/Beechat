@@ -740,7 +740,39 @@ export default function ChatWidget({ apiKey }) {
   const handleStep = useCallback((label, next) => {
     addMsg('visitor', label); surveyDataRef.current[stepId] = label;
     recordActivity();
+
+    const getVisitorContact = () => {
+      let email = '';
+      let phone = '';
+      if (surveyDataRef.current) {
+        Object.entries(surveyDataRef.current).forEach(([k, v]) => {
+          const keyLower = k.toLowerCase();
+          if (keyLower.includes('email') || keyLower.includes('mail')) {
+            email = v;
+          } else if (keyLower.includes('phone') || keyLower.includes('tel') || keyLower.includes('mobile') || keyLower.includes('contact')) {
+            phone = v;
+          }
+        });
+      }
+      return { email, phone };
+    };
+
+    const contact = getVisitorContact();
+
     if (next === 'human') { 
+       if (!contact.email || !contact.phone) {
+          setTicketFormVisible(true);
+          const summary = Object.entries(surveyDataRef.current)
+            .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+            .join("\n");
+          setTicketData(prev => ({
+            ...prev,
+            email: contact.email || prev.email || '',
+            phone: contact.phone || prev.phone || '',
+            message: "Human Connection Requested. Survey Results:\n" + summary
+          }));
+          return;
+       }
        setIsLive(true); 
        setSurveyDone(true); 
        localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
@@ -749,27 +781,53 @@ export default function ChatWidget({ apiKey }) {
        return; 
     }
     if (!next || next === 'finish') { 
+       if (!contact.email || !contact.phone) {
+          setTicketFormVisible(true);
+          const summary = Object.entries(surveyDataRef.current)
+            .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+            .join("\n");
+          setTicketData(prev => ({
+            ...prev,
+            email: contact.email || prev.email || '',
+            phone: contact.phone || prev.phone || '',
+            message: "Survey Results:\n" + summary
+          }));
+          return;
+       }
+
+       // Auto-raise ticket
+       setIsTyping(true);
+       fetch(`${API}/tickets.php?action=create`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           apiKey,
+           sessionId: sessionRef.current,
+           subject: 'Automated Ticket from Survey Flow',
+           message: "Survey Results:\n" + Object.entries(surveyDataRef.current)
+             .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+             .join("\n"),
+           email: contact.email,
+           phone: contact.phone,
+           videoCallType: 'none',
+           originDomain: window.location.hostname
+         })
+       }).then(r => r.json()).then(res => {
+         setIsTyping(false);
+         if (res.success) {
+           addMsg('bot', `🎟️ Ticket Created! Your tracking ID is: ${res.tracking_id}. Check your email for the link.`);
+         } else {
+           addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
+         }
+       }).catch(() => {
+         setIsTyping(false);
+         addMsg('bot', branding.success || 'Thank you! We will get back to you soon.');
+       });
+
        submitLead({ ...surveyDataRef.current }); 
        setSurveyDone(true); 
        localStorage.setItem(`bee_survey_completed_${apiKey}_${sessionRef.current}`, 'true');
        setStepId(null); 
-       setIsTyping(true); 
-       
-       // Send the visitor's final survey answer to the AI so it can generate an automatic reply!
-       fetch(`${API}/chat.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ apiKey, message: label, sessionId: sessionRef.current, isOffline: !branding.is_open }) })
-       .then(r => r.json()).then(d => { 
-           setIsTyping(false); 
-           if (d.content) {
-               addMsg('bot', d.content); 
-           } else {
-               addMsg('bot', branding.success); 
-           }
-           if (d.lead_id) setLeadId(d.lead_id); 
-       })
-       .catch(() => {
-           setIsTyping(false);
-           addMsg('bot', branding.success);
-       });
        return; 
     }
     const nxt = steps.find(s => s.id == next); 
@@ -851,6 +909,13 @@ export default function ChatWidget({ apiKey }) {
         ...prev,
         [storageKey]: true
       }));
+
+      // Copy form data into surveyDataRef.current so getVisitorContact can read it
+      if (formData) {
+        Object.entries(formData).forEach(([k, v]) => {
+          surveyDataRef.current[k] = v;
+        });
+      }
 
       // Advance survey step if current step type is form
       const currentStep = steps.find(s => s.id === stepId);
