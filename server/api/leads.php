@@ -130,7 +130,7 @@ if ($method === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_se
     $apiKey    = $_GET['apiKey']    ?? '';
     try {
         $stmt = $pdo->prepare("
-            SELECT l.id, l.is_live, l.chat_status, l.assigned_to, u.name AS agent_name
+            SELECT l.id, l.is_live, l.chat_status, l.assigned_to, l.details, l.phone, u.name AS agent_name
             FROM leads l
             JOIN websites w ON l.website_id = w.id
             LEFT JOIN users u ON l.assigned_to = u.id

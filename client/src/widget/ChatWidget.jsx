@@ -315,6 +315,16 @@ export default function ChatWidget({ apiKey }) {
           setIsLive(res.is_live);
           setChatStatus(res.chat_status || 'lead');
 
+          let detailsObj = {};
+          if (res.details) {
+            try {
+              detailsObj = typeof res.details === 'string' ? JSON.parse(res.details) : res.details;
+            } catch (e) {
+              detailsObj = {};
+            }
+          }
+          const hasContactInfo = (res.phone && res.phone !== 'Visitor') || !!(detailsObj.email || detailsObj.phone || detailsObj.tel || detailsObj.contact);
+
           const priority = d ? parseInt(d.survey_priority ?? 1) : 1;
           const surveyCompletedLocally = localStorage.getItem(`bee_survey_completed_${apiKey}_${sid}`) === 'true';
           const hasAgent = !!(res.assigned_to && res.agent_name);
@@ -341,23 +351,49 @@ export default function ChatWidget({ apiKey }) {
                   if (mapped.length > 0) setLastSeenMsgId(mapped[mapped.length-1].id);
                 } else {
                   // No conversations and survey not completed: initialize survey
-                  setSurveyDone(false);
                   let parsed = [];
                   if (d && d.survey_config) parsed = typeof d.survey_config === 'string' ? JSON.parse(d.survey_config) : d.survey_config;
                   setSteps(parsed);
+
+                  let startIdx = 0;
+                  // If we already have contact info, skip any initial 'form' steps
+                  while (startIdx < parsed.length && parsed[startIdx].type === 'form' && hasContactInfo) {
+                    const nextId = parsed[startIdx].next;
+                    if (!nextId || nextId === 'finish') {
+                      startIdx = parsed.length;
+                    } else if (nextId === 'human') {
+                      startIdx = parsed.length;
+                    } else {
+                      const nextIdx = parsed.findIndex(s => s.id == nextId);
+                      if (nextIdx !== -1) {
+                        startIdx = nextIdx;
+                      } else {
+                        startIdx = parsed.length;
+                      }
+                    }
+                  }
+
                   const welcome = d.is_open ? (d.welcome_message || 'Hello!') : "👋 We're currently closed, but you can leave a message below!";
                   const init = [{ role:'bot', text: welcome }];
-                  if (parsed.length > 0) {
+
+                  if (startIdx < parsed.length) {
+                    setSurveyDone(false);
+                    const startStep = parsed[startIdx];
                     init.push({ 
                       role:'bot', 
-                      text: parsed[0].question, 
-                      options: parsed[0].type === 'options' ? parsed[0].options : null,
-                      type: parsed[0].type === 'form' ? 'form' : null,
-                      stepId: parsed[0].id
+                      text: startStep.question, 
+                      options: startStep.type === 'options' ? startStep.options : null,
+                      type: startStep.type === 'form' ? 'form' : null,
+                      stepId: startStep.id
                     });
-                    setStepId(parsed[0].id);
+                    setStepId(startStep.id);
+                    setMessages(init);
+                  } else {
+                    setSurveyDone(true);
+                    setChatStatus('ai');
+                    init.push({ role:'bot', text: "How can I help you today?" });
+                    setMessages(init);
                   }
-                  setMessages(init);
                 }
               })
               .catch(() => {
