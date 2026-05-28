@@ -26,7 +26,8 @@ export default function Settings() {
     ai_offline_only: 1,
     notifications_enabled: 1,
     default_theme_color: '#6366f1',
-    default_bot_name: 'Bee Bot'
+    default_bot_name: 'Bee Bot',
+    support_email: ''
   });
 
   // Password state
@@ -95,7 +96,8 @@ export default function Settings() {
           default_language: res.data.default_language || 'en',
           ai_offline_only: Number(res.data.ai_offline_only ?? 1),
           opening_time: res.data.opening_time?.substring(0, 5) || '09:00',
-          closing_time: res.data.closing_time?.substring(0, 5) || '18:00'
+          closing_time: res.data.closing_time?.substring(0, 5) || '18:00',
+          support_email: res.data.support_email || ''
         });
       }
     } catch (err) {
@@ -437,6 +439,18 @@ export default function Settings() {
                       <option value="es">Spanish</option>
                       <option value="fr">French</option>
                     </select>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Support Team Email</label>
+                    <input 
+                      type="email" 
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-indigo-50 transition-all" 
+                      value={config.support_email || ''} 
+                      onChange={(e) => setConfig({...config, support_email: e.target.value})} 
+                      placeholder="support@yourdomain.com"
+                    />
+                    <p className="text-[10px] text-slate-400 font-medium ml-1">Email notifications will be sent here when new support tickets are raised.</p>
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-slate-100">

@@ -60,6 +60,16 @@ if (!$auth) {
 
 $tenantId = $auth['tenant_id'];
 
+// Dynamic column check to ensure tenant_settings schema matches code expectations
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM tenant_settings LIKE 'support_email'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE tenant_settings ADD COLUMN support_email VARCHAR(255) DEFAULT NULL");
+    }
+} catch (Exception $schemaEx) {
+    error_log("tenant_settings schema check failed: " . $schemaEx->getMessage());
+}
+
 if ($method === 'GET') {
     $stmt = $pdo->prepare("SELECT * FROM tenant_settings WHERE tenant_id = ?");
     $stmt->execute([$tenantId]);
@@ -82,7 +92,7 @@ elseif ($method === 'POST') {
         'handover_enabled', 'visitor_tracking', 'default_language', 
         'opening_time', 'closing_time', 'chat_visibility', 'ai_auto_reply', 
         'ai_offline_only', 'notifications_enabled', 'default_theme_color', 
-        'default_bot_name', 'timezone'
+        'default_bot_name', 'timezone', 'support_email'
     ];
     
     $updates = [];

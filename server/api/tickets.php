@@ -198,6 +198,35 @@ try {
             ]);
         }
 
+        // Support Team Notification Email
+        $supportEmail = null;
+        try {
+            $tenantSettingsStmt = $pdo->prepare("SELECT support_email FROM tenant_settings WHERE tenant_id = ?");
+            $tenantSettingsStmt->execute([$site['tenant_id']]);
+            $supportEmail = $tenantSettingsStmt->fetchColumn();
+        } catch (Exception $e) {}
+
+        if (!empty($supportEmail)) {
+            // Auto-seed template if missing
+            $tplStmt = $pdo->prepare("SELECT id FROM email_templates WHERE name = ?");
+            $tplStmt->execute(['support_ticket_created_notification']);
+            if (!$tplStmt->fetch()) {
+                $insertTpl = $pdo->prepare("INSERT IGNORE INTO email_templates (name, subject, body) VALUES (?, ?, ?)");
+                $insertTpl->execute([
+                    'support_ticket_created_notification',
+                    'New Support Ticket Raised: {subject}',
+                    "Hello Support Team,\n\nA new support ticket has been created:\n\nSubject: {subject}\nTicket ID: {tracking_id}\nVisitor Email: {visitor_email}\nMessage: {message}\n\nYou can view and manage this ticket in the dashboard at:\n\n{tracking_link}\n\nThank you,\nBee Chat Notification"
+                ]);
+            }
+            $mail->queue($supportEmail, 'support_ticket_created_notification', [
+                'subject' => $subject,
+                'tracking_id' => $trackingId,
+                'visitor_email' => $email ?: 'N/A',
+                'message' => $message,
+                'tracking_link' => getFrontendBaseUrl() . "/dashboard/tickets"
+            ]);
+        }
+
         echo json_encode([
             "success" => true,
             "tracking_id" => $trackingId,
@@ -382,7 +411,7 @@ if ($action === 'list') {
 
         $stmt = $pdo->prepare("INSERT INTO tickets (tenant_id, lead_id, tracking_id, subject, status, priority, department, video_call_type, video_call_url, video_call_allowed) VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)");
         $videoCallAllowed = 1;
-        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl]);
+        $stmt->execute([$tenantId, $leadId, $trackingId, $subject, $priority, $department, $videoCallType, $videoCallUrl, $videoCallAllowed]);
         $ticketId = $pdo->lastInsertId();
 
         // 3. Add Initial Message
@@ -404,15 +433,45 @@ if ($action === 'list') {
         // 5. Create Notification for the tenant
         triggerNotification($tenantId, 'ticket', 'Chat Escalated', "Chat #$leadId was converted to Ticket #$trackingId", "/dashboard/tickets");
 
-        // 6. Send Mail to Visitor if email exists
+        // 6. Send Mail (SMTP Integration)
+        require_once 'mail_service.php';
+        $mail = new MailService($pdo);
+        $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId;
+
         if (!empty($email)) {
-            require_once 'mail_service.php';
-            $mail = new MailService($pdo);
-            $trackingLink = getFrontendBaseUrl() . "/ticket/" . $trackingId;
             $mail->queue($email, 'ticket_created', [
                 'subject' => $subject,
                 'tracking_id' => $trackingId,
                 'tracking_link' => $trackingLink
+            ]);
+        }
+
+        // Support Team Notification Email
+        $supportEmail = null;
+        try {
+            $tenantSettingsStmt = $pdo->prepare("SELECT support_email FROM tenant_settings WHERE tenant_id = ?");
+            $tenantSettingsStmt->execute([$tenantId]);
+            $supportEmail = $tenantSettingsStmt->fetchColumn();
+        } catch (Exception $e) {}
+
+        if (!empty($supportEmail)) {
+            // Auto-seed template if missing
+            $tplStmt = $pdo->prepare("SELECT id FROM email_templates WHERE name = ?");
+            $tplStmt->execute(['support_ticket_created_notification']);
+            if (!$tplStmt->fetch()) {
+                $insertTpl = $pdo->prepare("INSERT IGNORE INTO email_templates (name, subject, body) VALUES (?, ?, ?)");
+                $insertTpl->execute([
+                    'support_ticket_created_notification',
+                    'New Support Ticket Raised: {subject}',
+                    "Hello Support Team,\n\nA new support ticket has been created:\n\nSubject: {subject}\nTicket ID: {tracking_id}\nVisitor Email: {visitor_email}\nMessage: {message}\n\nYou can view and manage this ticket in the dashboard at:\n\n{tracking_link}\n\nThank you,\nBee Chat Notification"
+                ]);
+            }
+            $mail->queue($supportEmail, 'support_ticket_created_notification', [
+                'subject' => $subject,
+                'tracking_id' => $trackingId,
+                'visitor_email' => $email ?: 'N/A',
+                'message' => $message,
+                'tracking_link' => getFrontendBaseUrl() . "/dashboard/tickets"
             ]);
         }
 

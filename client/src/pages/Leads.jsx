@@ -326,8 +326,12 @@ export default function Leads() {
         showToast(`✅ Ticket #${res.data.tracking_id} created!`);
         setShowTicketModal(false);
         setTab('history');
+      } else {
+        showToast(`❌ Conversion failed: ${res.data.error || 'Unknown error'}`);
       }
-    } catch { showToast('❌ Conversion failed.'); }
+    } catch (err) {
+      showToast(`❌ Conversion failed: ${err.response?.data?.error || err.message}`);
+    }
   };
 
   /* ─── filtered list ─────────────────────────────────────── */
