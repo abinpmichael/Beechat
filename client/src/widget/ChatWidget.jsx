@@ -796,7 +796,8 @@ export default function ChatWidget({ apiKey }) {
           email: ticketData.email,
           phone: ticketData.phone,
           videoCallType: ticketData.videoCallType || 'none',
-          inviteEmails: ticketData.inviteEmails
+          inviteEmails: ticketData.inviteEmails,
+          originDomain: window.location.hostname
         })
       }).then(r => r.json());
 

@@ -116,13 +116,27 @@ try {
         $videoCallType = $data['videoCallType'] ?? 'none';
         $inviteEmails = $data['inviteEmails'] ?? null; // optional CSV or JSON array
 
+        $originDomain = $data['originDomain'] ?? '';
+        if (empty($originDomain) && !empty($_SERVER['HTTP_REFERER'])) {
+            $originDomain = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+        }
+
         if (empty($apiKey) || empty($message)) exit(json_encode(["error" => "Missing data"]));
 
         // 1. Verify Website
-        $stmt = $pdo->prepare("SELECT id, tenant_id FROM websites WHERE api_key = ?");
+        $stmt = $pdo->prepare("SELECT id, tenant_id, domain FROM websites WHERE api_key = ?");
         $stmt->execute([$apiKey]);
         $site = $stmt->fetch();
         if (!$site) exit(json_encode(["error" => "Invalid API Key"]));
+
+        // Prepend domain name to the subject
+        $runningDomain = !empty($originDomain) ? $originDomain : ($site['domain'] ?? '');
+        if (!empty($runningDomain)) {
+            if (strpos($runningDomain, ':') !== false) {
+                $runningDomain = explode(':', $runningDomain)[0];
+            }
+            $subject = "[" . $runningDomain . "] " . $subject;
+        }
 
         // 2. Find or Create Lead
         $stmt = $pdo->prepare("SELECT id FROM leads WHERE session_id = ? AND website_id = ?");
@@ -244,11 +258,12 @@ try {
 
 if ($action === 'list') {
         $stmt = $pdo->prepare("
-            SELECT t.*, l.visitor_uid, l.chat_status,
+            SELECT t.*, l.visitor_uid, l.chat_status, w.domain,
                    JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.email')) as email,
                    (SELECT message FROM ticket_replies WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) as last_message
             FROM tickets t
             LEFT JOIN leads l ON t.lead_id = l.id
+            LEFT JOIN websites w ON l.website_id = w.id
             WHERE t.tenant_id = ?
             ORDER BY t.created_at DESC
         ");
@@ -337,9 +352,23 @@ if ($action === 'list') {
         $videoCallType = $data['videoCallType'] ?? 'none';
 
         // 1. Verify lead exists and belongs to tenant
-        $stmt = $pdo->prepare("SELECT id FROM leads WHERE id = ? AND tenant_id = ?");
+        $stmt = $pdo->prepare("
+            SELECT l.id, w.domain 
+            FROM leads l 
+            LEFT JOIN websites w ON l.website_id = w.id 
+            WHERE l.id = ? AND l.tenant_id = ?
+        ");
         $stmt->execute([$leadId, $tenantId]);
-        if (!$stmt->fetch()) exit(json_encode(["error" => "Lead not found"]));
+        $leadInfo = $stmt->fetch();
+        if (!$leadInfo) exit(json_encode(["error" => "Lead not found"]));
+
+        $runningDomain = $leadInfo['domain'] ?? '';
+        if (!empty($runningDomain)) {
+            if (strpos($runningDomain, ':') !== false) {
+                $runningDomain = explode(':', $runningDomain)[0];
+            }
+            $subject = "[" . $runningDomain . "] " . $subject;
+        }
 
         // 2. Create Ticket
         $trackingId = generateTrackingId();

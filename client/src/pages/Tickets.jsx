@@ -172,7 +172,14 @@ export default function Tickets() {
                 }`}
               >
                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.tracking_id}</span>
+                     <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.tracking_id}</span>
+                        {t.domain && (
+                          <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full lowercase truncate max-w-[100px]">
+                            {t.domain}
+                          </span>
+                        )}
+                     </div>
                     <div className="flex items-center gap-2">
                        {t.email && <span className="text-[9px] font-bold text-amber-600 lowercase truncate max-w-[120px]">{t.email}</span>}
                        <div className={`w-2 h-2 rounded-full ${t.status === 'open' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -207,6 +214,12 @@ export default function Tickets() {
                           <>
                             <div className="w-1 h-1 bg-slate-200 rounded-full" />
                             <span className="text-[10px] font-bold text-amber-600 lowercase select-all">{selectedTicket.email}</span>
+                          </>
+                        )}
+                        {selectedTicket.domain && (
+                          <>
+                            <div className="w-1 h-1 bg-slate-200 rounded-full" />
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Domain: {selectedTicket.domain}</span>
                           </>
                         )}
                         <div className="w-1 h-1 bg-slate-200 rounded-full" />
