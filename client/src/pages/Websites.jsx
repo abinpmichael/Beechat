@@ -111,7 +111,10 @@ export default function Websites() {
     welcome_message: '', bot_subtitle: '', success_message: '', 
     survey_config: [], 
     header_bg_gradient: '', notification_sound: '', widget_icon: '',
-    form_config: [] 
+    form_config: [],
+    widget_position: 'right',
+    widget_offset_x: 20,
+    widget_offset_y: 20
   });
   const [activeTab, setActiveTab] = useState('branding');
   const [knowledgeItems, setKnowledgeItems] = useState([]);
@@ -348,7 +351,15 @@ export default function Websites() {
                           forms = typeof site.form_config === 'string' && site.form_config.trim() ? JSON.parse(site.form_config) : (site.form_config || []);
                         } catch (e) { forms = []; }
 
-                        setEditData({ ...site, theme_color: site.theme_color||'#f59e0b', survey_config: Array.isArray(survey) ? survey : [], form_config: Array.isArray(forms) ? forms : [] }); 
+                        setEditData({ 
+                          ...site, 
+                          theme_color: site.theme_color || '#f59e0b', 
+                          survey_config: Array.isArray(survey) ? survey : [], 
+                          form_config: Array.isArray(forms) ? forms : [],
+                          widget_position: site.widget_position || 'right',
+                          widget_offset_x: site.widget_offset_x !== undefined && site.widget_offset_x !== null ? parseInt(site.widget_offset_x) : 20,
+                          widget_offset_y: site.widget_offset_y !== undefined && site.widget_offset_y !== null ? parseInt(site.widget_offset_y) : 20
+                        }); 
                         setActiveTab('branding'); 
                         fetchKnowledge(site.id); 
                       }}
@@ -443,6 +454,42 @@ export default function Websites() {
                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Avatar Terminal (URL)</label>
                               <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editData.bot_image} onChange={(e) => setEditData({...editData, bot_image: e.target.value})} />
                            </div>
+                           
+                           <div className="border-t border-slate-100 pt-8 space-y-6">
+                              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Widget Position & Spacing</h4>
+                              <div className="grid grid-cols-3 gap-6">
+                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Screen Side</label>
+                                    <select 
+                                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" 
+                                       value={editData.widget_position || 'right'} 
+                                       onChange={(e) => setEditData({...editData, widget_position: e.target.value})}
+                                    >
+                                       <option value="right">Right Side</option>
+                                       <option value="left">Left Side</option>
+                                    </select>
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Horizontal Offset (px)</label>
+                                    <input 
+                                       type="number" 
+                                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" 
+                                       value={editData.widget_offset_x !== undefined ? editData.widget_offset_x : 20} 
+                                       onChange={(e) => setEditData({...editData, widget_offset_x: parseInt(e.target.value) || 0})} 
+                                    />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vertical Offset (px)</label>
+                                    <input 
+                                       type="number" 
+                                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" 
+                                       value={editData.widget_offset_y !== undefined ? editData.widget_offset_y : 20} 
+                                       onChange={(e) => setEditData({...editData, widget_offset_y: parseInt(e.target.value) || 0})} 
+                                    />
+                                 </div>
+                              </div>
+                           </div>
+
                            <button type="submit" className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-black shadow-xl hover:bg-amber-500 transition-all uppercase text-xs tracking-widest flex items-center gap-3">
                               <Save className="w-5 h-5" /> Commit Branding
                            </button>

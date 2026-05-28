@@ -24,7 +24,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
                 'form_config' => 'LONGTEXT',
                 'header_bg_gradient' => 'VARCHAR(255)',
                 'notification_sound' => 'TEXT',
-                'widget_icon' => 'TEXT'
+                'widget_icon' => 'TEXT',
+                'widget_position' => "VARCHAR(20) DEFAULT 'right'",
+                'widget_offset_x' => 'INT DEFAULT 20',
+                'widget_offset_y' => 'INT DEFAULT 20'
             ];
             foreach ($colsToCheck as $colName => $colDef) {
                 $cols = $pdo->query("SHOW COLUMNS FROM websites LIKE '$colName'")->fetchAll();

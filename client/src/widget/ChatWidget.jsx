@@ -193,7 +193,10 @@ export default function ChatWidget({ apiKey }) {
     headerBg: null,
     sound: 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3',
     icon: null,
-    form_config: []
+    form_config: [],
+    widget_position: 'right',
+    widget_offset_x: 20,
+    widget_offset_y: 20
   });
   const [idleTimer, setIdleTimer] = useState(0);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -305,8 +308,22 @@ export default function ChatWidget({ apiKey }) {
             is_open:  d.is_open !== false,
             enable_live_chat: d.enable_live_chat,
             enable_ai_bot: d.enable_ai_bot,
-            form_config: Array.isArray(forms) ? forms : []
+            form_config: Array.isArray(forms) ? forms : [],
+            widget_position: d.widget_position || 'right',
+            widget_offset_x: d.widget_offset_x !== undefined ? parseInt(d.widget_offset_x) : 20,
+            widget_offset_y: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20
           });
+
+          // Post init_position message to parent
+          try {
+            window.parent.postMessage({
+              source: 'bee-chat-widget',
+              type: 'init_position',
+              position: d.widget_position || 'right',
+              offsetX: d.widget_offset_x !== undefined ? parseInt(d.widget_offset_x) : 20,
+              offsetY: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20
+            }, '*');
+          } catch (e) {}
         }
 
         if (res.id) {
@@ -456,6 +473,17 @@ export default function ChatWidget({ apiKey }) {
           ...d,
           form_config: Array.isArray(forms) ? forms : []
         }));
+
+        // Post init_position message to parent
+        try {
+          window.parent.postMessage({
+            source: 'bee-chat-widget',
+            type: 'init_position',
+            position: d.widget_position || 'right',
+            offsetX: d.widget_offset_x !== undefined ? parseInt(d.widget_offset_x) : 20,
+            offsetY: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20
+          }, '*');
+        } catch (e) {}
       });
   }, [apiKey]);
 

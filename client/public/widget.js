@@ -19,10 +19,15 @@
     iframe.src = baseUrl + '/widget?apiKey=' + encodeURIComponent(apiKey);
     iframe.id  = 'bee-chat-widget-iframe';
 
+    var isOpen = false;
+    var widgetPos = 'right';
+    var widgetX = '20px';
+    var widgetY = '20px';
+
     // ── Styles: start as just the bubble size ──────────────────────────
     iframe.style.position        = 'fixed';
-    iframe.style.bottom          = '20px';
-    iframe.style.right           = '20px';
+    iframe.style.bottom          = widgetY;
+    iframe.style.right           = widgetX;
     iframe.style.border          = 'none';
     iframe.style.zIndex          = '2147483647';
     iframe.style.colorScheme     = 'light';
@@ -32,11 +37,52 @@
     iframe.setAttribute('allowTransparency', 'true');
     iframe.setAttribute('allow', 'autoplay');
 
-    // Start small — only the bubble (80x80)
+    // Start small — only the bubble (85x85)
     iframe.style.width  = '85px';
     iframe.style.height = '85px';
 
     document.body.appendChild(iframe);
+
+    function updateIframeStyles() {
+        var isMobile = window.innerWidth < 480;
+        if (isOpen) {
+            iframe.style.width  = isMobile ? '100%' : '420px';
+            iframe.style.height = isMobile ? '100%' : '720px';
+            if (isMobile) {
+                iframe.style.bottom = '0';
+                iframe.style.right  = '0';
+                iframe.style.left   = '0';
+                iframe.style.borderRadius = '0';
+            } else {
+                iframe.style.bottom = widgetY;
+                if (widgetPos === 'left') {
+                    iframe.style.left = widgetX;
+                    iframe.style.right = 'auto';
+                } else {
+                    iframe.style.right = widgetX;
+                    iframe.style.left = 'auto';
+                }
+                iframe.style.borderRadius = '';
+            }
+        } else {
+            iframe.style.width  = '85px';
+            iframe.style.height = '85px';
+            iframe.style.bottom = widgetY;
+            if (widgetPos === 'left') {
+                iframe.style.left = widgetX;
+                iframe.style.right = 'auto';
+            } else {
+                iframe.style.right = widgetX;
+                iframe.style.left = 'auto';
+            }
+            iframe.style.borderRadius = '';
+        }
+    }
+
+    // Handle screen resize dynamically when widget is open
+    window.addEventListener('resize', function() {
+        updateIframeStyles();
+    });
 
     // ── Listen for postMessage from the widget ─────────────────────────
     window.addEventListener('message', function(e) {
@@ -45,22 +91,21 @@
         var data = e.data;
         if (!data || data.source !== 'bee-chat-widget') return;
 
+        if (data.type === 'init_position') {
+            widgetPos = data.position || 'right';
+            widgetX = (data.offsetX !== undefined ? data.offsetX : 20) + 'px';
+            widgetY = (data.offsetY !== undefined ? data.offsetY : 20) + 'px';
+            updateIframeStyles();
+        }
+
         if (data.type === 'open') {
-            var isMobile = window.innerWidth < 480;
-            iframe.style.width  = isMobile ? '100%' : '420px';
-            iframe.style.height = isMobile ? '100%' : '720px'; // Slightly taller for better spacing
-            if (isMobile) {
-                iframe.style.bottom = '0';
-                iframe.style.right  = '0';
-                iframe.style.borderRadius = '0';
-            }
+            isOpen = true;
+            updateIframeStyles();
         }
 
         if (data.type === 'close') {
-            iframe.style.width  = '85px';
-            iframe.style.height = '85px';
-            iframe.style.bottom = '20px';
-            iframe.style.right  = '20px';
+            isOpen = false;
+            updateIframeStyles();
         }
     });
 })();

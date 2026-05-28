@@ -26,7 +26,10 @@ try {
             'notification_sound' => 'TEXT',
             'widget_icon' => 'TEXT',
             // New column to enable/disable video call link per website
-            'video_call_allowed' => 'BOOLEAN DEFAULT 0'
+            'video_call_allowed' => 'BOOLEAN DEFAULT 0',
+            'widget_position' => "VARCHAR(20) DEFAULT 'right'",
+            'widget_offset_x' => 'INT DEFAULT 20',
+            'widget_offset_y' => 'INT DEFAULT 20'
         ];
         foreach ($colsToCheck as $colName => $colDef) {
             $cols = $pdo->query("SHOW COLUMNS FROM websites LIKE '$colName'")->fetchAll();
@@ -80,16 +83,22 @@ try {
             $icon     = $data['widget_icon'] ?? null;
             
             $surveyPriority = $data['survey_priority'] ?? 1;
+
+            $widgetPosition = $data['widget_position'] ?? 'right';
+            $widgetOffsetX = (int)($data['widget_offset_x'] ?? 20);
+            $widgetOffsetY = (int)($data['widget_offset_y'] ?? 20);
             
             $stmt = $pdo->prepare("UPDATE websites SET 
                 bot_name = ?, bot_image = ?, theme_color = ?, 
                 welcome_message = ?, bot_subtitle = ?, success_message = ?, 
                 survey_config = ?, form_config = ?, header_bg_gradient = ?, 
-                notification_sound = ?, widget_icon = ?, survey_priority = ?
+                notification_sound = ?, widget_icon = ?, survey_priority = ?,
+                widget_position = ?, widget_offset_x = ?, widget_offset_y = ?
                 WHERE id = ? AND tenant_id = ?");
             $stmt->execute([
                 $botName, $botImage, $themeColor, $welcomeMessage, $botSubtitle, $successMessage, 
-                $surveyConfig, $formConfig, $headerBg, $sound, $icon, $surveyPriority, $id, $tenantId
+                $surveyConfig, $formConfig, $headerBg, $sound, $icon, $surveyPriority,
+                $widgetPosition, $widgetOffsetX, $widgetOffsetY, $id, $tenantId
             ]);
             
             echo json_encode(["message" => "Settings updated"]);
