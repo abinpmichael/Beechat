@@ -99,7 +99,7 @@ const TopBee = ({ size = 40, animated = true }) => {
   );
 };
 
-const DynamicForm = ({ formConfig, onSubmit, color, isSubmitted }) => {
+const DynamicForm = ({ formConfig, onSubmit, color, isSubmitted, setMessages }) => {
   const [formData, setFormData] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -352,7 +352,8 @@ export default function ChatWidget({ apiKey }) {
                       role:'bot', 
                       text: parsed[0].question, 
                       options: parsed[0].type === 'options' ? parsed[0].options : null,
-                      type: parsed[0].type === 'form' ? 'form' : null
+                      type: parsed[0].type === 'form' ? 'form' : null,
+                      stepId: parsed[0].id
                     });
                     setStepId(parsed[0].id);
                   }
@@ -400,7 +401,8 @@ export default function ChatWidget({ apiKey }) {
              role:'bot', 
              text: parsed[0].question, 
              options: parsed[0].type === 'options' ? parsed[0].options : null,
-             type: parsed[0].type === 'form' ? 'form' : null 
+             type: parsed[0].type === 'form' ? 'form' : null,
+             stepId: parsed[0].id
            }); 
            setStepId(parsed[0].id); 
         } else {
@@ -678,8 +680,8 @@ export default function ChatWidget({ apiKey }) {
     return () => clearInterval(interval);
   }, [isOpen, leadId, apiKey]);
 
-  const addMsg = useCallback((role, text, image = null, type = null) => {
-    setMessages(p => [...p, { role, text, image, type }]);
+  const addMsg = useCallback((role, text, image = null, type = null, stepId = null) => {
+    setMessages(p => [...p, { role, text, image, type, stepId }]);
     if (role !== 'visitor') {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -835,7 +837,7 @@ export default function ChatWidget({ apiKey }) {
        setStepId(next); 
        setIsTyping(true); 
        setTimeout(() => { 
-          addMsg('bot', nxt.question, null, nxt.type === 'form' ? 'form' : null); 
+          addMsg('bot', nxt.question, null, nxt.type === 'form' ? 'form' : null, nxt.id); 
           if (nxt.type === 'options') {
              setMessages(prev => {
                 const last = prev[prev.length-1];
@@ -887,7 +889,7 @@ export default function ChatWidget({ apiKey }) {
     }
   };
 
-  const handleFormSubmit = async (formData, msgIdx, msgId) => {
+  const handleFormSubmit = async (formData, msgIdx, msgId, stepId) => {
     const phoneValue = formData.phone || formData.tel || '';
     const res = await fetch(`${API}/leads.php`, {
       method: 'POST',
@@ -903,7 +905,9 @@ export default function ChatWidget({ apiKey }) {
     if (res.id) {
       setLeadId(res.id);
       leadIdRef.current = res.id;
-      const storageKey = msgId ? `bee_form_submitted_${res.id}_${msgId}` : `bee_form_submitted_${res.id}_idx_${msgIdx}`;
+      const storageKey = msgId 
+        ? `bee_form_submitted_${res.id}_${msgId}` 
+        : (stepId ? `bee_form_submitted_${res.id}_step_${stepId}` : `bee_form_submitted_${res.id}_idx_${msgIdx}`);
       localStorage.setItem(storageKey, 'true');
       setSubmittedForms(prev => ({
         ...prev,
@@ -925,9 +929,11 @@ export default function ChatWidget({ apiKey }) {
     }
   };
 
-  const isFormSubmitted = (msgId, msgIdx) => {
+  const isFormSubmitted = (msgId, msgIdx, stepId) => {
     if (!leadId) return false;
-    const storageKey = msgId ? `bee_form_submitted_${leadId}_${msgId}` : `bee_form_submitted_${leadId}_idx_${msgIdx}`;
+    const storageKey = msgId 
+      ? `bee_form_submitted_${leadId}_${msgId}` 
+      : (stepId ? `bee_form_submitted_${leadId}_step_${stepId}` : `bee_form_submitted_${leadId}_idx_${msgIdx}`);
     return submittedForms[storageKey] || localStorage.getItem(storageKey) === 'true';
   };
 
@@ -978,7 +984,7 @@ export default function ChatWidget({ apiKey }) {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50/20">
               {messages.map((msg, i) => {
                 const right = msg.role === 'visitor';
-                const hasForm = !right && ((msg.text && msg.text.includes('[FORM:DATA_REQUEST]')) || msg.type === 'form');
+                const hasForm = !right && ((msg.text && msg.text.includes('[FORM:DATA_REQUEST]')) || msg.type === 'form') && !isFormSubmitted(msg.id, i, msg.stepId);
                 const cleanText = hasForm ? msg.text.replace('[FORM:DATA_REQUEST]', '').trim() : (msg.text || '');
                 const isOptions = msg.options && msg.options.length > 0;
                 return (
@@ -994,9 +1000,10 @@ export default function ChatWidget({ apiKey }) {
                       <div className="w-[85%]">
                         <DynamicForm 
                           formConfig={branding.form_config} 
-                          onSubmit={(fd) => handleFormSubmit(fd, i, msg.id)} 
+                          onSubmit={(fd) => handleFormSubmit(fd, i, msg.id, msg.stepId)} 
                           color={branding.color} 
-                          isSubmitted={isFormSubmitted(msg.id, i)} 
+                          isSubmitted={false} 
+                          setMessages={setMessages}
                         />
                       </div>
                     )}
