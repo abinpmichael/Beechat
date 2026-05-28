@@ -348,7 +348,12 @@ export default function ChatWidget({ apiKey }) {
                   const welcome = d.is_open ? (d.welcome_message || 'Hello!') : "👋 We're currently closed, but you can leave a message below!";
                   const init = [{ role:'bot', text: welcome }];
                   if (parsed.length > 0) {
-                    init.push({ role:'bot', text: parsed[0].question, options: parsed[0].type === 'options' ? parsed[0].options : null });
+                    init.push({ 
+                      role:'bot', 
+                      text: parsed[0].question, 
+                      options: parsed[0].type === 'options' ? parsed[0].options : null,
+                      type: parsed[0].type === 'form' ? 'form' : null
+                    });
                     setStepId(parsed[0].id);
                   }
                   setMessages(init);
@@ -391,7 +396,12 @@ export default function ChatWidget({ apiKey }) {
         
         const priority = parseInt(d.survey_priority ?? 1);
         if (priority === 1 && parsed.length > 0) { 
-           init.push({ role:'bot', text: parsed[0].question, options: parsed[0].type === 'options' ? parsed[0].options : null }); 
+           init.push({ 
+             role:'bot', 
+             text: parsed[0].question, 
+             options: parsed[0].type === 'options' ? parsed[0].options : null,
+             type: parsed[0].type === 'form' ? 'form' : null 
+           }); 
            setStepId(parsed[0].id); 
         } else {
            setSurveyDone(true);
@@ -668,8 +678,8 @@ export default function ChatWidget({ apiKey }) {
     return () => clearInterval(interval);
   }, [isOpen, leadId, apiKey]);
 
-  const addMsg = useCallback((role, text, image = null) => {
-    setMessages(p => [...p, { role, text, image }]);
+  const addMsg = useCallback((role, text, image = null, type = null) => {
+    setMessages(p => [...p, { role, text, image, type }]);
     if (role !== 'visitor') {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -767,7 +777,7 @@ export default function ChatWidget({ apiKey }) {
        setStepId(next); 
        setIsTyping(true); 
        setTimeout(() => { 
-          addMsg('bot', nxt.question, null); 
+          addMsg('bot', nxt.question, null, nxt.type === 'form' ? 'form' : null); 
           if (nxt.type === 'options') {
              setMessages(prev => {
                 const last = prev[prev.length-1];
@@ -841,6 +851,12 @@ export default function ChatWidget({ apiKey }) {
         ...prev,
         [storageKey]: true
       }));
+
+      // Advance survey step if current step type is form
+      const currentStep = steps.find(s => s.id === stepId);
+      if (!surveyDone && currentStep && currentStep.type === 'form') {
+        handleStep("Form Submitted", currentStep.next);
+      }
     }
   };
 
@@ -897,7 +913,7 @@ export default function ChatWidget({ apiKey }) {
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50/20">
               {messages.map((msg, i) => {
                 const right = msg.role === 'visitor';
-                const hasForm = !right && msg.text && msg.text.includes('[FORM:DATA_REQUEST]');
+                const hasForm = !right && ((msg.text && msg.text.includes('[FORM:DATA_REQUEST]')) || msg.type === 'form');
                 const cleanText = hasForm ? msg.text.replace('[FORM:DATA_REQUEST]', '').trim() : (msg.text || '');
                 const isOptions = msg.options && msg.options.length > 0;
                 return (

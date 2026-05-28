@@ -569,6 +569,11 @@ export default function Websites() {
                                                 if (!updated[idx].options) updated[idx].options = [];
                                                 setEditData({...editData, survey_config: updated});
                                              }} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${step.type === 'options' ? 'bg-white shadow-sm text-amber-600' : 'text-slate-400'}`}>Multiple Choice</button>
+                                             <button onClick={() => {
+                                                const updated = [...editData.survey_config];
+                                                updated[idx].type = 'form';
+                                                setEditData({...editData, survey_config: updated});
+                                             }} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${step.type === 'form' ? 'bg-white shadow-sm text-amber-600' : 'text-slate-400'}`}>Insert Form</button>
                                           </div>
                                        </div>
                                     </div>
