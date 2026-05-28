@@ -142,12 +142,12 @@ export default function Tickets() {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex gap-8">
+    <div className="h-[calc(100vh-180px)] md:h-[calc(100vh-250px)] flex gap-6 lg:gap-8 overflow-hidden select-none">
       {/* Sidebar List */}
-      <div className="w-96 flex flex-col gap-6">
+      <div className="w-80 lg:w-96 flex flex-col gap-4 shrink-0">
         <div className="flex items-center justify-between">
-           <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Support <span className="text-amber-500">Tickets</span></h2>
-           <button onClick={() => setIsCreating(true)} className="p-2 bg-amber-500 text-white rounded-xl shadow-lg hover:scale-105 transition-all"><Plus className="w-5 h-5" /></button>
+           <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Support <span className="text-amber-500">Tickets</span></h2>
+           <button onClick={() => setIsCreating(true)} className="p-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md hover:scale-105 transition-all"><Plus className="w-4 h-4" /></button>
         </div>
 
         <div className="relative">
@@ -155,40 +155,40 @@ export default function Tickets() {
            <input 
              type="text" 
              placeholder="Search tracking ID..." 
-             className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-50 rounded-2xl font-bold text-xs outline-none focus:border-amber-500 transition-all shadow-sm"
+             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-sm text-slate-800"
              value={search}
              onChange={(e) => setSearch(e.target.value)}
            />
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar">
-           {loading ? Array(5).fill(0).map((_,i) => <div key={i} className="h-24 bg-white rounded-3xl animate-pulse border-2 border-slate-50" />) :
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
+           {loading ? Array(5).fill(0).map((_,i) => <div key={i} className="h-20 bg-white rounded-2xl animate-pulse border border-slate-100" />) :
             filteredTickets.map(t => (
               <div 
                 key={t.id}
                 onClick={() => fetchTicketDetails(t.tracking_id)}
-                className={`p-5 rounded-[2rem] border-2 transition-all cursor-pointer relative group ${
-                  selectedTicket?.id === t.id ? 'bg-white border-amber-500 shadow-xl' : 'bg-white border-transparent hover:border-slate-100'
+                className={`p-4 rounded-2xl border transition-all cursor-pointer relative group ${
+                  selectedTicket?.id === t.id ? 'bg-white border-amber-500 shadow-md' : 'bg-white border-slate-100 hover:border-slate-200'
                 }`}
               >
-                 <div className="flex items-center justify-between mb-3">
-                     <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.tracking_id}</span>
-                        {t.domain && (
-                          <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full lowercase truncate max-w-[100px]">
-                            {t.domain}
-                          </span>
-                        )}
-                     </div>
-                    <div className="flex items-center gap-2">
-                       {t.email && <span className="text-[9px] font-bold text-amber-600 lowercase truncate max-w-[120px]">{t.email}</span>}
-                       <div className={`w-2 h-2 rounded-full ${t.status === 'open' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                 <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">{t.tracking_id}</span>
+                         {t.domain && (
+                           <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full lowercase truncate max-w-[80px]">
+                             {t.domain}
+                           </span>
+                         )}
+                      </div>
+                    <div className="flex items-center gap-1.5">
+                       {t.email && <span className="text-[8px] font-bold text-amber-600 lowercase truncate max-w-[100px]">{t.email}</span>}
+                       <div className={`w-1.5 h-1.5 rounded-full ${t.status === 'open' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                     </div>
                  </div>
-                 <h4 className="font-black text-slate-900 text-sm mb-1 truncate">{t.subject}</h4>
-                 <p className="text-[10px] font-bold text-slate-400 truncate">{t.last_message || 'No messages yet'}</p>
-                <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-all">
-                   <ArrowUpRight className="w-4 h-4 text-amber-500" />
+                 <h4 className="font-black text-slate-900 text-xs mb-0.5 truncate">{t.subject}</h4>
+                 <p className="text-[9px] font-bold text-slate-400 truncate">{t.last_message || 'No messages yet'}</p>
+                <div className="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all">
+                   <ArrowUpRight className="w-3.5 h-3.5 text-amber-500" />
                 </div>
               </div>
             ))
@@ -197,110 +197,109 @@ export default function Tickets() {
       </div>
 
       {/* Detail View */}
-      <div className="flex-1 bg-white rounded-[3rem] shadow-xl shadow-slate-100 border-2 border-slate-50 overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white rounded-[2rem] shadow-md border border-slate-150 overflow-hidden flex flex-col h-full">
         {selectedTicket ? (
           <>
             {/* Ticket Header */}
-            <div className="p-8 border-b-2 border-slate-50 flex items-center justify-between">
-               <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">
+            <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0 bg-white">
+               <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center font-black text-base shadow-sm shrink-0">
                      {selectedTicket.visitor_uid[0]}
                   </div>
                   <div>
-                     <h3 className="text-xl font-black text-slate-900 tracking-tight">{selectedTicket.subject}</h3>
-                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead: {selectedTicket.visitor_uid}</span>
+                     <h3 className="text-base font-black text-slate-900 tracking-tight">{selectedTicket.subject}</h3>
+                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Lead: {selectedTicket.visitor_uid}</span>
                         {selectedTicket.email && (
                           <>
                             <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                            <span className="text-[10px] font-bold text-amber-600 lowercase select-all">{selectedTicket.email}</span>
+                            <span className="text-[9px] font-bold text-amber-600 lowercase select-all">{selectedTicket.email}</span>
                           </>
                         )}
                         {selectedTicket.domain && (
                           <>
                             <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Domain: {selectedTicket.domain}</span>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{selectedTicket.domain}</span>
                           </>
                         )}
                         <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{selectedTicket.status}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider ${selectedTicket.status === 'open' ? 'text-emerald-500' : 'text-slate-400'}`}>{selectedTicket.status}</span>
                      </div>
                   </div>
                </div>
-                <div className="flex items-center gap-3">
-                   {selectedTicket.video_call_type && selectedTicket.video_call_type !== 'none' ? (
-                      <button 
-                        onClick={() => setActiveVideoUrl(selectedTicket.video_call_url)}
-                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
-                      >
-                         <Video className="w-4 h-4 animate-pulse" /> {selectedTicket.video_call_type === 'instant' ? 'Join Video' : 'View Schedule Link'}
-                      </button>
-                   ) : (
-                      <div className="flex items-center gap-2">
-                        <button 
-                          disabled={sending}
-                          onClick={() => handleInitiateVideo('instant')}
-                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
-                        >
-                           <Video className="w-4 h-4 text-emerald-500" /> Instant Call
-                        </button>
-                        <button 
-                          disabled={sending}
-                          onClick={() => handleInitiateVideo('scheduled')}
-                          className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-1.5"
-                        >
-                           <Calendar className="w-4 h-4 text-amber-500" /> Schedule Call
-                        </button>
-                      </div>
-                   )}
-                   <button className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400"><MoreVertical className="w-5 h-5" /></button>
-                   <button 
-                     disabled={sending}
-                     onClick={() => handleUpdateStatus(selectedTicket.status === 'open' ? 'closed' : 'open')}
-                     className={`px-6 py-2.5 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all ${
-                       selectedTicket.status === 'open' 
-                         ? 'bg-slate-900 hover:bg-amber-500' 
-                         : 'bg-emerald-500 hover:bg-emerald-600'
-                     }`}
-                   >
-                     {selectedTicket.status === 'open' ? 'Close Ticket' : 'Reopen Ticket'}
-                   </button>
-                </div>
+               <div className="flex items-center gap-2 flex-wrap">
+                  {selectedTicket.video_call_type && selectedTicket.video_call_type !== 'none' ? (
+                     <button 
+                       onClick={() => setActiveVideoUrl(selectedTicket.video_call_url)}
+                       className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-[9px] uppercase tracking-widest rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95 flex items-center gap-1"
+                     >
+                        <Video className="w-3.5 h-3.5 animate-pulse" /> {selectedTicket.video_call_type === 'instant' ? 'Join Video' : 'View Schedule Link'}
+                     </button>
+                  ) : (
+                     <div className="flex items-center gap-1.5">
+                       <button 
+                         disabled={sending}
+                         onClick={() => handleInitiateVideo('instant')}
+                         className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[9px] uppercase tracking-widest rounded-lg transition-all flex items-center gap-1"
+                       >
+                          <Video className="w-3.5 h-3.5 text-emerald-500" /> Instant Call
+                       </button>
+                       <button 
+                         disabled={sending}
+                         onClick={() => handleInitiateVideo('scheduled')}
+                         className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-[9px] uppercase tracking-widest rounded-lg transition-all flex items-center gap-1"
+                       >
+                          <Calendar className="w-3.5 h-3.5 text-amber-500" /> Schedule Call
+                       </button>
+                     </div>
+                  )}
+                  <button 
+                    disabled={sending}
+                    onClick={() => handleUpdateStatus(selectedTicket.status === 'open' ? 'closed' : 'open')}
+                    className={`px-4 py-2 text-white font-black text-[9px] uppercase tracking-widest rounded-lg transition-all ${
+                      selectedTicket.status === 'open' 
+                        ? 'bg-slate-900 hover:bg-amber-500' 
+                        : 'bg-emerald-500 hover:bg-emerald-600'
+                    }`}
+                  >
+                    {selectedTicket.status === 'open' ? 'Close Ticket' : 'Reopen Ticket'}
+                  </button>
+               </div>
             </div>
 
             {/* Messages Feed */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 custom-scrollbar select-text">
                {selectedTicket.replies.map((r, i) => (
-                 <div key={r.id} className={`flex gap-4 ${r.user_id ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-black ${
+                 <div key={r.id} className={`flex gap-3 ${r.user_id ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-black text-xs ${
                       r.user_id ? (r.is_private ? 'bg-slate-900 text-white' : 'bg-amber-500 text-white') : 'bg-white text-slate-400 border border-slate-100'
                     }`}>
                       {r.agent_name ? r.agent_name[0] : 'V'}
                     </div>
                     <div className={`max-w-xl space-y-1 ${r.user_id ? 'text-right' : ''}`}>
-                       <div className="flex items-center gap-2 mb-1 justify-between px-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                       <div className="flex items-center gap-2 mb-0.5 justify-between px-1">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                              {r.agent_name || 'Visitor'} {r.is_private ? '• Private Note' : ''}
                           </span>
                        </div>
-                       <div className={`p-5 rounded-3xl text-sm font-medium leading-relaxed shadow-sm ${
+                       <div className={`p-4 rounded-2xl text-xs font-medium leading-relaxed shadow-sm ${
                          r.user_id 
                            ? (r.is_private ? 'bg-slate-800 text-slate-100' : 'bg-amber-500 text-white') 
                            : 'bg-white text-slate-700 border border-slate-100'
                        }`}>
                          {r.message.split('\n').map((line, idx) => {
                            if (line.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                              return <img key={idx} src={line} className="max-w-full rounded-2xl my-2 shadow-lg border-4 border-white/20 cursor-pointer" onClick={() => window.open(line)} />
+                              return <img key={idx} src={line} className="max-w-full rounded-xl my-2 shadow-sm border-2 border-white/20 cursor-pointer" onClick={() => window.open(line)} />
                            }
                            if (line.match(/\.(pdf|docx|xlsx|txt|zip|csv)$/i)) {
                               return (
-                                <a key={idx} href={line} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-black/5 rounded-2xl my-2 hover:bg-black/10 transition-all border border-black/5 group">
-                                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                      <Paperclip className="w-5 h-5 text-slate-400" />
+                                <a key={idx} href={line} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-black/5 rounded-xl my-2 hover:bg-black/10 transition-all border border-black/5 group">
+                                   <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                      <Paperclip className="w-4 h-4 text-slate-400" />
                                    </div>
                                    <div className="text-left">
-                                      <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Attachment</p>
-                                      <p className="text-xs font-bold truncate max-w-[200px]">{line.split('/').pop()}</p>
+                                      <p className="text-[8px] font-black uppercase tracking-widest leading-none mb-1">Attachment</p>
+                                      <p className="text-[10px] font-bold truncate max-w-[200px]">{line.split('/').pop()}</p>
                                    </div>
                                 </a>
                               )
@@ -314,61 +313,73 @@ export default function Tickets() {
             </div>
 
             {/* Reply Footer */}
-            <div className="p-8 border-t-2 border-slate-50 bg-white">
-               <div className="flex items-center gap-4 mb-4">
-                  <button 
-                    onClick={() => setIsPrivate(false)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isPrivate ? 'bg-amber-500 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}
-                  >Public Reply</button>
-                  <button 
-                    onClick={() => setIsPrivate(true)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isPrivate ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}
-                  >Internal Note</button>
-               </div>
-               <form onSubmit={handleReply} className="relative">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+               <form onSubmit={handleReply} className="border border-slate-200 rounded-2xl overflow-hidden focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-all bg-white flex flex-col">
                   <textarea 
-                    rows="3"
-                    className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] font-bold text-sm outline-none focus:border-amber-500 transition-all"
-                    placeholder={isPrivate ? "Type a private note for the team..." : "Reply to visitor via email/portal..."}
+                    rows="2"
+                    className="w-full px-4 py-3 bg-white font-medium text-sm text-slate-800 outline-none resize-none placeholder:text-slate-400"
+                    placeholder={isPrivate ? "Type an internal note for the team..." : "Reply to visitor via email/portal..."}
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                   />
-                  <div className="absolute bottom-4 right-4 flex items-center gap-3">
-                     <label className="p-2.5 bg-white text-slate-400 rounded-xl hover:bg-slate-100 transition-all shadow-sm cursor-pointer border border-slate-100">
-                        <Paperclip className="w-5 h-5" />
-                        <input type="file" className="hidden" onChange={async (e) => {
-                           const file = e.target.files[0];
-                           if (!file) return;
-                           const formData = new FormData();
-                           formData.append('file', file);
-                           try {
-                              setSending(true);
-                              const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
-                              if (res.data.url) setReply(p => p + "\n" + res.data.url);
-                           } catch (err) { alert("Upload failed"); }
-                           finally { setSending(false); }
-                        }} />
-                     </label>
+                  <div className="bg-slate-50 px-4 py-2 flex items-center justify-between border-t border-slate-100">
+                     {/* Left Controls: Tabs & Attachments */}
+                     <div className="flex items-center gap-2">
+                        <div className="bg-slate-200/60 p-0.5 rounded-lg flex items-center gap-0.5">
+                           <button 
+                             type="button"
+                             onClick={() => setIsPrivate(false)}
+                             className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${!isPrivate ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                           >
+                             Public
+                           </button>
+                           <button 
+                             type="button"
+                             onClick={() => setIsPrivate(true)}
+                             className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${isPrivate ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                           >
+                             Note
+                           </button>
+                        </div>
+                        
+                        <label className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-200/55 rounded-lg transition-all cursor-pointer flex items-center justify-center">
+                           <Paperclip className="w-4 h-4" />
+                           <input type="file" className="hidden" onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              try {
+                                 setSending(true);
+                                 const res = await axios.post(`${API_BASE_URL}/upload.php`, formData);
+                                 if (res.data.url) setReply(p => p + "\n" + res.data.url);
+                              } catch (err) { alert("Upload failed"); }
+                              finally { setSending(false); }
+                           }} />
+                        </label>
+                     </div>
+                     
+                     {/* Right Action Button */}
                      <button 
-                       disabled={sending}
+                       disabled={sending || !reply.trim()}
                        type="submit" 
-                       className={`px-8 py-2.5 text-white font-black rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2 text-[11px] uppercase tracking-widest ${
+                       className={`px-5 py-2 text-white font-black rounded-lg shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-1.5 text-[10px] uppercase tracking-wider ${
                          isPrivate ? 'bg-slate-900' : 'bg-amber-500'
                        }`}
                      >
-                       {sending ? 'Processing...' : <><Send className="w-4 h-4" /> {isPrivate ? 'Add Note' : 'Post Reply'}</>}
+                       {sending ? 'Sending...' : <><Send className="w-3.5 h-3.5" /> {isPrivate ? 'Note' : 'Reply'}</>}
                      </button>
                   </div>
                </form>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
-             <div className="w-32 h-32 bg-slate-50 text-slate-200 rounded-[3rem] flex items-center justify-center mb-8 border-4 border-dashed border-slate-100">
-                <Inbox className="w-16 h-16" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-slate-50/20">
+             <div className="w-24 h-24 bg-slate-50 text-slate-200 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+                <Inbox className="w-10 h-10 text-slate-300" />
              </div>
-             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">No Ticket Selected</h3>
-             <p className="text-slate-400 font-bold max-w-xs mt-2 text-sm uppercase tracking-widest leading-relaxed">Select a conversation from the left to view neural support history.</p>
+             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">No Ticket Selected</h3>
+             <p className="text-slate-400 font-bold max-w-xs mt-2 text-[10px] uppercase tracking-widest leading-relaxed">Select a conversation from the left to view neural support history.</p>
           </div>
         )}
       </div>
