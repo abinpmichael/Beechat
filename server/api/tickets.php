@@ -202,12 +202,12 @@ try {
     $userId = $auth['id'];
     $tenantId = $auth['tenant_id'];
 
-    // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
 // Assign Agent to Ticket (admin only)
 // -------------------------------------------------------------------------
-// existing assign_agent block unchanged
-    // Only admins can assign tickets
-    if ($auth['role'] !== 'admin') {
+    if ($action === 'assign_agent') {
+        // Only admins can assign tickets
+        if ($auth['role'] !== 'admin') {
         exit(json_encode(['error' => 'Insufficient permissions']));
     }
 
