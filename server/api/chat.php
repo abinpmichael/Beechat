@@ -110,6 +110,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
                 $res[$row['setting_key']] = (int)$row['setting_value'];
             }
 
+            // Check if ANY agent is online (active in last 2 minutes)
+            $res['agents_online'] = false;
+            if (isset($res['tenant_id'])) {
+                $stmt_agents = $pdo->prepare("SELECT COUNT(*) FROM users WHERE tenant_id = ? AND last_seen_at > (NOW() - INTERVAL 2 MINUTE)");
+                $stmt_agents->execute([$res['tenant_id']]);
+                $agentsOnline = (int)$stmt_agents->fetchColumn();
+                $res['agents_online'] = ($agentsOnline > 0);
+            }
+
             echo json_encode($res);
         }
     } catch (Exception $e) {

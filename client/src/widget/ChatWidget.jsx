@@ -197,7 +197,8 @@ export default function ChatWidget({ apiKey }) {
     widget_position: 'right',
     widget_offset_x: 20,
     widget_offset_y: 20,
-    ip: '127.0.0.1'
+    ip: '127.0.0.1',
+    agents_online: false
   });
   const [idleTimer, setIdleTimer] = useState(0);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -238,6 +239,24 @@ export default function ChatWidget({ apiKey }) {
   const socketRef = useRef(null);
 
   useEffect(() => { leadIdRef.current = leadId; }, [leadId]);
+
+  const getVisitorContact = () => {
+    let email = '';
+    let phone = '';
+    if (surveyDataRef.current) {
+      Object.entries(surveyDataRef.current).forEach(([k, v]) => {
+        if (!v) return;
+        const keyLower = k.toLowerCase();
+        if (keyLower.includes('email') || keyLower.includes('mail')) {
+          email = v;
+        } else if (keyLower.includes('phone') || keyLower.includes('tel') || keyLower.includes('mobile') || keyLower.includes('contact')) {
+          phone = v;
+        }
+      });
+    }
+    return { email, phone };
+  };
+
   useEffect(() => {
     if (branding.sound) audioRef.current.src = branding.sound;
   }, [branding.sound]);
@@ -313,7 +332,8 @@ export default function ChatWidget({ apiKey }) {
             widget_position: d.widget_position || 'right',
             widget_offset_x: d.widget_offset_x !== undefined ? parseInt(d.widget_offset_x) : 20,
             widget_offset_y: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20,
-            ip:       d.ip || '127.0.0.1'
+            ip:       d.ip || '127.0.0.1',
+            agents_online: !!d.agents_online
           });
 
           // Post init_position message to parent
@@ -809,25 +829,23 @@ export default function ChatWidget({ apiKey }) {
     addMsg('visitor', label); surveyDataRef.current[stepId] = label;
     recordActivity();
 
-    const getVisitorContact = () => {
-      let email = '';
-      let phone = '';
-      if (surveyDataRef.current) {
-        Object.entries(surveyDataRef.current).forEach(([k, v]) => {
-          const keyLower = k.toLowerCase();
-          if (keyLower.includes('email') || keyLower.includes('mail')) {
-            email = v;
-          } else if (keyLower.includes('phone') || keyLower.includes('tel') || keyLower.includes('mobile') || keyLower.includes('contact')) {
-            phone = v;
-          }
-        });
-      }
-      return { email, phone };
-    };
-
     const contact = getVisitorContact();
 
     if (next === 'human') { 
+       if (!branding.agents_online) {
+          addMsg('bot', '⚠️ All live agents are currently offline. Please submit a support ticket below, and we will follow up with you via email.');
+          setTicketFormVisible(true);
+          const summary = Object.entries(surveyDataRef.current)
+            .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+            .join("\n");
+          setTicketData(prev => ({
+            ...prev,
+            email: contact.email || prev.email || '',
+            phone: contact.phone || prev.phone || '',
+            message: "Human Connection Requested (Agents Offline). Survey Results:\n" + summary
+          }));
+          return;
+       }
        if (!contact.email || !contact.phone) {
           setTicketFormVisible(true);
           const summary = Object.entries(surveyDataRef.current)
@@ -1033,21 +1051,54 @@ export default function ChatWidget({ apiKey }) {
                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" />
                           Speaking with {assignedAgent.name}
                         </>
-                      ) : branding.is_open ? (
+                      ) : (branding.is_open && branding.agents_online) ? (
                         <>
                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm" />
                           Live Connection
                         </>
+                      ) : branding.is_open ? (
+                        <>
+                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full shadow-sm" />
+                          Agents Offline
+                        </>
                       ) : (
                         <>
-                          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                          <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
                           Away Mode
                         </>
                       )}
                     </p>
                   </div>
                 </div>
-                <button onClick={closeChat} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-7 h-7"/></button>
+                <div className="flex items-center gap-2">
+                  {branding.enable_live_chat && !isLive && !assignedAgent && (
+                    <button 
+                      onClick={() => {
+                        if (!branding.agents_online) {
+                          addMsg('bot', '⚠️ All live agents are currently offline. Please submit a support ticket below, and we will follow up with you via email.');
+                          setTicketFormVisible(true);
+                          return;
+                        }
+                        const contact = getVisitorContact();
+                        if (!contact.email || !contact.phone) {
+                          addMsg('bot', '👋 To connect with a live agent, please share your contact details in the form below first.');
+                          setTicketFormVisible(true);
+                          return;
+                        }
+                        setIsLive(true);
+                        setSurveyDone(true);
+                        setStepId(null);
+                        submitLead({ ...surveyDataRef.current, status:'human_requested' }, true);
+                      }}
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/20 transition-all flex items-center gap-1 cursor-pointer pointer-events-auto"
+                      title="Speak to a live agent"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Live Agent</span>
+                    </button>
+                  )}
+                  <button onClick={closeChat} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-7 h-7"/></button>
+                </div>
               </div>
             </header>
 
