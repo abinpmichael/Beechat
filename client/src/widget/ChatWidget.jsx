@@ -196,7 +196,8 @@ export default function ChatWidget({ apiKey }) {
     form_config: [],
     widget_position: 'right',
     widget_offset_x: 20,
-    widget_offset_y: 20
+    widget_offset_y: 20,
+    ip: '127.0.0.1'
   });
   const [idleTimer, setIdleTimer] = useState(0);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -311,7 +312,8 @@ export default function ChatWidget({ apiKey }) {
             form_config: Array.isArray(forms) ? forms : [],
             widget_position: d.widget_position || 'right',
             widget_offset_x: d.widget_offset_x !== undefined ? parseInt(d.widget_offset_x) : 20,
-            widget_offset_y: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20
+            widget_offset_y: d.widget_offset_y !== undefined ? parseInt(d.widget_offset_y) : 20,
+            ip:       d.ip || '127.0.0.1'
           });
 
           // Post init_position message to parent
@@ -630,7 +632,7 @@ export default function ChatWidget({ apiKey }) {
         device,
         page,
         sessionDuration: Math.floor((Date.now() - widgetLoadTime.current) / 1000),
-        ip: '127.0.0.1'
+        ip: branding.ip || '127.0.0.1'
       });
     };
 

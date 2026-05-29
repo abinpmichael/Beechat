@@ -83,6 +83,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
 
             // IP Country Lookup for Colony Pulse
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                $ip = trim($ips[0]);
+            } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+                $ip = $_SERVER['HTTP_CLIENT_IP'];
+            }
             if ($ip === '::1' || $ip === '127.0.0.1') {
                 $ip = '104.244.42.1'; // fallback public IP
             }
@@ -95,6 +101,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_branding') {
                     $country = $geoData['country'];
                 }
             }
+            $res['ip'] = $ip;
             $res['country'] = $country;
 
             // GLOBAL SETTINGS

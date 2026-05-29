@@ -131,7 +131,7 @@ export default function Dashboard() {
     { sessionId: 'mock4', country: 'Canada', ip: '99.2.3.1', page: '/blog', browser: 'Edge', device: 'Desktop', sessionDuration: 89, visitorUid: 'Visitor (4C2F)' },
     { sessionId: 'mock5', country: 'Germany', ip: '46.5.6.7', page: '/about', browser: 'Chrome', device: 'Mobile', sessionDuration: 12, visitorUid: 'Visitor (A1B2)' }
   ];
-  const [liveVisitors, setLiveVisitors]   = useState(dummyVisitors);
+  const [liveVisitors, setLiveVisitors]   = useState([]);
   const maxNotifIdRef = useRef(0);
 
   const fetchNotifs = async () => {
@@ -184,11 +184,7 @@ export default function Dashboard() {
 
     // Listen to active visitor events
     socket.on('live_visitors_list', (list) => {
-      if (list && list.length > 0) {
-        setLiveVisitors(list);
-      } else {
-        setLiveVisitors(dummyVisitors);
-      }
+      setLiveVisitors(list || []);
     });
 
     // Request notification permission if not prompted yet
