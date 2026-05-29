@@ -15,6 +15,7 @@ import ChatWidget from './widget/ChatWidget';
 import TicketTracking from './pages/TicketTracking';
 import Integrations from './pages/Integrations';
 import VideoAdSimulator from './pages/VideoAdSimulator';
+import BlogList from './pages/BlogList';
 import { API_BASE_URL } from './config';
 
 const queryClient = new QueryClient();
@@ -397,6 +398,7 @@ function App() {
               <Route path="/help" element={<Help />} />
               <Route path="/privacy" element={<LegalPage type="privacy" />} />
               <Route path="/terms" element={<LegalPage type="terms" />} />
+              <Route path="/blog" element={landingActive ? <BlogList /> : <Navigate to="/dashboard" />} />
               <Route path="/blog/:postSlug" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
             </Routes>

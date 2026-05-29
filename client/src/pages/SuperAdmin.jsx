@@ -158,6 +158,7 @@ export default function SuperAdmin() {
   const [activeTab, setActiveTab] = useState('tenants');
   const [expandedTenantId, setExpandedTenantId] = useState(null);
   const [emailTemplates, setEmailTemplates] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateEditData, setTemplateEditData] = useState({ subject: '', body: '' });
   const [supportConvs, setSupportConvs] = useState([]);
@@ -184,14 +185,15 @@ export default function SuperAdmin() {
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const [tRes, pRes, sRes, kRes, rRes, eRes, bRes] = await Promise.all([
+      const [tRes, pRes, sRes, kRes, rRes, eRes, bRes, iRes] = await Promise.all([
         axios.get(`${API_URL}?action=list_tenants`, { headers }),
         axios.get(`${API_URL}?action=get_plans`, { headers }),
         axios.get(`${API_URL}?action=get_platform_settings`, { headers }),
         axios.get(`${API_URL}?action=list_all_knowledge`, { headers }),
         axios.get(`${API_URL}?action=get_revenue_stats`, { headers }),
         axios.get(`${API_URL}?action=list_email_templates`, { headers }),
-        axios.get(`${API_BASE_URL}/blog.php?action=list_all`, { headers }).catch(err => ({ data: [] }))
+        axios.get(`${API_BASE_URL}/blog.php?action=list_all`, { headers }).catch(err => ({ data: [] })),
+        axios.get(`${API_URL}?action=list_inquiries`, { headers }).catch(err => ({ data: [] }))
       ]);
       setTenants(Array.isArray(tRes.data) ? tRes.data : []);
       setPlans((Array.isArray(pRes.data) ? pRes.data : []).map(p => {
@@ -217,6 +219,7 @@ export default function SuperAdmin() {
       });
       setEmailTemplates(Array.isArray(eRes.data) ? eRes.data : []);
       setBlogPosts(Array.isArray(bRes.data) ? bRes.data : []);
+      setInquiries(Array.isArray(iRes.data) ? iRes.data : []);
       
       const supRes = await axios.get(`${API_BASE_URL}/support.php?action=list_conversations`, { headers });
       setSupportConvs(supRes.data);
@@ -285,6 +288,20 @@ export default function SuperAdmin() {
       fetchData();
     } catch (err) {
       alert("Error deleting item");
+    }
+  };
+
+  const handleDeleteInquiry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this contact inquiry?")) return;
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.post(API_URL, {
+        action: 'delete_inquiry',
+        id
+      }, { headers });
+      fetchData();
+    } catch (err) {
+      alert("Error deleting inquiry");
     }
   };
 
@@ -464,7 +481,8 @@ export default function SuperAdmin() {
           { id: 'emails', name: 'Email Center' },
           { id: 'testing', name: 'Automated Testing' },
           { id: 'support', name: 'Support Chats' },
-          { id: 'video-ad', name: 'Video Ad Builder 🎬' }
+          { id: 'video-ad', name: 'Video Ad Builder 🎬' },
+          { id: 'inquiries', name: 'Contact Inquiries ✉️' }
         ].map(tab => (
           <button 
             key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -1283,6 +1301,68 @@ export default function SuperAdmin() {
       {activeTab === 'video-ad' && (
         <div className="bg-slate-900 border border-white/10 rounded-[3rem] p-8 shadow-xl">
           <VideoAdSimulator embedded={true} />
+        </div>
+      )}
+
+      {activeTab === 'inquiries' && (
+        <div className="bg-white border border-slate-100 rounded-[3rem] p-8 md:p-12 shadow-xl space-y-8">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-6">
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Public Contact Inquiries</h3>
+              <p className="text-slate-500 font-medium text-xs mt-1">Inquiries submitted by visitors via the landing page contact form.</p>
+            </div>
+            <span className="bg-amber-100 text-amber-600 text-xs font-black px-4 py-2 rounded-full uppercase tracking-wider">
+              {inquiries.length} Messages
+            </span>
+          </div>
+
+          {inquiries.length === 0 ? (
+            <div className="text-center py-20 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+              <span className="text-3xl">✉️</span>
+              <p className="text-slate-500 font-bold mt-4">No public inquiries found. Check back later!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="py-4 px-6">Date</th>
+                    <th className="py-4 px-6">Visitor</th>
+                    <th className="py-4 px-6">Subject</th>
+                    <th className="py-4 px-6">Message</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {inquiries.map((inq) => (
+                    <tr key={inq.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-5 px-6 font-bold text-xs text-slate-500 whitespace-nowrap">
+                        {new Date(inq.created_at).toLocaleString()}
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="font-black text-slate-950 text-sm">{inq.name}</div>
+                        <a href={`mailto:${inq.email}`} className="text-xs font-semibold text-amber-600 hover:underline">{inq.email}</a>
+                      </td>
+                      <td className="py-5 px-6 font-black text-slate-800 text-sm">
+                        {inq.subject}
+                      </td>
+                      <td className="py-5 px-6 text-xs text-slate-600 font-medium max-w-md whitespace-pre-wrap leading-relaxed">
+                        {inq.message}
+                      </td>
+                      <td className="py-5 px-6 text-right">
+                        <button
+                          onClick={() => handleDeleteInquiry(inq.id)}
+                          className="px-4 py-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

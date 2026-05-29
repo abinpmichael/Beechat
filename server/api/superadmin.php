@@ -174,6 +174,23 @@ try {
             ]);
             exit;
         }
+
+        if ($action === 'list_inquiries') {
+            // Self-healing database check to ensure table exists
+            $pdo->exec("CREATE TABLE IF NOT EXISTS contact_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                subject VARCHAR(255),
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )");
+
+            $stmt = $pdo->query("SELECT * FROM contact_messages ORDER BY created_at DESC");
+            echo json_encode($stmt->fetchAll());
+            exit;
+        }
+
         exit;
     }
 
@@ -331,6 +348,13 @@ try {
             $stmt = $pdo->prepare("DELETE FROM knowledge_base WHERE id = ?");
             $stmt->execute([$data['id']]);
             echo json_encode(["message" => "Knowledge item deleted"]);
+            exit;
+        }
+
+        if ($action === 'delete_inquiry') {
+            $stmt = $pdo->prepare("DELETE FROM contact_messages WHERE id = ?");
+            $stmt->execute([$data['id']]);
+            echo json_encode(["message" => "Inquiry deleted"]);
             exit;
         }
 

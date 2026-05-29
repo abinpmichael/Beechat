@@ -486,7 +486,7 @@ const Nav = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 md:h-32 flex items-center justify-between">
         <BrandLogo size="lg" />
         <div className="hidden lg:flex items-center gap-10 xl:gap-16">
-          {['Features', 'Benefits', 'Pricing', 'Blog'].map(link => (
+          {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => (
             <a key={link} href={`#${link.toLowerCase()}`} className="group text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.4em] relative">
               {link}
               <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300" />
@@ -514,7 +514,7 @@ const Nav = () => {
             className="lg:hidden bg-white border-t border-slate-100 overflow-hidden shadow-2xl"
           >
              <div className="p-10 flex flex-col gap-8">
-                {['Features', 'Benefits', 'Pricing', 'Blog'].map(link => (
+                {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => (
                   <a key={link} href={`#${link.toLowerCase()}`} onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">{link}</a>
                 ))}
                 <a href="/integrations" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">Integrations</a>
@@ -860,6 +860,7 @@ const FeatureCard = ({ icon: Icon, title, desc, color, emoji }) => {
 
 const BlogSection = ({ posts, onPostClick }) => {
   if (!posts || posts.length === 0) return null;
+  const displayedPosts = posts.slice(0, 3);
 
   return (
     <section id="blog" className="py-20 md:py-28 bg-slate-50 relative overflow-hidden">
@@ -890,7 +891,7 @@ const BlogSection = ({ posts, onPostClick }) => {
 
         {/* Blog Post Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post, idx) => (
+          {displayedPosts.map((post, idx) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 30 }}
@@ -956,6 +957,186 @@ const BlogSection = ({ posts, onPostClick }) => {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {posts.length > 3 && (
+          <div className="mt-16 text-center">
+            <a 
+              href="/blog" 
+              className="inline-flex items-center gap-3 px-8 py-4.5 bg-slate-950 hover:bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Explore All Articles
+              <ChevronRight className="w-4 h-4 text-amber-500" />
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+const ContactSection = () => {
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+
+    try {
+      const res = await axios.post(`${API_BASE_URL}/contact.php`, formData);
+      if (res.data.success) {
+        setStatus({ type: 'success', message: res.data.message || 'Message sent successfully!' });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setStatus({ type: 'error', message: res.data.error || 'Failed to send message.' });
+      }
+    } catch (err) {
+      setStatus({
+        type: 'error',
+        message: err.response?.data?.error || 'An error occurred. Please try again later.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section id="contact" className="py-20 md:py-28 bg-slate-950 text-white relative overflow-hidden">
+      {/* Background honeycomb */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='70' viewBox='0 0 40 70' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l20 11.55v23.1L20 46.2 0 34.65V11.55L20 0z' fill='%23f59e0b' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+        backgroundSize: '40px 70px'
+      }} />
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+
+      <div className="max-w-7xl mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        {/* Left Column */}
+        <div className="lg:col-span-5 space-y-8">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="space-y-6"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-[10px] font-black uppercase tracking-widest">
+              <MessageSquare className="w-3 h-3 text-amber-500" />
+              Get In Touch
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none">
+              Connect with <br />
+              the <span className="text-amber-500">Hive.</span>
+            </h2>
+            <p className="text-slate-400 text-sm font-semibold leading-relaxed">
+              Have questions about subscription cells, custom AI agent deployments, or enterprise capabilities? Drop us a line and the swarm will respond.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="p-6 bg-slate-900/50 border border-white/5 backdrop-blur-md rounded-3xl space-y-4"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center font-bold">✉️</div>
+              <div>
+                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Official Support</div>
+                <div className="text-sm font-bold">support@beechat.online</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-7">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="p-8 md:p-12 bg-slate-900/35 border border-white/5 backdrop-blur-xl rounded-[2.5rem] shadow-2xl relative"
+          >
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-6 py-4 bg-slate-950 border border-white/5 focus:border-amber-500/50 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-white"
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-6 py-4 bg-slate-950 border border-white/5 focus:border-amber-500/50 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-white"
+                    placeholder="name@company.com"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subject</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full px-6 py-4 bg-slate-950 border border-white/5 focus:border-amber-500/50 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-white"
+                  placeholder="What is your inquiry about?"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Message</label>
+                <textarea
+                  rows="4"
+                  required
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className="w-full px-6 py-4 bg-slate-950 border border-white/5 focus:border-amber-500/50 rounded-2xl font-semibold text-sm focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-white resize-none"
+                  placeholder="Tell us details about your project..."
+                />
+              </div>
+
+              {status.message && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-2xl text-xs font-bold ${
+                    status.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                  }`}
+                >
+                  {status.message}
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-white hover:bg-amber-500 text-slate-950 hover:text-white disabled:opacity-50 text-sm font-black uppercase tracking-wider rounded-2xl transition-all duration-300 transform active:scale-95 shadow-xl shadow-amber-500/5 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Send Message ⚡
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -1288,6 +1469,9 @@ const LandingPage = () => {
             </div>
           </div>
         </motion.section>
+
+        {/* === PUBLIC CONTACT INQUIRY FORM === */}
+        <ContactSection />
       </main>
 
       <footer className="py-16 md:py-24 border-t-4 border-amber-100 bg-slate-50/50 rounded-t-[3rem] md:rounded-t-[6rem] relative overflow-hidden">
