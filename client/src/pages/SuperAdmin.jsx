@@ -147,7 +147,10 @@ export default function SuperAdmin() {
     smtp_user: '',
     smtp_pass: '',
     smtp_from_email: '',
-    smtp_from_name: ''
+    smtp_from_name: '',
+    privacy_policy: '',
+    terms_of_service: '',
+    platform_widget_api_key: ''
   });
   const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [], transactions: [] });
   const [loading, setLoading] = useState(true);
@@ -901,6 +904,24 @@ export default function SuperAdmin() {
               <div className="space-y-2 col-span-1 md:col-span-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Video Tutorial MP4 / Video URL</label>
                 <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" value={platformSettings.tutorial_video_url || ''} onChange={(e) => setPlatformSettings({...platformSettings, tutorial_video_url: e.target.value})} placeholder="https://www.w3schools.com/html/mov_bbb.mp4" />
+              </div>
+              <div className="space-y-2 col-span-1 md:col-span-2 border-t border-slate-100 pt-6">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform Support Widget API Key</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.platform_widget_api_key || ''} onChange={(e) => setPlatformSettings({...platformSettings, platform_widget_api_key: e.target.value})} placeholder="Paste your support website's API key to embed the chat widget platform-wide" />
+              </div>
+            </div>
+
+            <h3 className="text-xl font-black text-slate-900 mt-10 mb-6 flex items-center gap-3">
+              <Shield className="w-6 h-6 text-amber-500" /> Platform Legal Policies
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Privacy Policy (HTML/Text)</label>
+                <textarea rows="6" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-sm leading-relaxed focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.privacy_policy || ''} onChange={(e) => setPlatformSettings({...platformSettings, privacy_policy: e.target.value})} placeholder="Enter the privacy policy content here..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Terms of Service (HTML/Text)</label>
+                <textarea rows="6" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-sm leading-relaxed focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.terms_of_service || ''} onChange={(e) => setPlatformSettings({...platformSettings, terms_of_service: e.target.value})} placeholder="Enter the terms of service content here..." />
               </div>
             </div>
           </div>

@@ -155,6 +155,16 @@ function App() {
         const d = res.data;
         setGoogleClientId(d.google_client_id);
         setLandingActive(parseInt(d.landing_page_active ?? 1) === 1);
+        
+        // Dynamically inject platform support chat widget if configured and in top-level window
+        if (d.platform_widget_api_key && window.self === window.top && window.location.pathname !== '/widget' && !document.getElementById('bee-chat-widget-iframe')) {
+          const s = document.createElement('script');
+          s.src = `${window.location.origin}/widget.js`;
+          s.setAttribute('data-api-key', d.platform_widget_api_key);
+          s.async = true;
+          document.body.appendChild(s);
+        }
+
         if (d.seo_title) document.title = d.seo_title;
 
         const updateTag = (selector, attr, value, tagType = 'meta') => {

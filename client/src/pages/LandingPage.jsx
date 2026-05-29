@@ -969,6 +969,7 @@ const LandingPage = () => {
   const [platformSettings, setPlatformSettings] = useState({});
   const [blogPosts, setBlogPosts] = useState([]);
   const [activePost, setActivePost] = useState(null);
+  const [legalModal, setLegalModal] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1308,8 +1309,8 @@ const LandingPage = () => {
              <a href={`mailto:${platformSettings.support_email}`} className="hover:text-amber-500 transition-all relative group">Email</a>
              {platformSettings.support_phone && <a href={`tel:${platformSettings.support_phone}`} className="hover:text-amber-500 transition-all relative group">Call</a>}
              {platformSettings.support_whatsapp && <a href={platformSettings.support_whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-all relative group">Chat</a>}
-             <a href="#" className="hover:text-amber-500 transition-all relative group">Privacy</a>
-             <a href="#" className="hover:text-amber-500 transition-all relative group">Terms</a>
+             <button onClick={() => setLegalModal('privacy')} className="hover:text-amber-500 transition-all relative group text-left focus:outline-none">Privacy</button>
+             <button onClick={() => setLegalModal('terms')} className="hover:text-amber-500 transition-all relative group text-left focus:outline-none">Terms</button>
           </div>
           <div className="flex flex-col items-center md:items-end gap-4 text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
             <span className="opacity-50">Colony Secured 🐝</span>
@@ -1414,6 +1415,24 @@ const LandingPage = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {legalModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setLegalModal(null)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+             <motion.div initial={{ scale: 0.95, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 20, opacity: 0 }} className="relative w-full max-w-3xl h-[70vh] bg-white rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-amber-100/20">
+                <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
+                   <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase">
+                      {legalModal === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
+                   </h3>
+                   <button onClick={() => setLegalModal(null)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-50 hover:text-rose-500 transition-all">
+                      <X className="w-5 h-5" />
+                   </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-10 font-bold text-slate-500 text-sm leading-relaxed whitespace-pre-wrap custom-scrollbar" dangerouslySetInnerHTML={{ __html: legalModal === 'privacy' ? (platformSettings.privacy_policy || 'Our privacy policy is being updated. Please check back later.') : (platformSettings.terms_of_service || 'Our terms of service are being updated. Please check back later.') }} />
+             </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
