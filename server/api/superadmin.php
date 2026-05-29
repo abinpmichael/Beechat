@@ -91,6 +91,45 @@ try {
             if (!isset($settings['is_testing_mode'])) $settings['is_testing_mode'] = 1;
             if (!isset($settings['platform_name'])) $settings['platform_name'] = 'Bee Chat';
             if (!isset($settings['jitsi_domain'])) $settings['jitsi_domain'] = 'meet.jit.si';
+            if (!isset($settings['privacy_policy'])) {
+                $settings['privacy_policy'] = '<h2><strong>1. Introduction</strong></h2>' .
+                    '<p>Welcome to Bee Chat. We value your privacy and are committed to protecting your personal data. This Privacy Policy outlines how we collect, use, and safeguard your information when you visit our platform and use our AI-powered customer support services.</p>' .
+                    '<h2><strong>2. Data We Collect</strong></h2>' .
+                    '<p>We may collect and process the following categories of data:</p>' .
+                    '<ul>' .
+                    '<li><strong>Account Information:</strong> Name, email address, password, and billing details when you register as a tenant.</li>' .
+                    '<li><strong>Visitor Data:</strong> IP addresses, browser types, and activity logs of visitors interacting with our chat widget.</li>' .
+                    '<li><strong>Conversation Logs:</strong> Transcripts of chat conversations between visitors, AI bots, and live agents for training and service improvement.</li>' .
+                    '</ul>' .
+                    '<h2><strong>3. How We Use Your Data</strong></h2>' .
+                    '<p>Your data is used to provide, maintain, and optimize our services. Specifically for:</p>' .
+                    '<ul>' .
+                    '<li>Initializing and personalizing AI-driven chat responses.</li>' .
+                    '<li>Processing payments and managing tenant subscriptions.</li>' .
+                    '<li>Analyzing platform performance and debugging system issues.</li>' .
+                    '</ul>' .
+                    '<h2><strong>4. Data Security</strong></h2>' .
+                    '<p>We implement industry-standard encryption and security measures to prevent unauthorized access, alteration, or disclosure of your personal data.</p>' .
+                    '<h2><strong>5. Contact Us</strong></h2>' .
+                    '<p>If you have any questions about this Privacy Policy, please contact us at our official support email.</p>';
+            }
+            if (!isset($settings['terms_of_service'])) {
+                $settings['terms_of_service'] = '<h2><strong>1. Acceptance of Terms</strong></h2>' .
+                    '<p>By registering for or using Bee Chat services, you agree to comply with and be bound by these Terms of Service. If you do not agree, you must not use our platform.</p>' .
+                    '<h2><strong>2. Account Responsibilities</strong></h2>' .
+                    '<p>As a tenant, you are responsible for maintaining the confidentiality of your account credentials. You are fully responsible for all activities that occur under your account and chat widget.</p>' .
+                    '<h2><strong>3. Acceptable Use</strong></h2>' .
+                    '<p>You agree not to use our chat widget or platform to:</p>' .
+                    '<ul>' .
+                    '<li>Transmit any unlawful, threatening, abusive, or obscene content.</li>' .
+                    '<li>Impersonate any person or entity or misrepresent your affiliation.</li>' .
+                    '<li>Distribute viruses, malware, or any disruptive software.</li>' .
+                    '</ul>' .
+                    '<h2><strong>4. Limitation of Liability</strong></h2>' .
+                    '<p>Bee Chat shall not be liable for any indirect, incidental, special, or consequential damages resulting from the use or inability to use our services.</p>' .
+                    '<h2><strong>5. Changes to Terms</strong></h2>' .
+                    '<p>We reserve the right to modify these Terms of Service at any time. Your continued use of the platform after changes are posted constitutes acceptance of the new terms.</p>';
+            }
             
             echo json_encode($settings);
             exit;
