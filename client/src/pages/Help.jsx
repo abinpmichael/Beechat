@@ -20,6 +20,28 @@ export default function Help() {
       .catch(e => console.error(e));
   }, []);
 
+  React.useEffect(() => {
+    if (platformSettings.platform_contact_widget_api_key) {
+      const iframe = document.getElementById('bee-chat-widget-iframe');
+      if (iframe) {
+        const url = new URL(iframe.src);
+        const currentKey = url.searchParams.get('apiKey');
+        if (currentKey !== platformSettings.platform_contact_widget_api_key) {
+          iframe.remove();
+          const script = document.getElementById('bee-chat-widget-script');
+          if (script) script.remove();
+          
+          const s = document.createElement('script');
+          s.src = `${window.location.origin}/widget.js`;
+          s.id = 'bee-chat-widget-script';
+          s.setAttribute('data-api-key', platformSettings.platform_contact_widget_api_key);
+          s.async = true;
+          document.body.appendChild(s);
+        }
+      }
+    }
+  }, [platformSettings]);
+
   const categories = [
     { id: 'getting-started', name: 'Getting Started', icon: Zap, color: 'bg-amber-500' },
     { id: 'ai-training', name: 'AI Training', icon: Brain, color: 'bg-purple-500' },
@@ -262,7 +284,14 @@ export default function Help() {
                 </a>
 
                 <button 
-                  onClick={() => { setShowSupport(false); setIsSupportChatOpen(true); }}
+                  onClick={() => { 
+                    setShowSupport(false); 
+                    if (user) {
+                      setIsSupportChatOpen(true); 
+                    } else {
+                      window.postMessage({ source: 'bee-chat-widget', type: 'open' }, window.location.origin);
+                    }
+                  }}
                   className="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-6 hover:bg-emerald-600 hover:text-white group transition-all"
                 >
                   <div className="w-14 h-14 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">

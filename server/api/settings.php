@@ -24,6 +24,7 @@ if ($method === 'GET' && !$auth) {
     if (!isset($settings['support_whatsapp'])) $settings['support_whatsapp'] = '';
     if (!isset($settings['help_center_url'])) $settings['help_center_url'] = '';
     if (!isset($settings['tutorial_video_url'])) $settings['tutorial_video_url'] = '/tutorial.webp';
+    if (!isset($settings['platform_contact_widget_api_key'])) $settings['platform_contact_widget_api_key'] = '';
 
     if (!isset($settings['privacy_policy'])) {
         $settings['privacy_policy'] = '<h2><strong>1. Introduction</strong></h2>' .

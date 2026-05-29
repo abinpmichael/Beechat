@@ -205,10 +205,16 @@ function App() {
         setLandingActive(parseInt(d.landing_page_active ?? 1) === 1);
         
         // Dynamically inject platform support chat widget if configured and in top-level window
-        if (d.platform_widget_api_key && window.self === window.top && window.location.pathname !== '/widget' && !document.getElementById('bee-chat-widget-iframe')) {
+        const isHelpPage = window.location.pathname === '/help';
+        const apiKeyToUse = isHelpPage 
+          ? (d.platform_contact_widget_api_key || d.platform_widget_api_key)
+          : d.platform_widget_api_key;
+
+        if (apiKeyToUse && window.self === window.top && window.location.pathname !== '/widget' && !document.getElementById('bee-chat-widget-iframe')) {
           const s = document.createElement('script');
           s.src = `${window.location.origin}/widget.js`;
-          s.setAttribute('data-api-key', d.platform_widget_api_key);
+          s.id = 'bee-chat-widget-script';
+          s.setAttribute('data-api-key', apiKeyToUse);
           s.async = true;
           document.body.appendChild(s);
         }

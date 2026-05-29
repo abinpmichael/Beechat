@@ -150,7 +150,8 @@ export default function SuperAdmin() {
     smtp_from_name: '',
     privacy_policy: '',
     terms_of_service: '',
-    platform_widget_api_key: ''
+    platform_widget_api_key: '',
+    platform_contact_widget_api_key: ''
   });
   const [revenue, setRevenue] = useState({ total_revenue: 0, monthly_stats: [], transactions: [] });
   const [loading, setLoading] = useState(true);
@@ -906,8 +907,12 @@ export default function SuperAdmin() {
                 <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" value={platformSettings.tutorial_video_url || ''} onChange={(e) => setPlatformSettings({...platformSettings, tutorial_video_url: e.target.value})} placeholder="https://www.w3schools.com/html/mov_bbb.mp4" />
               </div>
               <div className="space-y-2 col-span-1 md:col-span-2 border-t border-slate-100 pt-6">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform Support Widget API Key</label>
-                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.platform_widget_api_key || ''} onChange={(e) => setPlatformSettings({...platformSettings, platform_widget_api_key: e.target.value})} placeholder="Paste your support website's API key to embed the chat widget platform-wide" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform Support Widget API Key (General/Landing Page)</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.platform_widget_api_key || ''} onChange={(e) => setPlatformSettings({...platformSettings, platform_widget_api_key: e.target.value})} placeholder="Paste your support website's API key to embed the chat widget on the landing page and general pages" />
+              </div>
+              <div className="space-y-2 col-span-1 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform Contact Widget API Key (Help Page / Contact)</label>
+                <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs focus:ring-2 focus:ring-amber-500 outline-none" value={platformSettings.platform_contact_widget_api_key || ''} onChange={(e) => setPlatformSettings({...platformSettings, platform_contact_widget_api_key: e.target.value})} placeholder="Paste a separate API key for the contact/help page chat widget" />
               </div>
             </div>
 

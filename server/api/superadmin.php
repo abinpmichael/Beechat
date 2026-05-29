@@ -91,6 +91,7 @@ try {
             if (!isset($settings['is_testing_mode'])) $settings['is_testing_mode'] = 1;
             if (!isset($settings['platform_name'])) $settings['platform_name'] = 'Bee Chat';
             if (!isset($settings['jitsi_domain'])) $settings['jitsi_domain'] = 'meet.jit.si';
+            if (!isset($settings['platform_contact_widget_api_key'])) $settings['platform_contact_widget_api_key'] = '';
             if (!isset($settings['privacy_policy'])) {
                 $settings['privacy_policy'] = '<h2><strong>1. Introduction</strong></h2>' .
                     '<p>Welcome to Bee Chat. We value your privacy and are committed to protecting your personal data. This Privacy Policy outlines how we collect, use, and safeguard your information when you visit our platform and use our AI-powered customer support services.</p>' .
