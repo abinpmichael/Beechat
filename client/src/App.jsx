@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import SuperAdmin from './pages/SuperAdmin';
 import LandingPage from './pages/LandingPage';
+import Help from './pages/Help';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ChatWidget from './widget/ChatWidget';
 import TicketTracking from './pages/TicketTracking';
@@ -141,6 +142,53 @@ const ProtectedRoute = ({ children }) => {
   );
   if (!user) return <Navigate to="/login" />;
   return children;
+};
+
+const LegalPage = ({ type }) => {
+  const [platformSettings, setPlatformSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/settings.php`)
+      .then(res => {
+        setPlatformSettings(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const title = type === 'privacy' ? 'Privacy Policy' : 'Terms of Service';
+  const content = type === 'privacy' ? platformSettings.privacy_policy : platformSettings.terms_of_service;
+
+  return (
+    <div className="min-h-screen bg-slate-950 py-16 px-6 md:px-10 flex flex-col items-center justify-center text-white relative overflow-hidden">
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
+      
+      <div className="w-full max-w-3xl bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] shadow-2xl border border-white/5 p-10 md:p-16 relative z-10">
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter mb-8 border-b border-white/5 pb-6">
+          {title}
+        </h1>
+        <div 
+          className="font-medium text-slate-350 text-sm leading-relaxed whitespace-pre-wrap custom-scrollbar" 
+          dangerouslySetInnerHTML={{ __html: content || 'Our policies are currently being updated. Please check back soon.' }} 
+        />
+        <div className="mt-12 pt-6 border-t border-white/5 flex justify-end">
+          <a href="/" className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black px-8 py-4 rounded-xl uppercase tracking-widest transition-all shadow-lg shadow-amber-500/10">
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 function App() {
@@ -340,6 +388,9 @@ function App() {
               <Route path="/widget" element={<div className="h-screen overflow-hidden bg-transparent"><ChatWidget apiKey={new URLSearchParams(window.location.search).get('apiKey')} /></div>} />
               <Route path="/integrations" element={<Integrations />} />
               <Route path="/video-ad" element={<VideoAdSimulator />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/privacy" element={<LegalPage type="privacy" />} />
+              <Route path="/terms" element={<LegalPage type="terms" />} />
               <Route path="/blog/:postSlug" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
             </Routes>
