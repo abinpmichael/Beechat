@@ -23,7 +23,6 @@ echo "<!DOCTYPE html>
         .log-section { border-top: 1px solid #f1f5f9; padding-top: 30px; }
         .log-item { display: flex; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; font-size: 14px; font-weight: 600; border: 1px solid #f1f5f9; }
         .log-item span.ok { color: #10b981; }
-        .log-item span.existed { color: #6366f1; }
         .btn { display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 14px 28px; border-radius: 16px; font-weight: bold; font-size: 14px; transition: all 0.2s; margin-top: 20px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); }
         .btn:hover { background: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.2); }
     </style>
@@ -33,7 +32,7 @@ echo "<!DOCTYPE html>
 <div class="card">
     <div class="logo">🐝 BEE<span>CHAT</span></div>
     <h1>AI Neural Training Console</h1>
-    <p class="subtitle">Populating documentation cells and tutorials for the AI bot swarm.</p>
+    <p class="subtitle">Populating documentation cells, step-by-step tutorials, and links for the AI bot swarm.</p>
 ";
 
 $targetKey = '1d29d7564fa93be470632301a473f3d3';
@@ -62,45 +61,67 @@ try {
         $articles = [
             [
                 "title" => "About BeeChat and How it Works",
-                "content" => "BeeChat is an advanced AI-powered customer support and live chat platform designed for modern websites. It combines real-time visitor tracking, business hours automation, an autonomous AI support bot, and a unified helpdesk ticketing system. Visitors can load the chat widget, engage in conversation with an automated AI bot, or request a handover to speak directly to a live human agent.",
+                "content" => "BeeChat is an advanced AI-powered customer support and live chat platform designed for modern websites. It combines real-time visitor tracking, business hours automation, an autonomous AI support bot, and a unified helpdesk ticketing system. Visitors can load the chat widget, engage in conversation with an automated AI bot, or request a handover to speak directly to a live human agent. Visit the homepage at https://www.beechat.online/ to learn more.",
                 "source_url" => "https://www.beechat.online/about"
             ],
             [
-                "title" => "How to Embed and Install the BeeChat Widget",
-                "content" => "To install the BeeChat widget, copy the custom integration script from the 'My Domains' section of the dashboard. The code looks like this: <script src='https://www.beechat.online/widget.js' data-api-key='YOUR_API_KEY' async></script>. Paste this single line of code right before the closing </body> tag of your website. The widget will automatically load and render a chat icon at the bottom right corner.",
-                "source_url" => "https://www.beechat.online/help"
+                "title" => "Step-by-Step Installation Tutorial & Code Integration",
+                "content" => "Follow these simple steps to install the chat widget on your website:
+Step 1: Sign up or log into your BeeChat dashboard at https://www.beechat.online/
+Step 2: Navigate to 'My Domains' (/dashboard/websites) and click 'Add Website'. Enter your website name and domain.
+Step 3: Copy the generated script integration tag: <script src='https://www.beechat.online/widget.js' data-api-key='1d29d7564fa93be470632301a473f3d3' async></script>
+Step 4: Paste this script tag right before the closing </body> tag of your website files.
+For integrations on WordPress, Shopify, React, Next.js, or HTML files, visit our Integrations Guide at https://www.beechat.online/integrations. If you have questions, view our Help Center at https://www.beechat.online/help.",
+                "source_url" => "https://www.beechat.online/integrations"
             ],
             [
-                "title" => "How the AI Support Bot Answers Questions",
-                "content" => "The autonomous AI Bot learns from files, custom documents, and manual Q&A items uploaded in the Knowledge Base settings. When a visitor sends a message, the AI engine scans the knowledge base context and generates an accurate response. The AI bot will only run if AI is enabled for the site and if set to 'Offline Only' it will stand down whenever a live agent is logged in.",
-                "source_url" => "https://www.beechat.online/help"
+                "title" => "How to Configure the AI Bot (Training Steps)",
+                "content" => "Follow these steps to enable and train your autonomous AI assistant:
+Step 1: Go to the 'My Domains' tab in the dashboard and click 'Manage' next to your website.
+Step 2: Under the 'AI Bot' configuration panel, toggle 'Enable AI Bot' to ON.
+Step 3: Scroll to the 'Knowledge Base' section. Enter a Title (e.g. business hours or pricing) and write detailed paragraphs, then click 'Add Knowledge Item' to train the bot.
+Step 4: To make the bot only reply when your agents are offline, toggle 'AI Offline Only' to ON under 'Neural Config' settings.
+For optimization tips, check out our latest articles at https://www.beechat.online/blog.",
+                "source_url" => "https://www.beechat.online/settings"
             ],
             [
-                "title" => "How Live Handover and Claiming Chats Works",
-                "content" => "When a visitor requests a human agent, the chat status is set to 'waiting' and the agent console receives a real-time notification with sound. Agents logged into the Live Console can view all waiting visitors and click 'Claim Chat' to immediately connect. Once claimed, the agent can text the visitor in real-time, share files, add internal notes, or transfer the chat to another agent.",
+                "title" => "How to Claim & Respond to Live Chats (Agent Tutorial)",
+                "content" => "Follow these steps for live support agents to receive and handle chats:
+Step 1: Log into the agent dashboard at https://www.beechat.online/
+Step 2: Go to the 'Live Console' tab (/dashboard/leads). When a visitor clicks the 'Live Agent' button in the widget, you will receive an alert notification and hear a warning buzzer.
+Step 3: Select the waiting visitor and click 'Claim Chat' to begin messaging them. The AI bot automatically stands down.
+Step 4: Type in the input box to chat, attach files, or use canned responses. You can transfer the chat to other team members or flag it for email follow-up.",
                 "source_url" => "https://www.beechat.online/help"
             ],
             [
                 "title" => "Troubleshooting Widget Offline or Away Mode Status",
-                "content" => "The chat widget automatically adjusts its availability based on business hours and agent status. It will show 'Away Mode' if outside business hours. If inside business hours but no agents are logged in, it will show 'Agents Offline' and display a support ticket form. The system detects active agents using a 2-minute activity heartbeat while they are logged into the dashboard.",
+                "content" => "If the widget is displaying 'Away Mode' or 'Agents Offline', follow these troubleshooting steps:
+Step 1: Check your operating hours and local timezone settings under 'Neural Config' (/dashboard/settings) to ensure you are within business hours.
+Step 2: Ensure an agent is logged into the dashboard at https://www.beechat.online/. The widget checks agent presence using a 2-minute activity heartbeat. If no agents are active, the widget switches status to offline and routes visitors to the ticket form.
+Step 3: To test your widget configuration locally, use our test suite at https://www.beechat.online/help.",
                 "source_url" => "https://www.beechat.online/help"
             ],
             [
-                "title" => "Tickets and Ticket Escalation",
-                "content" => "If no live agents are online, visitors can submit support tickets directly from the chat widget. Support tickets generate a unique tracking ID, queue automated email confirmations using the platform's SMTP server, and route straight to the Neural Tickets section in the agent dashboard where agents can reply or escalate issues.",
+                "title" => "Support Ticket Creation & Troubleshooting",
+                "content" => "If agents are offline, visitors can click 'Open Ticket' in the widget footer.
+Step 1: Enter your email address and phone number.
+Step 2: Describe your query. You can attach images or screenshots using the file upload button.
+Step 3: Optionally request an instant video call or schedule a meeting.
+Step 4: Click 'Raise Ticket'. You will receive an automated tracking ID and an email link to follow up.
+Agents can view and manage tickets under the 'Neural Tickets' tab (/dashboard/tickets). Read details at https://www.beechat.online/help.",
                 "source_url" => "https://www.beechat.online/help"
             ],
             [
                 "title" => "Configuring Business Operating Hours and Timezones",
-                "content" => "Tenant administrators can customize opening/closing times and select their specific local timezone under 'Neural Config' in the agent dashboard. This synchronizes the chat widget's availability with their active operating hours.",
+                "content" => "Tenant administrators can customize opening/closing times and select their specific local timezone under 'Neural Config' (/dashboard/settings) in the agent dashboard. This synchronizes the chat widget's availability with their active operating hours.",
                 "source_url" => "https://www.beechat.online/settings"
             ],
             [
                 "title" => "BeeChat Subscription Plans and Pricing Cells",
-                "content" => "BeeChat offers tiered pricing cells designed to grow with your colony:
+                "content" => "BeeChat offers flexible subscription cells tailored to your colony:
 - Worker Bee Plan: Essential live chat, single website domain support, basic AI auto-replies, and 2 active agents.
 - Queen Bee Plan: Multi-domain support, unlimited chat history, priority routing, custom branding configurations, and higher AI token quotas.
-Users can manage and upgrade billing from the Overview tab.",
+Upgrade your subscription at the Billing section of the dashboard. Learn more at https://www.beechat.online/#pricing.",
                 "source_url" => "https://www.beechat.online/#pricing"
             ]
         ];
@@ -112,9 +133,15 @@ Users can manage and upgrade billing from the Overview tab.",
             $exists = $checkStmt->fetchColumn();
 
             if ($exists) {
+                $updStmt = $pdo->prepare("UPDATE knowledge_base SET content = ?, source_url = ? WHERE id = ?");
+                $updStmt->execute([
+                    $art['content'],
+                    $art['source_url'],
+                    $exists
+                ]);
                 echo "<div class='log-item'>
                     <span>" . htmlspecialchars($art['title']) . "</span>
-                    <span class='existed'>Already Trained</span>
+                    <span class='ok' style='color:#6366f1;'>Updated & Re-Trained</span>
                 </div>";
             } else {
                 $insStmt = $pdo->prepare("INSERT INTO knowledge_base (tenant_id, website_id, title, content, source_url) VALUES (?, ?, ?, ?, ?)");
