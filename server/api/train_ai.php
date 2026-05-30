@@ -1,7 +1,7 @@
 <?php
-// train_ai.php — populates knowledge base articles to train the AI assistant
+// server/api/train_ai.php — populates knowledge base articles to train the AI assistant
 define('HTML_RESPONSE', true);
-require_once 'server/api/config.php';
+require_once 'config.php';
 
 header("Content-Type: text/html; charset=utf-8");
 
