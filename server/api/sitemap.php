@@ -14,7 +14,11 @@ $pages = [
     '' => '1.0',
     '/login' => '0.8',
     '/register' => '0.8',
-    '/dashboard' => '0.8'
+    '/dashboard' => '0.8',
+    '/help' => '0.7',
+    '/privacy' => '0.5',
+    '/terms' => '0.5',
+    '/blog' => '0.8'
 ];
 
 foreach ($pages as $path => $priority) {
