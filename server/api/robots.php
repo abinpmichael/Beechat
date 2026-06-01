@@ -11,5 +11,13 @@ echo "User-agent: *\n";
 echo "Disallow: /server/\n";
 echo "Disallow: /tests/\n";
 echo "Allow: /\n\n";
+
+// Block AI crawlers and training bots
+$ai_bots = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Google-Extended', 'PerplexityBot'];
+foreach ($ai_bots as $bot) {
+    echo "User-agent: " . $bot . "\n";
+    echo "Disallow: /\n\n";
+}
+
 echo "Sitemap: " . $domain . "/sitemap.xml\n";
 ?>

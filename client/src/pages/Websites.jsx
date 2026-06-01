@@ -358,7 +358,11 @@ export default function Websites() {
                           form_config: Array.isArray(forms) ? forms : [],
                           widget_position: site.widget_position || 'right',
                           widget_offset_x: site.widget_offset_x !== undefined && site.widget_offset_x !== null ? parseInt(site.widget_offset_x) : 20,
-                          widget_offset_y: site.widget_offset_y !== undefined && site.widget_offset_y !== null ? parseInt(site.widget_offset_y) : 20
+                          widget_offset_y: site.widget_offset_y !== undefined && site.widget_offset_y !== null ? parseInt(site.widget_offset_y) : 20,
+                          header_bg_gradient: site.header_bg_gradient || '',
+                          notification_sound: site.notification_sound || '',
+                          widget_icon: site.widget_icon || '',
+                          success_message: site.success_message || ''
                         }); 
                         setActiveTab('branding'); 
                         fetchKnowledge(site.id); 
@@ -451,9 +455,24 @@ export default function Websites() {
                               </div>
                            </div>
                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Avatar Terminal (URL)</label>
-                              <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editData.bot_image} onChange={(e) => setEditData({...editData, bot_image: e.target.value})} />
-                           </div>
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Avatar Terminal (URL)</label>
+                               <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editData.bot_image} onChange={(e) => setEditData({...editData, bot_image: e.target.value})} />
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-8">
+                               <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Header Background Gradient</label>
+                                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-xs" placeholder="linear-gradient(135deg, #f59e0b, #d97706)" value={editData.header_bg_gradient || ''} onChange={(e) => setEditData({...editData, header_bg_gradient: e.target.value})} />
+                               </div>
+                               <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Widget Launcher Icon (URL)</label>
+                                  <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="https://example.com/icon.png" value={editData.widget_icon || ''} onChange={(e) => setEditData({...editData, widget_icon: e.target.value})} />
+                               </div>
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Notification Sound (URL)</label>
+                               <input className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="https://example.com/sound.mp3" value={editData.notification_sound || ''} onChange={(e) => setEditData({...editData, notification_sound: e.target.value})} />
+                            </div>
                            
                            <div className="border-t border-slate-100 pt-8 space-y-6">
                               <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Widget Position & Spacing</h4>
@@ -816,6 +835,10 @@ export default function Websites() {
                                   <div className="space-y-2">
                                      <label className="text-[10px] font-black text-amber-900 uppercase tracking-widest ml-1">Bot Subtitle</label>
                                      <input className="w-full px-6 py-4 bg-white border border-amber-100 rounded-2xl font-bold text-amber-900" value={editData.bot_subtitle} onChange={e => setEditData({...editData, bot_subtitle: e.target.value})} />
+                                  </div>
+                                  <div className="space-y-2">
+                                     <label className="text-[10px] font-black text-amber-900 uppercase tracking-widest ml-1">Form Success Message</label>
+                                     <textarea className="w-full px-6 py-4 bg-white border border-amber-100 rounded-2xl font-bold text-amber-900" rows="2" placeholder="Thank you! We will be in touch soon." value={editData.success_message || ''} onChange={e => setEditData({...editData, success_message: e.target.value})} />
                                   </div>
 
                                   <div className="p-6 bg-white/50 rounded-2xl border border-amber-200/50">
