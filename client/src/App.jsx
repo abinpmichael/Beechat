@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useId } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -192,10 +192,59 @@ const LegalPage = ({ type }) => {
   );
 };
 
+function WidgetInjector({ platformSettings }) {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!platformSettings) return;
+
+    const isHelpPage = location.pathname === '/help';
+    const isMobile = window.innerWidth < 768;
+
+    // Mobile check: only load the platform widget on the /help page
+    const shouldLoadWidget = !isMobile || isHelpPage;
+
+    const apiKeyToUse = isHelpPage 
+      ? (platformSettings.platform_contact_widget_api_key || platformSettings.platform_widget_api_key)
+      : platformSettings.platform_widget_api_key;
+
+    const existingScript = document.getElementById('bee-chat-widget-script');
+    const existingIframe = document.getElementById('bee-chat-widget-iframe');
+
+    if (!shouldLoadWidget) {
+      if (existingScript) existingScript.remove();
+      if (existingIframe) existingIframe.remove();
+      return;
+    }
+
+    if (apiKeyToUse && window.self === window.top && location.pathname !== '/widget') {
+      if (existingScript) {
+        const currentKey = existingScript.getAttribute('data-api-key');
+        if (currentKey !== apiKeyToUse) {
+          existingScript.remove();
+          if (existingIframe) existingIframe.remove();
+        } else {
+          return;
+        }
+      }
+
+      const s = document.createElement('script');
+      s.src = `${window.location.origin}/widget.js`;
+      s.id = 'bee-chat-widget-script';
+      s.setAttribute('data-api-key', apiKeyToUse);
+      s.async = true;
+      document.body.appendChild(s);
+    }
+  }, [location.pathname, platformSettings]);
+
+  return null;
+}
+
 function App() {
   const [googleClientId, setGoogleClientId] = useState('');
   const [landingActive, setLandingActive] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [platformSettings, setPlatformSettings] = useState(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -204,21 +253,7 @@ function App() {
         const d = res.data;
         setGoogleClientId(d.google_client_id);
         setLandingActive(parseInt(d.landing_page_active ?? 1) === 1);
-        
-        // Dynamically inject platform support chat widget if configured and in top-level window
-        const isHelpPage = window.location.pathname === '/help';
-        const apiKeyToUse = isHelpPage 
-          ? (d.platform_contact_widget_api_key || d.platform_widget_api_key)
-          : d.platform_widget_api_key;
-
-        if (apiKeyToUse && window.self === window.top && window.location.pathname !== '/widget' && !document.getElementById('bee-chat-widget-iframe')) {
-          const s = document.createElement('script');
-          s.src = `${window.location.origin}/widget.js`;
-          s.id = 'bee-chat-widget-script';
-          s.setAttribute('data-api-key', apiKeyToUse);
-          s.async = true;
-          document.body.appendChild(s);
-        }
+        setPlatformSettings(d);
 
         if (d.seo_title) document.title = d.seo_title;
 
@@ -387,6 +422,7 @@ function App() {
       <GoogleOAuthProvider clientId={googleClientId}>
         <AuthProvider>
           <Router>
+            <WidgetInjector platformSettings={platformSettings} />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
