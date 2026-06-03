@@ -1,9 +1,20 @@
 <?php
 // Root index.php to pre-render SEO/AEO/GEO tags server-side
-$config_path = __DIR__ . '/server/api/config.php';
+$config_paths = [
+    __DIR__ . '/server/api/config.php',
+    __DIR__ . '/../../server/api/config.php',
+    __DIR__ . '/../server/api/config.php'
+];
+$config_path = null;
+foreach ($config_paths as $path) {
+    if (file_exists($path)) {
+        $config_path = $path;
+        break;
+    }
+}
 $settings = [];
 
-if (file_exists($config_path)) {
+if ($config_path) {
     try {
         // Prevent config.php from sending API JSON headers
         define('HTML_RESPONSE', true);
@@ -34,8 +45,55 @@ $og_desc        = $settings['og_description'] ?? $seo_desc;
 $og_image       = $settings['og_image'] ?? '/og-image.png';
 $twitter_handle = $settings['twitter_handle'] ?? '@BeeChatAI';
 
-// Ensure canonical URL is slash-terminated
-$seo_canonical  = rtrim($seo_canonical, '/') . '/';
+// Ensure canonical URL has no trailing slash to build clean paths
+$domain_base    = rtrim($seo_canonical, '/');
+
+// Parse request path relative to possible application base dir
+$script_name    = $_SERVER['SCRIPT_NAME'] ?? '';
+$base_dir       = dirname($script_name);
+$base_dir       = str_replace('\\', '/', $base_dir);
+$base_dir       = rtrim($base_dir, '/');
+
+$request_uri    = $_SERVER['REQUEST_URI'] ?? '';
+$request_path   = parse_url($request_uri, PHP_URL_PATH) ?: '/';
+
+if ($base_dir !== '' && strpos($request_path, $base_dir) === 0) {
+    $request_path = substr($request_path, strlen($base_dir));
+}
+
+if (empty($request_path)) {
+    $request_path = '/';
+} else {
+    $request_path = '/' . ltrim($request_path, '/');
+}
+
+$current_canonical = $domain_base . ($request_path === '/' ? '/' : $request_path);
+
+// Check if dynamic blog post is requested
+$blog_post = null;
+if (preg_match('#^/blog/([^/]+)$#', $request_path, $matches)) {
+    $post_slug = $matches[1];
+    if ($config_path && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT title, summary, content, image_url, author, seo_title, seo_description FROM blog_posts WHERE slug = ? AND status = 'published' AND (published_at IS NULL OR published_at <= NOW()) LIMIT 1");
+            $stmt->execute([$post_slug]);
+            $blog_post = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            // Ignore DB errors
+        }
+    }
+}
+
+if ($blog_post) {
+    $seo_title      = $blog_post['seo_title'] ?: ($blog_post['title'] . ' | ' . $platform_name);
+    $seo_desc       = $blog_post['seo_description'] ?: $blog_post['summary'];
+    $og_title       = $seo_title;
+    $og_desc        = $seo_desc;
+    if (!empty($blog_post['image_url'])) {
+        $og_image   = $blog_post['image_url'];
+    }
+}
+
 
 // ─── Load static index.html built by Vite ───────────────────────────
 $html_path = __DIR__ . '/index.html';
@@ -91,7 +149,7 @@ $html = str_replace(
 
 $html = str_replace(
     '<meta property="og:url" content="https://www.beechat.online/" />',
-    '<meta property="og:url" content="' . htmlspecialchars($seo_canonical) . '" />',
+    '<meta property="og:url" content="' . htmlspecialchars($current_canonical) . '" />',
     $html
 );
 
@@ -103,7 +161,7 @@ $html = str_replace(
 
 $html = str_replace(
     '<meta property="twitter:url" content="https://www.beechat.online/" />',
-    '<meta property="twitter:url" content="' . htmlspecialchars($seo_canonical) . '" />',
+    '<meta property="twitter:url" content="' . htmlspecialchars($current_canonical) . '" />',
     $html
 );
 
@@ -150,7 +208,9 @@ if (!empty($gtm_id) && $gtm_id !== 'GTM-XXXXXXX') {
 }
 
 // ─── Inject GEO & JSON-LD Schema before </head> ────────────────────
-$inject_head = "\n    <!-- Server-Side SEO & Geotargeting (GEO) -->\n";
+$inject_head = "\n    <!-- Dynamic Canonical URL -->\n" .
+    '    <link rel="canonical" href="' . htmlspecialchars($current_canonical) . "\" />\n\n" .
+    "    <!-- Server-Side SEO & Geotargeting (GEO) -->\n";
 if (!empty($settings['geo_region'])) {
     $inject_head .= '    <meta name="geo.region" content="' . htmlspecialchars($settings['geo_region']) . "\" />\n";
 }

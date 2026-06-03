@@ -22,8 +22,12 @@ $pages = [
 ];
 
 foreach ($pages as $path => $priority) {
+    $url = $domain . $path;
+    if ($path === '') {
+        $url = $domain . '/';
+    }
     echo "  <url>\n";
-    echo "    <loc>" . htmlspecialchars($domain . $path) . "</loc>\n";
+    echo "    <loc>" . htmlspecialchars($url) . "</loc>\n";
     echo "    <lastmod>" . date('Y-m-d') . "</lastmod>\n";
     echo "    <changefreq>daily</changefreq>\n";
     echo "    <priority>$priority</priority>\n";

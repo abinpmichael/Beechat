@@ -1201,6 +1201,7 @@ const LandingPage = () => {
     if (activePost) {
       const originalTitle = document.title;
       const originalDesc = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+      const originalCanonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
       
       const newTitle = activePost.seo_title || `${activePost.title} | BeeChat`;
       const newDesc = activePost.seo_description || activePost.summary;
@@ -1214,6 +1215,21 @@ const LandingPage = () => {
         document.head.appendChild(metaDesc);
       }
       metaDesc.setAttribute('content', newDesc);
+
+      // Dynamically set canonical URL for the active blog post page
+      let linkCanonical = document.querySelector('link[rel="canonical"]');
+      if (!linkCanonical) {
+        linkCanonical = document.createElement('link');
+        linkCanonical.rel = 'canonical';
+        document.head.appendChild(linkCanonical);
+      }
+      let canonicalBase = 'https://www.beechat.online';
+      if (originalCanonical) {
+        canonicalBase = originalCanonical.split('/blog/')[0].replace(/\/+$/, '');
+      } else {
+        canonicalBase = window.location.origin;
+      }
+      linkCanonical.setAttribute('href', `${canonicalBase}/blog/${activePost.slug}`);
       
       return () => {
         document.title = originalTitle;
@@ -1223,6 +1239,14 @@ const LandingPage = () => {
         } else {
           const currentMeta = document.querySelector('meta[name="description"]');
           if (currentMeta) currentMeta.remove();
+        }
+
+        // Restore original canonical URL
+        const currentCanonical = document.querySelector('link[rel="canonical"]');
+        if (originalCanonical) {
+          if (currentCanonical) currentCanonical.setAttribute('href', originalCanonical);
+        } else {
+          if (currentCanonical) currentCanonical.remove();
         }
       };
     }
