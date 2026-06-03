@@ -486,12 +486,19 @@ const Nav = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 md:h-32 flex items-center justify-between">
         <BrandLogo size="lg" />
         <div className="hidden lg:flex items-center gap-10 xl:gap-16">
-          {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => (
-            <a key={link} href={`#${link.toLowerCase()}`} className="group text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.4em] relative">
-              {link}
-              <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300" />
-            </a>
-          ))}
+          {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => {
+            const isBlog = link === 'Blog';
+            return (
+              <a 
+                key={link} 
+                href={isBlog ? '/blog' : `#${link.toLowerCase()}`} 
+                className="group text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.4em] relative"
+              >
+                {link}
+                <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300" />
+              </a>
+            );
+          })}
           <a href="/integrations" className="group text-[10px] font-black text-slate-400 hover:text-slate-900 transition-all uppercase tracking-[0.4em] relative">
             Integrations
             <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300" />
@@ -514,9 +521,19 @@ const Nav = () => {
             className="lg:hidden bg-white border-t border-slate-100 overflow-hidden shadow-2xl"
           >
              <div className="p-10 flex flex-col gap-8">
-                {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => (
-                  <a key={link} href={`#${link.toLowerCase()}`} onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">{link}</a>
-                ))}
+                {['Features', 'Benefits', 'Pricing', 'Blog', 'Contact'].map(link => {
+                  const isBlog = link === 'Blog';
+                  return (
+                    <a 
+                      key={link} 
+                      href={isBlog ? '/blog' : `#${link.toLowerCase()}`} 
+                      onClick={() => setIsOpen(false)} 
+                      className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors"
+                    >
+                      {link}
+                    </a>
+                  );
+                })}
                 <a href="/integrations" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">Integrations</a>
                 <div className="h-px bg-slate-100" />
                 <a href="/login" className="text-xl font-black text-amber-600 uppercase tracking-widest">Member Login</a>
