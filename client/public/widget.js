@@ -37,9 +37,11 @@
     iframe.setAttribute('allowTransparency', 'true');
     iframe.setAttribute('allow', 'autoplay');
 
-    // Start small — only the bubble (85x85)
-    iframe.style.width  = '85px';
-    iframe.style.height = '85px';
+    // Start small — only the bubble (95x95)
+    iframe.style.width  = '95px';
+    iframe.style.height = '95px';
+    iframe.style.maxHeight = '95px';
+    iframe.style.maxWidth = '95px';
 
     document.body.appendChild(iframe);
 
@@ -48,6 +50,8 @@
         if (isOpen) {
             iframe.style.width  = isMobile ? '100%' : '420px';
             iframe.style.height = isMobile ? '100%' : '720px';
+            iframe.style.maxHeight = isMobile ? '100%' : 'calc(100vh - 40px)';
+            iframe.style.maxWidth  = isMobile ? '100%' : 'calc(100vw - 40px)';
             if (isMobile) {
                 iframe.style.bottom = '0';
                 iframe.style.right  = '0';
@@ -65,8 +69,10 @@
                 iframe.style.borderRadius = '';
             }
         } else {
-            iframe.style.width  = '85px';
-            iframe.style.height = '85px';
+            iframe.style.width  = '95px';
+            iframe.style.height = '95px';
+            iframe.style.maxHeight = '95px';
+            iframe.style.maxWidth = '95px';
             iframe.style.bottom = widgetY;
             if (widgetPos === 'left') {
                 iframe.style.left = widgetX;

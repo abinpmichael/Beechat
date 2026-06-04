@@ -199,10 +199,9 @@ function WidgetInjector({ platformSettings }) {
     if (!platformSettings) return;
 
     const isHelpPage = location.pathname === '/help';
-    const isMobile = window.innerWidth < 768;
 
-    // Mobile check: only load the platform widget on the /help page
-    const shouldLoadWidget = !isMobile || isHelpPage;
+    // Load widget on all screen resolutions (widget.js will handle its own responsiveness)
+    const shouldLoadWidget = true;
 
     const apiKeyToUse = isHelpPage 
       ? (platformSettings.platform_contact_widget_api_key || platformSettings.platform_widget_api_key)
