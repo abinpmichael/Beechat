@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Send, Phone, User, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles, Paperclip } from 'lucide-react';
+import { X, Send, Phone, User, Users, Mail, ChevronRight, MessageSquare, PhoneOff, Image, FileText, Bot, CheckCircle, Clock, Shield, Radio, Globe, Plus, Sparkles, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL, SOCKET_URL } from '../config';
 import { io } from 'socket.io-client';
