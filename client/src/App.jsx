@@ -291,7 +291,7 @@ function App() {
           let link = document.querySelector('link[rel="canonical"]');
           if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
           const canonicalBase = d.seo_canonical_url.replace(/\/+$/, '');
-          link.href = window.location.pathname === '/' ? (canonicalBase + '/') : (canonicalBase + window.location.pathname);
+          link.href = window.location.pathname === '/' ? (canonicalBase + '/') : (canonicalBase + window.location.pathname.replace(/\/+$/, ''));
         }
 
         // Generative Engine Optimization (GEO) & Geotargeting

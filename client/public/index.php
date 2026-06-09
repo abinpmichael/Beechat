@@ -65,6 +65,9 @@ if (empty($request_path)) {
     $request_path = '/';
 } else {
     $request_path = '/' . ltrim($request_path, '/');
+    if ($request_path !== '/') {
+        $request_path = rtrim($request_path, '/');
+    }
 }
 
 $current_canonical = $domain_base . ($request_path === '/' ? '/' : $request_path);

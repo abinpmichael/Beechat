@@ -10,6 +10,8 @@ $domain = rtrim($canonical, '/');
 echo "User-agent: *\n";
 echo "Disallow: /server/\n";
 echo "Disallow: /tests/\n";
+echo "Disallow: /dashboard/\n";
+echo "Disallow: /widget/\n";
 echo "Allow: /\n\n";
 
 // Block AI crawlers and training bots
