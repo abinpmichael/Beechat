@@ -49,7 +49,7 @@ if ($method === 'POST') {
         $stmt->execute([$name, $email, $subject, $message]);
         
         // Push notification / mail if SMTP is configured
-        $supportEmail = 'support@beechat.online';
+        $supportEmail = 'info@beechat.online';
         try {
             $stmtSupport = $pdo->query("SELECT setting_value FROM platform_settings WHERE setting_key = 'support_email'");
             $resSupport = $stmtSupport->fetchColumn();

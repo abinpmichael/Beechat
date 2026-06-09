@@ -2,6 +2,22 @@
 
 RewriteEngine On
 
+# ─── Canonical Redirection (SEO) ──────────────────────────────────────
+# 1. Force HTTPS (Except on localhost / 127.0.0.1)
+# Excluded for local development
+RewriteCond %{HTTP_HOST} !=localhost
+RewriteCond %{HTTP_HOST} !=127.0.0.1
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# 2. Force WWW for non-WWW domains (e.g., beechat.online -> www.beechat.online)
+# Excludes localhost, IP addresses, and existing subdomains
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteCond %{HTTP_HOST} !=localhost
+RewriteCond %{HTTP_HOST} !=127.0.0.1
+RewriteCond %{HTTP_HOST} ^[^.]+\.[^.]+$
+RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
+
 # Exempt the API directory from SPA fallback
 RewriteCond %{REQUEST_URI} ^/server/api/ [NC]
 RewriteRule ^ - [L]

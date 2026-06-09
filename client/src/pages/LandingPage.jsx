@@ -1063,7 +1063,7 @@ const ContactSection = () => {
               <div className="w-10 h-10 bg-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center font-bold">✉️</div>
               <div>
                 <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Official Support</div>
-                <div className="text-sm font-bold">support@beechat.online</div>
+                <div className="text-sm font-bold">info@beechat.online</div>
               </div>
             </div>
           </motion.div>
