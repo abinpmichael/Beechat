@@ -169,7 +169,7 @@ export default function SuperAdmin() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [editData, setEditData] = useState({ plan_id: 1, expires_at: '', is_active: 1 });
-  const [planEditData, setPlanEditData] = useState({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] });
+  const [planEditData, setPlanEditData] = useState({ name: '', price: '', max_websites: 1, max_agents: 1, max_chats_per_month: 0, ai_enabled: false, features: [] });
   const [newKItem, setNewKItem] = useState({ title: '', content: '' });
   const [blogPosts, setBlogPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -344,7 +344,7 @@ export default function SuperAdmin() {
         ...planEditData
       }, { headers });
       setIsCreatingPlan(false);
-      setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] });
+      setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, max_chats_per_month: 0, ai_enabled: false, features: [] });
       fetchData();
       alert("New plan created successfully!");
     } catch (err) {
@@ -776,7 +776,7 @@ export default function SuperAdmin() {
       {activeTab === 'plans' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex justify-end">
-            <button onClick={() => { setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, ai_enabled: false, features: [] }); setIsCreatingPlan(true); }} className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3">
+            <button onClick={() => { setPlanEditData({ name: '', price: '', max_websites: 1, max_agents: 1, max_chats_per_month: 0, ai_enabled: false, features: [] }); setIsCreatingPlan(true); }} className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-amber-100 hover:scale-105 transition-all flex items-center gap-3">
               <Plus className="w-5 h-5" /> Add New Tier
             </button>
           </div>
@@ -794,6 +794,7 @@ export default function SuperAdmin() {
                 <div className="mt-8 space-y-3">
                   <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Websites</span><span className="text-amber-500">{p.max_websites}</span></div>
                   <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>Support Agents</span><span className="text-amber-500">{p.max_agents}</span></div>
+                  <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>AI Chats / Month</span><span className="text-amber-500">{Number(p.max_chats_per_month) > 0 ? p.max_chats_per_month : 'Unlimited'}</span></div>
                   <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>AI Auto-Reply</span><span className={p.ai_enabled ? 'text-emerald-500' : 'text-slate-300'}>{p.ai_enabled ? 'ON' : 'OFF'}</span></div>
                 </div>
               </motion.div>
@@ -1401,6 +1402,10 @@ export default function SuperAdmin() {
               <div className="grid grid-cols-2 gap-4">
                 <input type="number" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="Agents" value={planEditData.max_agents} onChange={(e) => setPlanEditData({...planEditData, max_agents: e.target.value})} />
                 <div onClick={() => setPlanEditData({...planEditData, ai_enabled: !planEditData.ai_enabled})} className={`w-full px-6 py-4 rounded-2xl font-black text-center cursor-pointer transition-all ${planEditData.ai_enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>{planEditData.ai_enabled ? 'AI ENABLED' : 'AI DISABLED'}</div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">AI conversations per month (0 = unlimited)</label>
+                <input type="number" min="0" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="AI conversations per month (0 = unlimited)" value={planEditData.max_chats_per_month ?? 0} onChange={(e) => setPlanEditData({...planEditData, max_chats_per_month: e.target.value})} />
               </div>
               <textarea rows="3" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="Features (one per line)" value={planEditData.features.join('\n')} onChange={(e) => setPlanEditData({...planEditData, features: e.target.value.split('\n')})} />
               <button type="submit" className="w-full bg-amber-500 text-white font-black py-4 rounded-2xl shadow-xl">{isCreatingPlan ? 'Create Plan' : 'Save Changes'}</button>

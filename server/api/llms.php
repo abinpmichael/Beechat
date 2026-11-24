@@ -42,12 +42,12 @@ foreach ($feats as $f) {
 
 // Pricing straight from the plans table so it never goes stale.
 try {
-    $plans = $pdo->query("SELECT name, price, max_websites, ai_enabled FROM plans ORDER BY price ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $plans = $pdo->query("SELECT name, price, max_websites, max_chats_per_month, ai_enabled FROM plans ORDER BY price ASC")->fetchAll(PDO::FETCH_ASSOC);
     if ($plans) {
         echo "\n## Pricing (USD per month)\n";
         foreach ($plans as $p) {
             $sites = ((int)$p['max_websites'] >= 999) ? 'unlimited websites' : ((int)$p['max_websites'] . ((int)$p['max_websites'] === 1 ? ' website' : ' websites'));
-            $ai    = $p['ai_enabled'] ? 'AI replies included' : 'live chat only, no AI replies';
+            $ai    = $p['ai_enabled'] ? (((int)$p['max_chats_per_month'] > 0) ? ((int)$p['max_chats_per_month'] . ' AI conversations a month') : 'unlimited AI conversations') : 'live chat only, no AI replies';
             echo "- " . $p['name'] . ": $" . rtrim(rtrim(number_format((float)$p['price'], 2, '.', ''), '0'), '.') . " – " . $sites . ", " . $ai . "\n";
         }
     }

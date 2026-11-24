@@ -197,6 +197,15 @@ try {
             }
         }
 
+        // Monthly AI conversation limit from the tenant's plan (0 = unlimited).
+        // Over the limit, new chats fall back to the normal bot reply and agents.
+        if ($shouldTriggerAI) {
+            require_once 'usage.php';
+            if (!aiLimitAllowsLead($pdo, $website['tenant_id'], $leadId)) {
+                $shouldTriggerAI = false;
+            }
+        }
+
         if ($shouldTriggerAI) {
             require_once 'ai_engine.php';
             $ai = new AIEngine($pdo);

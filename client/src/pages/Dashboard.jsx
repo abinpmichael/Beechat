@@ -713,6 +713,18 @@ function Overview({ statsUrl, liveVisitors = [] }) {
                     <motion.div initial={{ width: 0 }} animate={{ width: `${(stats.plan_utilization.agents_used / stats.plan_utilization.agents_max) * 100}%` }} className="h-full bg-slate-900 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]" />
                   </div>
                 </div>
+                <div>
+                  <div className="flex items-center justify-between mb-3 px-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Conversations (This Month)</span>
+                    <span className="text-xs font-black text-slate-900">{stats.plan_utilization.ai_conversations_used ?? 0} / {stats.plan_utilization.ai_conversations_max > 0 ? stats.plan_utilization.ai_conversations_max : 'Unlimited'}</span>
+                  </div>
+                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats.plan_utilization.ai_conversations_max > 0 ? Math.min(100, ((stats.plan_utilization.ai_conversations_used || 0) / stats.plan_utilization.ai_conversations_max) * 100) : 0}%` }} className="h-full bg-emerald-500 rounded-full" />
+                  </div>
+                  {stats.plan_utilization.ai_conversations_max > 0 && (stats.plan_utilization.ai_conversations_used || 0) >= stats.plan_utilization.ai_conversations_max && (
+                    <p className="text-[10px] font-bold text-rose-500 mt-2 px-2">Monthly AI limit reached. New chats go to your team until next month or a plan upgrade.</p>
+                  )}
+                </div>
               </div>
            </div>
 

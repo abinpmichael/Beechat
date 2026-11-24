@@ -86,6 +86,10 @@ try {
         $dailyStats[] = ["date" => date('D', strtotime($d)), "count" => $found];
     }
 
+    // Monthly AI conversation usage
+    require_once 'usage.php';
+    $aiUsage = getAiConversationUsage($pdo, $tenantId);
+
     // Plan Limits & Utilization
     $stmt = $pdo->prepare("SELECT p.max_websites, p.max_agents FROM tenants t JOIN plans p ON t.plan_id=p.id WHERE t.id=?");
     $stmt->execute([$tenantId]);
@@ -122,7 +126,9 @@ try {
             "websites_used" => $websites,
             "websites_max"  => (int)($plan['max_websites'] ?? 1),
             "agents_used"   => $agents,
-            "agents_max"    => (int)($plan['max_agents'] ?? 2)
+            "agents_max"    => (int)($plan['max_agents'] ?? 2),
+            "ai_conversations_used" => $aiUsage['used'],
+            "ai_conversations_max"  => $aiUsage['limit']
         ]
     ]);
 } catch (Exception $e) {

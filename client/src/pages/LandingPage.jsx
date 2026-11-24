@@ -1492,7 +1492,7 @@ const LandingPage = () => {
                   </div>
                   <div className="space-y-3 mb-8 flex-1 text-sm font-medium text-slate-500">
                     <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.max_websites >= 999 ? 'Unlimited' : plan.max_websites} {plan.max_websites === 1 ? 'Website' : 'Websites'}</div>
-                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.ai_enabled ? 'AI Replies Included' : 'Live Chat Only (No AI)'}</div>
+                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.ai_enabled ? (Number(plan.max_chats_per_month) > 0 ? `${plan.max_chats_per_month} AI Chats / Month` : 'Unlimited AI Chats') : 'Live Chat Only (No AI)'}</div>
                     <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />24/7 Hive Support</div>
                   </div>
                   <a href="/register" className={`w-full py-4 rounded-2xl font-black text-center text-sm transition-all duration-300 uppercase tracking-wider ${idx === 1 ? 'bg-amber-500 text-white hover:bg-slate-900' : 'bg-slate-900 text-white hover:bg-amber-500'}`}>

@@ -269,6 +269,7 @@ try {
                 price = ?, 
                 max_websites = ?, 
                 max_agents = ?, 
+                max_chats_per_month = ?, 
                 ai_enabled = ?, 
                 features = ?
                 WHERE id = ?");
@@ -278,6 +279,7 @@ try {
                 $data['price'],
                 $data['max_websites'],
                 $data['max_agents'],
+                max(0, (int)($data['max_chats_per_month'] ?? 0)),
                 $data['ai_enabled'] ? 1 : 0,
                 json_encode($data['features']),
                 $data['id']
@@ -288,12 +290,13 @@ try {
         }
 
         if ($action === 'create_plan') {
-            $stmt = $pdo->prepare("INSERT INTO plans (name, price, max_websites, max_agents, ai_enabled, features) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO plans (name, price, max_websites, max_agents, max_chats_per_month, ai_enabled, features) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data['name'],
                 $data['price'],
                 $data['max_websites'],
                 $data['max_agents'],
+                max(0, (int)($data['max_chats_per_month'] ?? 0)),
                 $data['ai_enabled'] ? 1 : 0,
                 json_encode($data['features'])
             ]);
