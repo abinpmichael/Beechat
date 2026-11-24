@@ -245,7 +245,7 @@ export default function BlogList() {
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-amber-500" />
-                      {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(post.published_at || post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
 

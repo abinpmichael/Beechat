@@ -571,14 +571,14 @@ const Hero = () => (
         }}
           className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-black text-slate-900 tracking-tighter leading-[1.1] md:leading-[0.9] uppercase relative z-10"
         >
-          {["Own", "Your", "Digital", "Cell."].map((word, i) => (
+          {["AI", "Chat", "For", "Your", "Website."].map((word, i) => (
             <motion.span 
               key={i} 
               variants={{
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0 }
               }}
-              className={`inline-block mr-4 ${word === 'Cell.' ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 bg-[length:200%_auto] animate-gradient-flow' : ''}`}
+              className={`inline-block mr-4 ${word === 'Website.' ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 bg-[length:200%_auto] animate-gradient-flow' : ''}`}
             >
               {word}
             </motion.span>
@@ -599,7 +599,7 @@ const Hero = () => (
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         className="max-w-3xl mx-auto text-base sm:text-lg md:text-2xl lg:text-3xl text-slate-400 font-bold leading-relaxed tracking-tight px-4"
       >
-        The world's most <span className="text-slate-900">adorable</span> and <span className="text-amber-500 underline decoration-amber-500/30 decoration-4 md:decoration-8 underline-offset-4">powerful</span> neural chat colony for modern empires.
+        An AI chatbot <span className="text-slate-900">trained on your own docs</span>, with <span className="text-amber-500 underline decoration-amber-500/30 decoration-4 md:decoration-8 underline-offset-4">live human takeover</span>. Install with one line of code. Free plan available.
       </motion.p>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -659,11 +659,11 @@ const HoneyDrip = ({ flip = false }) => (
 // --- LIVE STATS COUNTER STRIP ---
 const LiveStats = () => {
   const stats = [
-    { value: '2,400+', label: 'Active Hives', emoji: '🏠' },
-    { value: '1.2M+', label: 'Chats Handled', emoji: '💬' },
-    { value: '99.9%', label: 'Uptime', emoji: '⚡' },
-    { value: '< 0.3s', label: 'AI Response', emoji: '🧠' },
-    { value: '60k+', label: 'Happy Bees', emoji: '🐝' },
+    { value: '$0', label: 'Free Plan, No Card', emoji: '🍯' },
+    { value: '1 Line', label: 'Of Code to Install', emoji: '⚡' },
+    { value: '24/7', label: 'AI Answers', emoji: '🧠' },
+    { value: 'PDF · DOCX · URL', label: 'Train on Your Content', emoji: '📄' },
+    { value: 'Human', label: 'Takeover Any Time', emoji: '🐝' },
   ];
   return (
     <div className="bg-slate-900 py-10 relative overflow-hidden">
@@ -775,20 +775,13 @@ const TutorialSection = () => {
                   <code>
                     {`<!-- BeeChat Neural Integration -->\n`}
                     <span className="text-amber-500">{`<script `}</span>
-                    <span className="text-slate-300">{`src="https://beechat.pro/widget.js"`}</span>
+                    <span className="text-slate-300">{`src="https://www.beechat.online/widget.js"`}</span>
+                    {`\n  `}
+                    <span className="text-slate-300">{`data-api-key=`}</span>
+                    <span className="text-rose-400">"YOUR_API_KEY"</span>
+                    {` `}
+                    <span className="text-slate-300">async</span>
                     <span className="text-amber-500">{`></script>`}</span>
-                    {`\n\n`}
-                    <span className="text-amber-500">{`<script>`}</span>
-                    {`\n  window.`}
-                    <span className="text-emerald-400">BeeChat</span>
-                    {`.`}
-                    <span className="text-blue-400">init</span>
-                    {`({\n    apiKey: `}
-                    <span className="text-rose-400">"YOUR_HIVE_KEY"</span>
-                    {`,\n    theme: `}
-                    <span className="text-rose-400">"honey-dark"</span>
-                    {`\n  });\n`}
-                    <span className="text-amber-500">{`</script>`}</span>
                   </code>
                 </pre>
               </div>
@@ -952,7 +945,7 @@ const BlogSection = ({ posts, onPostClick }) => {
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-amber-500" />
-                    {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(post.published_at || post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
 
@@ -1335,9 +1328,9 @@ const LandingPage = () => {
                 <div className="grid grid-cols-2 gap-4 md:gap-6">
                   {[
                     { icon: Zap, label: "Instant Setup", value: "< 5 min", color: "text-amber-400" },
-                    { icon: Shield, label: "Uptime", value: "99.9%", color: "text-emerald-400" },
-                    { icon: BarChart3, label: "Avg Response", value: "0.3s", color: "text-sky-400" },
-                    { icon: Globe, label: "Global Cells", value: "10k+", color: "text-purple-400" },
+                    { icon: Shield, label: "Free Plan", value: "$0", color: "text-emerald-400" },
+                    { icon: BarChart3, label: "AI Answers", value: "24/7", color: "text-sky-400" },
+                    { icon: Globe, label: "To Install", value: "1 Line", color: "text-purple-400" },
                   ].map((stat, idx) => (
                     <motion.div
                       key={idx}
@@ -1367,8 +1360,8 @@ const LandingPage = () => {
                     ))}
                   </div>
                   <div>
-                    <p className="text-white font-black text-sm">Join 2,400+ hives</p>
-                    <p className="text-slate-400 text-xs">Already buzzing on BeeChat</p>
+                    <p className="text-white font-black text-sm">Start free today</p>
+                    <p className="text-slate-400 text-xs">No credit card required</p>
                   </div>
                 </div>
               </div>
@@ -1498,8 +1491,8 @@ const LandingPage = () => {
                     <span className="text-slate-400 font-bold text-sm">/mo</span>
                   </div>
                   <div className="space-y-3 mb-8 flex-1 text-sm font-medium text-slate-500">
-                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.max_websites} Active Cells</div>
-                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />Neural AI {plan.ai_enabled ? 'Enabled' : 'Disabled'}</div>
+                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.max_websites >= 999 ? 'Unlimited' : plan.max_websites} {plan.max_websites === 1 ? 'Website' : 'Websites'}</div>
+                    <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />{plan.ai_enabled ? 'AI Replies Included' : 'Live Chat Only (No AI)'}</div>
                     <div className="flex items-center gap-3"><Hexagon className="w-4 h-4 text-amber-500 fill-amber-500/15 flex-shrink-0" />24/7 Hive Support</div>
                   </div>
                   <a href="/register" className={`w-full py-4 rounded-2xl font-black text-center text-sm transition-all duration-300 uppercase tracking-wider ${idx === 1 ? 'bg-amber-500 text-white hover:bg-slate-900' : 'bg-slate-900 text-white hover:bg-amber-500'}`}>
@@ -1602,7 +1595,7 @@ const LandingPage = () => {
                   </span>
                   <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full text-amber-600 border border-amber-100/50">
                     <Calendar className="w-3 h-3 text-amber-500" />
-                    {new Date(activePost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {new Date(activePost.published_at || activePost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
 

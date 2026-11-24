@@ -168,13 +168,41 @@ export default function Websites() {
     } catch (err) { alert("Error deleting item"); }
   };
 
+  const loadScriptOnce = (src) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing.dataset.loaded === 'true') return resolve();
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.onload = () => { s.dataset.loaded = 'true'; resolve(); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+
+  const loadDocumentLibraries = async () => {
+    const loads = [];
+    if (!window.mammoth) loads.push(loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js'));
+    if (!window.pdfjsLib) loads.push(loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'));
+    await Promise.all(loads);
+    if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check for libraries (mammoth and pdfjsLib are expected to be on window via script tags in index.html)
-    if (!window.mammoth || !window.pdfjsLib) {
-      alert("Document processing libraries are still loading. Please try again in a few seconds.");
+    // Load the document parsing libraries on demand (kept out of index.html so public pages load fast)
+    try {
+      await loadDocumentLibraries();
+    } catch (err) {
+      alert("Could not load the document processing libraries. Check your connection and try again.");
       return;
     }
     

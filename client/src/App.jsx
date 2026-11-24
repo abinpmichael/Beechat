@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -6,15 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import SuperAdmin from './pages/SuperAdmin';
+// Dashboard and admin screens are loaded on demand so public pages stay light
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 import LandingPage from './pages/LandingPage';
 import Help from './pages/Help';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ChatWidget from './widget/ChatWidget';
-import TicketTracking from './pages/TicketTracking';
+const TicketTracking = lazy(() => import('./pages/TicketTracking'));
 import Integrations from './pages/Integrations';
-import VideoAdSimulator from './pages/VideoAdSimulator';
+const VideoAdSimulator = lazy(() => import('./pages/VideoAdSimulator'));
 import BlogList from './pages/BlogList';
 import { API_BASE_URL } from './config';
 
@@ -423,6 +423,7 @@ function App() {
         <AuthProvider>
           <Router>
             <WidgetInjector platformSettings={platformSettings} />
+            <Suspense fallback={<div className="min-h-screen" />}>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -438,6 +439,7 @@ function App() {
               <Route path="/blog/:postSlug" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/" element={landingActive ? <LandingPage /> : <Navigate to="/dashboard" />} />
             </Routes>
+            </Suspense>
           </Router>
         </AuthProvider>
       </GoogleOAuthProvider>
