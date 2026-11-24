@@ -88,7 +88,18 @@ if (preg_match('#^/blog/([^/]+)$#', $request_path, $matches)) {
 }
 
 // ─── Route-level SEO: unique titles, noindex for app screens, real 404s ──
+$live_chat_faq = [
+    ['q' => 'What is a live chat widget?', 'a' => 'A live chat widget is a small chat bubble on your website. Visitors click it to message you, and you reply in real time from a dashboard. BeeChat adds an AI assistant that can answer common questions for you, and you can take over any chat.'],
+    ['q' => 'Is the BeeChat live chat widget free?', 'a' => 'Yes. The Free plan covers one website with live chat and needs no credit card. AI replies start on the Starter plan at $19 a month.'],
+    ['q' => 'How do I add a live chat widget to my website?', 'a' => 'Create a free account, add your website, and paste one script tag into your site’s HTML before the closing body tag. It works on WordPress, Shopify, WooCommerce and any HTML site.'],
+    ['q' => 'Can the AI answer questions about my business?', 'a' => 'Yes, on paid plans. Upload PDF, Word or text files, or paste text, and the AI answers visitors from that content. If it doesn’t know, your team can take over.'],
+    ['q' => 'What happens when nobody is online?', 'a' => 'The AI keeps answering on paid plans, and visitors can leave their details or open a ticket so you can follow up later.'],
+    ['q' => 'Will a chat widget slow down my site?', 'a' => 'The script loads asynchronously, so it doesn’t block your page from rendering, and the chat window runs in its own frame.'],
+];
+
 $route_meta = [
+    '/live-chat-widget' => ['Free Live Chat Widget for Your Website | ' . $platform_name,
+                            'Add a free live chat widget to any website with one line of code. Real-time chat, an AI that answers from your own docs, and human takeover. Free plan for 1 site.'],
     '/integrations' => [$platform_name . ' Integrations – WordPress, Shopify, WhatsApp & More',
                         'Connect the ' . $platform_name . ' AI chat widget to WordPress, Shopify, WooCommerce, HubSpot, WhatsApp and more, or build your own with the REST API and webhooks.'],
     '/help'         => [$platform_name . ' Help Center – Setup, AI Training & Widget Guides',
@@ -116,7 +127,7 @@ if ($is_app_screen) {
 }
 
 // Unknown URLs return a real 404 instead of a 200 copy of the homepage
-$known_paths = ['/', '/index.php', '/index.html', '/login', '/register', '/widget', '/integrations',
+$known_paths = ['/', '/index.php', '/index.html', '/login', '/register', '/widget', '/integrations', '/live-chat-widget',
                 '/video-ad', '/help', '/privacy', '/terms', '/blog'];
 $is_known = in_array($request_path, $known_paths, true)
     || $request_path === '/dashboard' || strpos($request_path, '/dashboard/') === 0
@@ -401,6 +412,25 @@ if ($blog_post) {
     }
 }
 
+if ($request_path === '/live-chat-widget') {
+    $faq_schema = ["@type" => "FAQPage", "mainEntity" => []];
+    foreach ($live_chat_faq as $item) {
+        $faq_schema['mainEntity'][] = [
+            "@type" => "Question",
+            "name" => $item['q'],
+            "acceptedAnswer" => ["@type" => "Answer", "text" => $item['a']]
+        ];
+    }
+    $graph[] = $faq_schema;
+    $graph[] = [
+        "@type" => "BreadcrumbList",
+        "itemListElement" => [
+            ["@type" => "ListItem", "position" => 1, "name" => "Home", "item" => $site_url],
+            ["@type" => "ListItem", "position" => 2, "name" => "Live chat widget", "item" => $domain_base . "/live-chat-widget"]
+        ]
+    ];
+}
+
 $schema = ["@context" => "https://schema.org", "@graph" => $graph];
 $inject_head .= "    <script type=\"application/ld+json\">\n    " . json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n    </script>\n";
 
@@ -447,7 +477,28 @@ if ($blog_post) {
             $prerender .= '<h3>' . $esc($item['q']) . '</h3><p>' . $esc($item['a']) . '</p>';
         }
     }
-    $prerender .= '<p><a href="/register">Start free</a> · <a href="/integrations">Integrations</a> · <a href="/help">Help center</a> · <a href="/blog">Blog</a></p></main>';
+    $prerender .= '<p><a href="/register">Start free</a> · <a href="/live-chat-widget">Live chat widget</a> · <a href="/integrations">Integrations</a> · <a href="/help">Help center</a> · <a href="/blog">Blog</a></p></main>';
+}
+if ($request_path === '/live-chat-widget') {
+    $prerender = '<main style="' . $wrap_style . '">'
+        . '<h1>Free live chat widget for your website</h1>'
+        . '<p>' . $esc($platform_name) . ' is a live chat widget you add to any website with one line of code. Chat with visitors in real time, let an AI answer common questions from your own documents, and take over whenever a person should reply. The free plan covers one website.</p>'
+        . '<h2>What you get</h2><ul>'
+        . '<li>Real-time live chat from one dashboard</li>'
+        . '<li>AI that answers from your PDF, Word or text files, 24/7 (paid plans)</li>'
+        . '<li>Human takeover of any conversation</li>'
+        . '<li>Lead capture and tickets when you are away</li>'
+        . '<li>Multiple websites on one account</li></ul>'
+        . '<h2>Add live chat to your website in 4 steps</h2><ol>'
+        . '<li>Create a free account and add your website.</li>'
+        . '<li>Optionally train the AI with PDF, Word or text files.</li>'
+        . '<li>Paste one script tag before the closing body tag (WordPress, Shopify, WooCommerce or any HTML site).</li>'
+        . '<li>Reply to visitors from the dashboard and take over AI chats any time.</li></ol>'
+        . '<h2>Frequently asked questions</h2>';
+    foreach ($live_chat_faq as $item) {
+        $prerender .= '<h3>' . $esc($item['q']) . '</h3><p>' . $esc($item['a']) . '</p>';
+    }
+    $prerender .= '<p><a href="/register">Get the free widget</a> · <a href="/">Home</a> · <a href="/integrations">Integrations</a></p></main>';
 }
 if ($prerender !== '') {
     $html = str_replace('<div id="root"></div>', '<div id="root">' . $prerender . '</div>', $html);

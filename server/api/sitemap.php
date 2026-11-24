@@ -17,6 +17,7 @@ echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 // Public, indexable pages only (login/register are noindex and left out).
 $pages = [
     ''              => ['1.0', 'weekly'],
+    '/live-chat-widget' => ['0.9', 'monthly'],
     '/integrations' => ['0.8', 'monthly'],
     '/help'         => ['0.7', 'monthly'],
     '/blog'         => ['0.8', 'weekly'],

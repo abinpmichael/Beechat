@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ChatWidget from './widget/ChatWidget';
 const TicketTracking = lazy(() => import('./pages/TicketTracking'));
 import Integrations from './pages/Integrations';
+import LiveChatWidget from './pages/LiveChatWidget';
 const VideoAdSimulator = lazy(() => import('./pages/VideoAdSimulator'));
 import BlogList from './pages/BlogList';
 import { API_BASE_URL } from './config';
@@ -431,6 +432,7 @@ function App() {
               <Route path="/ticket/:trackingId" element={<TicketTracking />} />
               <Route path="/widget" element={<div className="h-screen overflow-hidden bg-transparent"><ChatWidget apiKey={new URLSearchParams(window.location.search).get('apiKey')} /></div>} />
               <Route path="/integrations" element={<Integrations />} />
+              <Route path="/live-chat-widget" element={<LiveChatWidget />} />
               <Route path="/video-ad" element={<VideoAdSimulator />} />
               <Route path="/help" element={<Help />} />
               <Route path="/privacy" element={<LegalPage type="privacy" />} />

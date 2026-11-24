@@ -534,6 +534,7 @@ const Nav = () => {
                     </a>
                   );
                 })}
+                <a href="/live-chat-widget" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">Live Chat Widget</a>
                 <a href="/integrations" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 uppercase tracking-widest hover:text-amber-500 transition-colors">Integrations</a>
                 <div className="h-px bg-slate-100" />
                 <a href="/login" className="text-xl font-black text-amber-600 uppercase tracking-widest">Member Login</a>

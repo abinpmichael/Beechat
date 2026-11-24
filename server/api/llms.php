@@ -57,6 +57,7 @@ try {
 
 echo "\n## Key pages\n";
 echo "- [Home](" . $domain . "/): what " . $name . " is and how it works\n";
+echo "- [Live chat widget](" . $domain . "/live-chat-widget): free live chat widget for any website, setup steps and pricing\n";
 echo "- [Integrations](" . $domain . "/integrations): supported platforms, CRMs and messaging apps\n";
 echo "- [Help center](" . $domain . "/help): setup, AI training and widget guides\n";
 echo "- [Blog](" . $domain . "/blog): guides on AI chatbots and live chat support\n";
