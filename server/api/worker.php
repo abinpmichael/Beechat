@@ -4,6 +4,12 @@
 // This script should be run by a cron job every minute
 // * * * * * php /path/to/server/api/worker.php
 
+// Cron/CLI only: never run from a web request.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

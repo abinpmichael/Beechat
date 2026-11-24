@@ -10,9 +10,23 @@ $auth = decodeJwt($headers);
 
 /* ── PUBLIC SETTINGS (No Auth) ────────────────────────────── */
 if ($method === 'GET' && !$auth) {
-    $stmt = $pdo->query("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key NOT IN (
-        'stripe_secret_key', 'stripe_webhook_secret', 'openai_api_key', 'smtp_pass', 'smtp_user'
-    )");
+    // Allowlist: only keys the public site (landing, login, help, legal pages) reads.
+    // Never add secrets here (API keys, SMTP, Stripe secrets).
+    $publicKeys = [
+        'platform_name', 'platform_currency', 'platform_widget_api_key', 'platform_contact_widget_api_key',
+        'support_email', 'support_phone', 'support_whatsapp', 'help_center_url', 'tutorial_video_url',
+        'privacy_policy', 'terms_of_service',
+        'landing_page_active', 'enable_registration', 'enable_live_chat', 'enable_ai_bot',
+        'enable_ticketing', 'enable_billing', 'google_client_id',
+        'seo_title', 'seo_description', 'seo_keywords', 'seo_canonical_url', 'seo_author', 'seo_robots',
+        'og_title', 'og_description', 'og_image', 'twitter_handle',
+        'aeo_llm_summary', 'aeo_product_features', 'aeo_faq_json',
+        'geo_region', 'geo_placename', 'geo_position', 'geo_target_country',
+        'gtm_id', 'google_analytics_id',
+    ];
+    $placeholders = implode(',', array_fill(0, count($publicKeys), '?'));
+    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM platform_settings WHERE setting_key IN ($placeholders)");
+    $stmt->execute($publicKeys);
     $settings = [];
     foreach ($stmt->fetchAll() as $row) {
         $settings[$row['setting_key']] = $row['setting_value'];
