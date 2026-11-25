@@ -50,11 +50,13 @@ class MailService {
  
         echo "[".date('Y-m-d H:i:s')."] Found " . count($emails) . " pending emails in queue.\n";
  
+        $stats = ['found' => count($emails), 'sent' => 0, 'failed' => 0];
         foreach ($emails as $email) {
             echo "[".date('Y-m-d H:i:s')."] Processing email ID " . $email['id'] . " to " . $email['recipient'] . "...\n";
-            $this->sendEmail($email);
+            if ($this->sendEmail($email)) { $stats['sent']++; } else { $stats['failed']++; }
             echo "[".date('Y-m-d H:i:s')."] Finished email ID " . $email['id'] . ".\n";
         }
+        return $stats;
     }
  
     private function sendEmail($emailRecord) {
@@ -113,10 +115,12 @@ class MailService {
             
             $this->pdo->prepare("UPDATE email_queue SET status = 'sent', sent_at = NOW() WHERE id = ?")->execute([$id]);
             echo "[".date('Y-m-d H:i:s')."] Email ID " . $id . " sent successfully.\n";
+            return true;
         } catch (Exception $e) {
             $this->pdo->prepare("UPDATE email_queue SET status = 'failed', attempts = attempts + 1, error_log = ? WHERE id = ?")
                  ->execute([$mail->ErrorInfo ?: $e->getMessage(), $id]);
             echo "[".date('Y-m-d H:i:s')."] Email ID " . $id . " failed: " . ($mail->ErrorInfo ?: $e->getMessage()) . "\n";
+            return false;
         }
     }
 }

@@ -8,6 +8,7 @@
 // log is kept out of the response (it names tenants and shows errors).
 $isCli = (PHP_SAPI === 'cli');
 $workerOk = false;
+$workerStats = [];
 error_reporting(E_ALL);
 ini_set('display_errors', $isCli ? '1' : '0');
 if (!$isCli) {
@@ -19,7 +20,8 @@ if (!$isCli) {
             http_response_code($ok ? 200 : 500);
             header('Content-Type: application/json');
         }
-        echo json_encode(['status' => $ok ? 'ok' : 'error', 'ts' => date('Y-m-d H:i:s')]);
+        // Counts only: never names recipients or tenants.
+        echo json_encode(array_merge(['status' => $ok ? 'ok' : 'error', 'ts' => date('Y-m-d H:i:s')], $GLOBALS['workerStats']));
     });
 }
 
@@ -40,12 +42,16 @@ try {
     
     // 1. Process Email Queue
     echo "[".date('Y-m-d H:i:s')."] Processing Email Queue...\n";
-    $mail->processQueue(20); // Process 20 emails per run
+    $q = $mail->processQueue(20); // Process 20 emails per run
+    $workerStats['emails_found']  = $q['found'];
+    $workerStats['emails_sent']   = $q['sent'];
+    $workerStats['emails_failed'] = $q['failed'];
+    echo "[".date('Y-m-d H:i:s')."] Emails: {$q['sent']} sent, {$q['failed']} failed of {$q['found']} found.\n";
     
     // 2. Clean up stale live sessions (no heartbeat for > 5 mins)
     echo "[".date('Y-m-d H:i:s')."] Cleaning up stale sessions...\n";
-    $pdo->exec("
-        UPDATE leads 
+    $workerStats['sessions_closed'] = (int)$pdo->exec("
+        UPDATE leads
         SET is_live = 0, chat_status = 'ended' 
         WHERE is_live = 1 
           AND chat_status = 'active'
@@ -63,6 +69,7 @@ try {
     $stmt->execute();
     $expiredTenants = $stmt->fetchAll();
 
+    $workerStats['plans_suspended'] = count($expiredTenants);
     foreach ($expiredTenants as $tenant) {
         $pdo->prepare("UPDATE tenants SET is_active = 0, status = 'suspended' WHERE id = ?")->execute([$tenant['id']]);
         $mail->queue($tenant['email'], 'plan_expired', [
