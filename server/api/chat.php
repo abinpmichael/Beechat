@@ -209,7 +209,7 @@ try {
         if ($shouldTriggerAI) {
             require_once 'ai_engine.php';
             $ai = new AIEngine($pdo);
-            $aiResponse = $ai->getResponse($website['tenant_id'], $website['id'], $message);
+            $aiResponse = $ai->getResponse($website['tenant_id'], $website['id'], $message, $leadId);
 
             if ($aiResponse) {
                 $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_name) VALUES (?, 'agent', ?, 'AI Bot')")

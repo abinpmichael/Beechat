@@ -46,12 +46,11 @@ if ($action === 'run') {
     });
 
     // Test 2: AI Engine Config
+    // Makes a real (tiny) OpenAI call so key, quota and model problems show up here.
     $results[] = runTest("AI Engine Configuration", function() use ($pdo) {
-        $stmt = $pdo->prepare("SELECT setting_value FROM platform_settings WHERE setting_key = 'openai_api_key'");
-        $stmt->execute();
-        $key = $stmt->fetchColumn();
-        if (!$key) return ['status' => 'failed', 'message' => 'OpenAI API Key not set'];
-        return ['status' => 'passed', 'message' => 'API Key detected'];
+        require_once 'ai_engine.php';
+        $r = (new AIEngine($pdo))->checkConnection();
+        return ['status' => $r['ok'] ? 'passed' : 'failed', 'message' => $r['message']];
     });
 
     // Test 3: Mail Service
