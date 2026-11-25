@@ -4,16 +4,31 @@
 // This script should be run by a cron job every minute
 // * * * * * php /path/to/server/api/worker.php
 
-// Cron/CLI only: never run from a web request.
-if (PHP_SAPI !== 'cli') {
-    http_response_code(404);
-    exit;
+// Can run from CLI cron or a URL cron (wget/curl). Over the web, the detailed
+// log is kept out of the response (it names tenants and shows errors).
+$isCli = (PHP_SAPI === 'cli');
+$workerOk = false;
+error_reporting(E_ALL);
+ini_set('display_errors', $isCli ? '1' : '0');
+if (!$isCli) {
+    ob_start();
+    register_shutdown_function(function () {
+        while (ob_get_level() > 0) { ob_end_clean(); }
+        $ok = !empty($GLOBALS['workerOk']);
+        if (!headers_sent()) {
+            http_response_code($ok ? 200 : 500);
+            header('Content-Type: application/json');
+        }
+        echo json_encode(['status' => $ok ? 'ok' : 'error', 'ts' => date('Y-m-d H:i:s')]);
+    });
 }
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+// Skip if a previous run is still going (stops overlapping runs).
+$lock = fopen(sys_get_temp_dir() . '/beechat_worker.lock', 'c');
+if ($lock && !flock($lock, LOCK_EX | LOCK_NB)) {
+    echo "Worker already running.\n";
+    exit;
+}
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/mail_service.php';
@@ -62,6 +77,7 @@ try {
     // $pdo->exec("UPDATE leads SET chat_status = 'ended' WHERE chat_status = 'lead' AND created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
 
     echo "[".date('Y-m-d H:i:s')."] Worker Finished.\n";
+    $workerOk = true;
 
 } catch (Exception $e) {
     echo "[".date('Y-m-d H:i:s')."] ERROR: " . $e->getMessage() . "\n";
