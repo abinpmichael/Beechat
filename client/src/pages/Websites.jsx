@@ -240,7 +240,7 @@ export default function Websites() {
   };
 
   const handleToggleAI = async (siteId, currentStatus) => {
-    if (user?.plan?.ai_enabled === 0 && user?.is_superadmin !== 1) {
+    if (!currentStatus && user?.plan && !user.plan.ai_enabled && user?.is_superadmin !== 1) {
       alert(`🚫 AI features are not included in your current plan (${user?.plan?.name}). Please upgrade to unlock.`);
       return;
     }

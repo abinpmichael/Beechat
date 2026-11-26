@@ -52,6 +52,14 @@ try {
         if (isset($_GET['action']) && $_GET['action'] === 'toggle_ai') {
             $id = $data['id'] ?? 0;
             $enabled = $data['enabled'] ? 1 : 0;
+            if ($enabled) {
+                require_once 'usage.php';
+                if (!tenantPlanAllowsAi($pdo, $tenantId)) {
+                    http_response_code(403);
+                    echo json_encode(["message" => "AI replies are not included in your plan. Please upgrade to turn them on."]);
+                    exit;
+                }
+            }
             $stmt = $pdo->prepare("UPDATE websites SET ai_enabled = ? WHERE id = ? AND tenant_id = ?");
             $stmt->execute([$enabled, $id, $tenantId]);
             echo json_encode(["message" => "AI status updated"]);
@@ -109,7 +117,7 @@ try {
         
         // --- Improved Plan Limit Check ---
         // 1. Get current website count
-        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM websites WHERE tenant_id = ?");
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM websites WHERE tenant_id = ? AND deleted_at IS NULL");
         $countStmt->execute([$tenantId]);
         $currentCount = $countStmt->fetchColumn();
 
@@ -132,9 +140,11 @@ try {
         }
         // -------------------------
 
+        require_once 'usage.php';
+        $newSiteAi = tenantPlanAllowsAi($pdo, $tenantId) ? 1 : 0;
         $apiKey = bin2hex(random_bytes(16));
-        $stmt = $pdo->prepare("INSERT INTO websites (tenant_id, domain, api_key, ai_enabled, settings) VALUES (?, ?, ?, 1, ?)");
-        $stmt->execute([$tenantId, $domain, $apiKey, json_encode(['theme' => 'default'])]);
+        $stmt = $pdo->prepare("INSERT INTO websites (tenant_id, domain, api_key, ai_enabled, settings) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$tenantId, $domain, $apiKey, $newSiteAi, json_encode(['theme' => 'default'])]);
         
         echo json_encode([
             "message" => "Website added successfully",

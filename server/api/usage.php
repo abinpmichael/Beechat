@@ -31,6 +31,22 @@ if (!function_exists('getAiConversationUsage')) {
     }
 }
 
+if (!function_exists('tenantPlanAllowsAi')) {
+    // True when the tenant's plan includes AI replies (plans.ai_enabled = 1).
+    // The platform owner's own tenant (has a superadmin user) always has AI.
+    // No plan assigned = Free tier = no AI.
+    function tenantPlanAllowsAi(PDO $pdo, $tenantId) {
+        $stmt = $pdo->prepare("SELECT 1 FROM users WHERE tenant_id = ? AND is_superadmin = 1 LIMIT 1");
+        $stmt->execute([$tenantId]);
+        if ($stmt->fetchColumn()) {
+            return true;
+        }
+        $stmt = $pdo->prepare("SELECT p.ai_enabled FROM tenants t JOIN plans p ON t.plan_id = p.id WHERE t.id = ?");
+        $stmt->execute([$tenantId]);
+        return (int)$stmt->fetchColumn() === 1;
+    }
+}
+
 if (!function_exists('aiLimitAllowsLead')) {
     // True when the AI may answer this lead: unlimited plan, under the limit,
     // or the lead already had an AI reply this month (never cut a chat mid-way).

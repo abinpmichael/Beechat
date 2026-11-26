@@ -213,7 +213,10 @@ try {
         // Over the limit, new chats fall back to the normal bot reply and agents.
         if ($shouldTriggerAI) {
             require_once 'usage.php';
-            if (!aiLimitAllowsLead($pdo, $website['tenant_id'], $leadId)) {
+            // Plans without AI (Free) get live chat only.
+            if (!tenantPlanAllowsAi($pdo, $website['tenant_id'])) {
+                $shouldTriggerAI = false;
+            } elseif (!aiLimitAllowsLead($pdo, $website['tenant_id'], $leadId)) {
                 $shouldTriggerAI = false;
             }
         }
