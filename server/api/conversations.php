@@ -195,11 +195,18 @@ try {
 
         // ── CLAIM ──
         if ($action === 'claim') {
+            // The dashboard may not send a name; look it up so the visitor doesn't see "Agent Agent".
+            if (($agentName === '' || $agentName === 'Agent') && $agentId) {
+                $nameStmt = $pdo->prepare("SELECT name FROM users WHERE id = ?");
+                $nameStmt->execute([$agentId]);
+                $agentName = trim((string)$nameStmt->fetchColumn()) ?: 'Agent';
+            }
             $stmt = $pdo->prepare("UPDATE leads SET assigned_to = ?, is_live = 1, chat_status = 'active' WHERE id = ?");
             $stmt->execute([$agentId, $leadId]);
 
             $stmt = $pdo->prepare("INSERT INTO messages (lead_id, sender_type, content, agent_id, agent_name) VALUES (?, 'agent', ?, ?, ?)");
-            $stmt->execute([$leadId, "✅ Agent $agentName has joined the chat.", $agentId, $agentName]);
+            $joinText = $agentName === 'Agent' ? "✅ An agent has joined the chat." : "✅ $agentName has joined the chat.";
+            $stmt->execute([$leadId, $joinText, $agentId, $agentName]);
 
             // GET tenant_id of this lead
             $stmt = $pdo->prepare("SELECT tenant_id, session_id FROM leads WHERE id = ?");

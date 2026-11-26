@@ -143,7 +143,7 @@ try {
     // 2. Find or CREATE lead so offline messages show in dashboard
     $leadId = null;
     if ($sessionId) {
-        $stmt = $pdo->prepare("SELECT id FROM leads WHERE session_id=? AND website_id=?");
+        $stmt = $pdo->prepare("SELECT id, assigned_to, chat_status FROM leads WHERE session_id=? AND website_id=?");
         $stmt->execute([$sessionId, $website['id']]);
         $lead = $stmt->fetch();
         
@@ -160,8 +160,20 @@ try {
 
     // 3. Save visitor message
     if ($leadId) {
-        $pdo->prepare("INSERT INTO messages (lead_id,sender_type,content) VALUES (?,?,?)")
-            ->execute([$leadId, 'visitor', $message]);
+        // In live mode the widget also posts the same message to conversations.php;
+        // skip it here if that copy was saved in the last few seconds.
+        $dup = $pdo->prepare("SELECT 1 FROM messages WHERE lead_id = ? AND sender_type = 'visitor' AND content = ? AND created_at >= (NOW() - INTERVAL 15 SECOND) LIMIT 1");
+        $dup->execute([$leadId, $message]);
+        if (!$dup->fetchColumn()) {
+            $pdo->prepare("INSERT INTO messages (lead_id,sender_type,content) VALUES (?,?,?)")
+                ->execute([$leadId, 'visitor', $message]);
+        }
+
+        // A human agent has claimed this chat: the AI and the canned bot stay quiet.
+        if (!empty($lead) && !empty($lead['assigned_to']) && ($lead['chat_status'] ?? '') === 'active') {
+            echo json_encode(["status" => "agent_handling", "lead_id" => $leadId]);
+            exit;
+        }
         
         // --- AI & AUTOMATION INTEGRATION ---
         $stmt = $pdo->prepare("SELECT ai_auto_reply, ai_offline_only, force_ai FROM tenant_settings WHERE tenant_id = ?");
